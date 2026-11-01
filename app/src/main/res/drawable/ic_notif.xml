@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône des notifications : silhouette blanche du calendrier, les deux sœurs en creux -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:fillType="evenOdd"
+        android:pathData="M25,30 h58 a7,7 0 0 1 7,7 v48 a7,7 0 0 1 -7,7 h-58 a7,7 0 0 1 -7,-7 v-48 a7,7 0 0 1 7,-7 z
+                          M35.5,58 a6.5,6.5 0 1 0 13,0 a6.5,6.5 0 1 0 -13,0 z
+                          M31,83 a11,11 0 0 1 22,0 z
+                          M58,63 a5.5,5.5 0 1 0 11,0 a5.5,5.5 0 1 0 -11,0 z
+                          M54.5,83 a9,9 0 0 1 18,0 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M32,20 h6 v14 h-6 z M70,20 h6 v14 h-6 z" />
+</vector>

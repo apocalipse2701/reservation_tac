@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestion administrative enfants</title>
+<style>
+  @font-face{font-family:"Bricolage";src:url("fonts/bricolage.ttf") format("truetype");font-weight:200 800;font-stretch:75% 100%;font-display:swap}
+  /* ---- Thèmes : un ton principal (bus), un ton chaud (cantine), un ton froid (covoiturage) ---- */
+  :root,[data-theme="menthe"]{
+    --bg:#EAF3EE; --card:#FFFFFF; --field:#F6FAF8; --ink:#11302A; --muted:#5A7068; --line:#D3E3DB;
+    --brand:#0E8A6A; --brand-ink:#FFFFFF; --soft:#D9F0E6; --brand2:#E8962E; --soft2:#FCEBD3; --brand3:#3D6FD6; --soft3:#DEE7FB;
+    --shadow:0 1px 2px rgba(14,90,70,.08),0 8px 24px -12px rgba(14,90,70,.25);
+  }
+  [data-theme="ocean"]{
+    --bg:#E9F1F9; --card:#FFFFFF; --field:#F5F9FD; --ink:#0F2338; --muted:#5A6B80; --line:#D1DEEC;
+    --brand:#1C67B0; --brand-ink:#FFFFFF; --soft:#D9E8F7; --brand2:#E9A23B; --soft2:#FBEDD5; --brand3:#14A08C; --soft3:#D4F1EC;
+    --shadow:0 1px 2px rgba(20,60,110,.08),0 8px 24px -12px rgba(20,60,110,.28);
+  }
+  [data-theme="prune"]{
+    --bg:#F3EEF7; --card:#FFFFFF; --field:#FAF7FC; --ink:#271734; --muted:#6E5E7B; --line:#E3D7EC;
+    --brand:#7B3FA0; --brand-ink:#FFFFFF; --soft:#EDE0F5; --brand2:#E0873A; --soft2:#FBE6D3; --brand3:#1F9E92; --soft3:#D3F0EC;
+    --shadow:0 1px 2px rgba(80,30,110,.08),0 8px 24px -12px rgba(80,30,110,.28);
+  }
+  [data-theme="corail"]{
+    --bg:#FBEFF0; --card:#FFFFFF; --field:#FEF8F8; --ink:#371A21; --muted:#7C5F66; --line:#F0D9DD;
+    --brand:#D8465F; --brand-ink:#FFFFFF; --soft:#FADDE2; --brand2:#E59A2F; --soft2:#FCEBD2; --brand3:#2E77C9; --soft3:#DCE8F8;
+    --shadow:0 1px 2px rgba(150,40,60,.08),0 8px 24px -12px rgba(150,40,60,.28);
+  }
+  [data-theme="ardoise"]{
+    --bg:#12161B; --card:#1C2229; --field:#232A32; --ink:#E9EEF2; --muted:#97A2AD; --line:#2D3640;
+    --brand:#46C99D; --brand-ink:#0B1A15; --soft:#1F3A31; --brand2:#F2B14E; --soft2:#3A2F1C; --brand3:#7FA6F5; --soft3:#22304A;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.6);
+  }
+  :root{--danger:#C2283C;--danger-bg:#FBE3E6;--ok:#2E9D5B;--wait:#E9A23B;--disp:"Bricolage",system-ui,sans-serif}
+  [data-theme="ardoise"]{--danger:#FF7A8A;--danger-bg:#3A1F25}
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--brand)}
+  :focus-visible{outline:3px solid var(--brand3);outline-offset:2px}
+
+  /* ---- En-tête ---- */
+  header{background:var(--brand);color:var(--brand-ink);padding:16px 16px 22px;position:sticky;top:0;z-index:5;border-radius:0 0 26px 26px;box-shadow:var(--shadow)}
+  header h1{margin:0;font:700 24px/1.1 var(--disp);font-stretch:88%;letter-spacing:-.01em}
+  header p{margin:3px 0 0;opacity:.85;font-size:13px}
+  .hrow{display:flex;align-items:center;gap:12px}
+  .back{background:color-mix(in srgb,var(--brand-ink) 16%,transparent);color:var(--brand-ink);border:0;border-radius:14px;width:44px;height:44px;font-size:26px;line-height:1;cursor:pointer;flex:0 0 auto}
+  #gear{font-size:21px}
+
+  main{padding:16px 14px 120px;max-width:640px;margin:0 auto}
+
+  /* ---- Cartes ---- */
+  .card{background:var(--card);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card h2{font:700 18px/1.2 var(--disp);font-stretch:90%;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .card h2 small{font:400 12px system-ui,sans-serif;color:var(--muted)}
+  .muted{color:var(--muted);font-size:13px}
+
+  /* ---- Champs ---- */
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+  input[type=text],input[type=tel],input[type=email],input[type=date],input[type=password],select{
+    width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:16px;background:var(--field);color:var(--ink);appearance:none;-webkit-appearance:none}
+  input:focus,select:focus{border-color:var(--brand);outline:none;background:var(--card)}
+  select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+  select:disabled,input:disabled{opacity:.5}
+  .row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.row>.narrow{flex:0 0 38%}
+  .check{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:15px;color:var(--ink)}
+  .check input{width:22px;height:22px;margin:0;flex:0 0 auto;accent-color:var(--brand)}
+  .extra{border-top:1.5px dashed var(--line);margin-top:12px;padding-top:2px}
+
+  /* ---- Boutons ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:650;cursor:pointer;font-family:inherit;transition:transform .08s}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--brand);color:var(--brand-ink);width:100%;padding:16px;font-size:17px;border-radius:18px}
+  .btn-primary:disabled{opacity:.45}
+  .btn-ghost{background:var(--soft);color:var(--brand)}
+  .btn-small{padding:9px 13px;font-size:13.5px;border-radius:12px}
+  .btn-link{background:none;color:var(--danger);padding:6px;font-size:13px}
+  .btn-cancel{background:var(--danger-bg);color:var(--danger)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:flex;align-items:center;background:var(--soft);color:var(--brand);border-radius:999px;font-size:14px;font-weight:650;overflow:hidden}
+  .chip button{border:0;background:none;color:inherit;font:inherit;padding:8px 12px;cursor:pointer}
+  .chip .x{padding:8px 10px 8px 2px;opacity:.6}
+  .alert{border-radius:16px;padding:13px 14px;margin:0 0 14px;font-size:14px}
+  .alert-err{background:var(--danger-bg);color:var(--danger)}
+  .alert-ok{background:var(--soft);color:var(--brand)}
+
+  .footer{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(transparent,var(--bg) 35%);padding:20px 14px calc(14px + env(safe-area-inset-bottom));z-index:6}
+  .footer .inner{max-width:640px;margin:0 auto}
+  .overlay{position:fixed;inset:0;background:rgba(10,18,24,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+  .overlay.show{display:flex}
+  .sheet{background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;width:100%;max-width:640px;padding:22px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+  .sheet h3{margin:0 0 10px;font:700 20px var(--disp);font-stretch:90%}
+  .sum{font-size:15px}.sum dt{color:var(--muted);font-size:12px;margin-top:10px}.sum dd{margin:0}
+  .spinner{width:34px;height:34px;border:4px solid var(--soft);border-top-color:var(--brand);border-radius:50%;animation:s .9s linear infinite;margin:0 auto}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .loading{display:none;position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 70%,transparent);z-index:30;align-items:center;justify-content:center}
+  .loading.show{display:flex}
+  .hidden{display:none!important}
+  .done{text-align:center;padding:30px 10px}
+  .done .big{font-size:52px}
+
+  /* ---- Accueil : la journée ---- */
+  .today{background:var(--card);border-radius:28px;padding:18px 18px 8px;margin:-4px 0 18px;box-shadow:var(--shadow)}
+  .today .when{font:750 30px/1.05 var(--disp);font-stretch:85%;letter-spacing:-.015em;margin:0}
+  .today .when::first-letter,.kday .dt::first-letter,.calhead b::first-letter{text-transform:uppercase}
+  .today .rel{color:var(--muted);font-size:13px;margin:4px 0 10px}
+  .tline{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1.5px solid var(--line)}
+  .tline .dot{flex:0 0 38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px}
+  .tline .what{flex:1;min-width:0}
+  .tline .what b{display:block;font-size:15px}
+  .tline .what span{font-size:13px;color:var(--muted)}
+  .tline .st{font-weight:700;font-size:14px;white-space:nowrap}
+  .c-cantine{background:var(--soft2);color:var(--brand2)} .c-bus{background:var(--soft);color:var(--brand)} .c-covoit{background:var(--soft3);color:var(--brand3)}
+  .st.ok{color:var(--ok)} .st.no{color:var(--muted)} .st.warn{color:var(--danger)}
+
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:100%;text-align:left;border:0;border-radius:24px;padding:16px;font:inherit;color:var(--ink);cursor:pointer;background:var(--card);box-shadow:var(--shadow);min-height:132px}
+  .tile:active{transform:scale(.98)}
+  .tile.wide{grid-column:1 / -1;flex-direction:row;align-items:center;min-height:0}
+  .tile .ico{font-size:26px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:16px;flex:0 0 auto}
+  .tile b{display:block;font:700 19px/1.15 var(--disp);font-stretch:90%}
+  .tile small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+
+  /* ---- Réglages : thèmes ---- */
+  .swatches{display:flex;flex-wrap:wrap;gap:12px}
+  .swatch{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}
+  .swatch i{display:block;width:48px;height:48px;border-radius:16px;position:relative;box-shadow:inset 0 0 0 3px transparent}
+  .swatch i::after{content:"";position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;border-radius:7px;border:3px solid var(--card)}
+  .swatch i{background:var(--a)} .swatch i::after{background:var(--b)}
+  .swatch.on{color:var(--ink);font-weight:700}
+  .swatch.on i{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ink)}
+
+  /* ---- Cantine : calendrier ---- */
+  .cal{padding:14px}
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .calhead b{font:700 20px var(--disp);font-stretch:88%;display:inline-block}
+  .calnav{border:0;background:var(--soft2);color:var(--brand2);font-size:26px;width:46px;height:42px;border-radius:14px;cursor:pointer}
+  .calgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .calgrid .h{text-align:center;font-size:12px;color:var(--muted);font-weight:650}
+  .cell{aspect-ratio:1/1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 17px var(--disp);border:2px solid transparent;background:transparent;color:var(--muted);padding:0;opacity:.6}
+  .cell small{font:650 9.5px system-ui,sans-serif;line-height:1}
+  .cell.s-ok,.cell.s-no,.cell.s-wait,.cell.s-abs,.cell.s-cxl{opacity:1}
+  .cell.s-ok{background:var(--ok);color:#fff}
+  .cell.s-no{background:var(--field);color:var(--ink);border-color:var(--line)}
+  .cell.s-wait{background:var(--wait);color:#fff}
+  .cell.s-abs{background:var(--danger-bg);color:var(--danger)}
+  .cell.s-cxl{background:var(--danger);color:#fff;text-decoration:line-through}
+  .cell.s-cxl small{text-decoration:none}
+  .cell.past{opacity:.4}
+  .cell.today{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+  .cell.chg{border-color:var(--ink);border-style:dashed;border-width:3px}
+  .cell.tap{cursor:pointer}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px;font-size:12px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:4px}
+  .sw.s-ok{background:var(--ok)}.sw.s-no{background:var(--field);box-shadow:inset 0 0 0 1.5px var(--line)}.sw.s-wait{background:var(--wait)}.sw.s-abs{background:var(--danger-bg);box-shadow:inset 0 0 0 1.5px var(--danger)}
+  #cErr{white-space:pre-line}
+  #cPlan h2{margin-bottom:6px}
+  .sug{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1.5px solid var(--line);font-size:14px}
+  .sug:first-of-type{border-top:0}
+  .sug b{white-space:nowrap}
+  #newsList p{margin:0;padding:12px 0;border-top:1.5px solid var(--line);font-size:15.5px}
+  #newsList p:first-child{border-top:0}
+  .sug .ign{border:0;background:var(--soft2);color:var(--brand2);font:inherit;font-size:12px;font-weight:650;border-radius:10px;padding:5px 9px;margin-top:6px;cursor:pointer}
+  .sug .go{font-weight:750;white-space:nowrap}.sug .go.book{color:var(--ok)}.sug .go.cancel{color:var(--danger)}
+
+  /* ---- Covoiturage ---- */
+  .kstate{background:var(--soft3);color:var(--brand3);border-radius:16px;padding:11px 14px;margin:0 0 12px;font-size:13.5px;font-weight:600}
+  .kstate.bad{background:var(--danger-bg);color:var(--danger)}
+  .kday{background:var(--card);border-radius:20px;padding:14px 14px 12px;margin-bottom:10px;box-shadow:var(--shadow);border-left:5px solid var(--brand3)}
+  .kday.free{border-left-color:var(--wait)}
+  .kday.mine{border-left-color:var(--ok)}
+  .kday.off{opacity:.55;border-left-color:var(--line)}
+  .kday .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .kday .dt{font:700 17px var(--disp);font-stretch:90%;display:inline-block}
+  .kday .hr{border:0;background:var(--soft3);border-radius:12px;padding:6px 11px;font:inherit;font-weight:700;color:var(--brand3)}
+  .kday .who{margin:8px 0 8px;font-size:15px}
+  .kday .who.none{color:var(--wait);font-weight:650}.kday .who.me{color:var(--ok);font-weight:750}
+  .kday .acts{display:flex;gap:6px;flex-wrap:wrap}
+  .kday .acts .btn{padding:9px 13px;font-size:13.5px;border-radius:12px}
+  .kday .acts .btn-primary{background:var(--brand3);color:#fff}
+  .kday .sub{font-size:12px;color:var(--muted);margin-top:7px}
+  .kday .pl{font-size:12.5px;color:var(--brand3);margin-top:5px;font-weight:600}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script>
+(function(){
+  var t = null;
+  try{ t = window.Android ? window.Android.getPref("theme") : localStorage.getItem("theme"); t = t ? JSON.parse(t) : null; }catch(e){}
+  document.documentElement.setAttribute("data-theme", t || "menthe");
+})();
+</script>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <button id="back" class="back hidden" type="button" aria-label="Retour">‹</button>
+    <div style="flex:1;min-width:0"><h1 id="title">Gestion administrative enfants</h1>
+    <p id="subtitle">Cantine, bus et covoiturage</p></div>
+    <button id="gear" class="back" type="button" aria-label="Réglages" title="Réglages">⚙️</button>
+  </div>
+</header>
+
+<main id="home">
+  <section class="today" id="today" aria-live="polite"></section>
+  <div class="tiles">
+    <button class="tile" type="button" data-go="cantine">
+      <span class="ico c-cantine">🍽️</span>
+      <span><b>Cantine</b><small id="tileCantine">Réserver les repas</small></span>
+    </button>
+    <button class="tile" type="button" data-go="bus">
+      <span class="ico c-bus">🚌</span>
+      <span><b>Bus</b><small id="tileBus">Demande de transport</small></span>
+    </button>
+    <button class="tile wide" type="button" data-go="covoit">
+      <span class="ico c-covoit">🚗</span>
+      <span><b id="tileCov">Covoiturage</b><small>Qui va les chercher ?</small></span>
+    </button>
+  </div>
+</main>
+
+<main id="reglages" class="hidden">
+  <section class="card">
+    <h2>🎨 Couleurs de l'appli</h2>
+    <div class="swatches" id="swatches"></div>
+  </section>
+  <section class="card" id="persoCard">
+    <h2>👧 Mes enfants et trajets</h2>
+    <p class="muted" style="margin:0">Gardé uniquement sur ce téléphone.</p>
+    <label for="psBusKid">Prénom de l'enfant qui prend le bus</label><input id="psBusKid" type="text" placeholder="ex. Lucie">
+    <label for="psCovKids">Enfants du covoiturage</label><input id="psCovKids" type="text" placeholder="ex. Lucie &amp; Emma">
+    <label for="psPortal">Adresse du portail famille (cantine)</label>
+    <input id="psPortal" type="text" autocomplete="off" autocapitalize="off" placeholder="https://portail.berger-levrault.fr/…/">
+    <p class="muted" style="margin:4px 0 0;font-size:12px">Copie l'adresse de la page d'accueil de ton portail, telle qu'elle s'affiche dans ton navigateur.</p>
+    <label>Trajet de bus habituel</label>
+    <p class="muted" id="psRouteNow" style="margin:0 0 6px"></p>
+    <select id="psLine"><option value="">Choisir la ligne…</option></select>
+    <div class="row" style="margin-top:8px"><select id="psDep"><option value="">Arrêt de départ</option></select><select id="psDst"><option value="">Arrêt d'arrivée</option></select></div>
+    <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="psSave" type="button">Enregistrer</button>
+    <button class="btn btn-ghost btn-small" id="psNoRoute" type="button">Toutes les lignes</button></div>
+  </section>
+  <section class="card">
+    <h2>🚌 Mon identité <small>pour les demandes de bus</small></h2>
+    <div class="row">
+      <div><label for="nom">Nom</label><input id="nom" type="text" autocomplete="family-name"></div>
+      <div><label for="prenom">Prénom</label><input id="prenom" type="text" autocomplete="given-name"></div>
+    </div>
+    <label for="tel">Téléphone</label><input id="tel" type="tel" autocomplete="tel">
+    <label for="email">Email</label><input id="email" type="email" autocomplete="email">
+    <p class="muted" style="margin:8px 0 0">Enregistré automatiquement sur ce téléphone.</p>
+  </section>
+  <section class="card">
+    <h2>🍽️ Portail cantine</h2>
+    <p class="muted" id="rgPortal" style="margin:0 0 4px"></p>
+    <label for="rgUser">Identifiant du portail famille</label><input id="rgUser" type="text" autocomplete="off" autocapitalize="off">
+    <label for="rgPass">Mot de passe</label><input id="rgPass" type="password" autocomplete="off">
+    <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="rgSaveLogin" type="button">Enregistrer</button>
+    <button class="btn btn-ghost btn-small" id="rgLogin" type="button">Se connecter</button></div>
+    <p style="margin:10px 0 0"><a href="#" id="rgForget" class="muted hidden">Oublier mes identifiants</a></p>
+  </section>
+  <section class="card hidden" id="rgPlanCard">
+    <h2>🗓️ Lien avec mon planning</h2>
+    <p class="muted" id="rgPlan" style="margin:0 0 10px"></p>
+    <button class="btn btn-ghost btn-small" id="rgPlanBtn" type="button">Modifier</button>
+  </section>
+  <section class="card">
+    <h2>🚗 Covoiturage</h2>
+    <p class="muted" id="rgCov" style="margin:0 0 10px"></p>
+    <button class="btn btn-ghost btn-small" id="rgCovBtn" type="button">Modifier</button>
+  </section>
+  <section class="card">
+    <h2>🧩 Widget</h2>
+    <p class="muted" id="rgWid" style="margin:0 0 10px"></p>
+    <div id="rgWidBtns"></div>
+  </section>
+  <section class="card">
+    <h2>📱 Application</h2>
+    <p class="muted" style="margin:0 0 10px"><span id="appVer">Version ?</span></p>
+    <button class="btn btn-ghost btn-small" id="checkUpd" type="button">Rechercher une mise à jour</button>
+  </section>
+</main>
+
+<main id="cantine" class="hidden">
+  <section class="card hidden" id="cLogin">
+    <h2>Connexion</h2>
+    <p class="muted">Connecte-toi une fois au portail famille. L'appli reprend la main dès que c'est fait.</p>
+    <button class="btn btn-primary" id="cLoginBtn" type="button">Se connecter</button>
+  </section>
+
+  <section id="cMain" class="hidden">
+    <div class="card" id="cPlan"></div>
+    <div class="card cal">
+      <div class="calhead">
+        <button class="calnav" id="cPrev" type="button" aria-label="Mois précédent">‹</button>
+        <b id="cMonth"></b>
+        <button class="calnav" id="cNext" type="button" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="calgrid" id="cGrid"></div>
+      <div class="legend">
+        <span><i class="sw s-ok"></i>Réservé</span><span><i class="sw s-no"></i>Libre</span><span><i class="sw s-wait"></i>En attente</span><span><i class="sw s-abs"></i>Absente</span>
+      </div>
+      <p class="muted" id="cHint" style="text-align:center;margin:8px 0 0">Touche un jour gris pour le réserver, un jour vert pour l'annuler.</p>
+    </div>
+    <p class="muted" style="text-align:center"><span id="cCount"></span> · <a href="#" id="cRefresh">Actualiser</a></p>
+  </section>
+  <div id="cErr" class="alert alert-err hidden"></div>
+  <div class="footer hidden" id="cSaveBar"><div class="inner">
+    <button class="btn btn-primary" id="cSave" type="button">Valider</button>
+  </div></div>
+</main>
+
+<main id="covoit" class="hidden">
+  <div id="kErr" class="alert alert-err hidden"></div>
+  <section class="card hidden" id="kSetup">
+    <h2>Covoiturage</h2>
+    <p class="muted">Les téléphones du covoiturage partagent un fichier sur le Synology, chiffré avec un code commun. Remplis les réglages pour commencer.</p>
+    <button class="btn btn-primary" id="kSetupBtn" type="button">⚙️ Régler dans Réglages</button>
+  </section>
+  <section id="kMain" class="hidden">
+    <p class="kstate hidden" id="kState"></p>
+    <div id="kDays"></div>
+    <p class="muted" style="text-align:center"><span id="kInfo"></span> · <a href="#" id="kRefresh">Actualiser</a></p>
+  </section>
+</main>
+
+<div class="overlay" id="kSet"><div class="sheet">
+  <h3>Réglages du covoiturage</h3>
+  <label for="kNom">Ton prénom (vu par les autres)</label><input id="kNom" type="text" placeholder="ex. Papa, Sophie, Famille Martin">
+  <label for="kBadge">Initiales sur le widget (facultatif, 1 ou 2 caractères)</label><input id="kBadge" type="text" maxlength="4" placeholder="automatique">
+  <label for="kAdr">Adresse du Synology</label><input id="kAdr" type="text" placeholder="monnas.synology.me">
+  <label for="kId">Identifiant sur le Synology</label><input id="kId" type="text" autocomplete="off">
+  <label for="kMdp">Mot de passe</label><input id="kMdp" type="password" autocomplete="off">
+  <label for="kDos">Dossier partagé</label><input id="kDos" type="text" placeholder="Covoiturage">
+  <label for="kCode">Code du covoiturage (le même sur tous les téléphones)</label>
+  <div class="row"><input id="kCode" type="text" autocomplete="off" placeholder="ABCD-EFGH-JKLM"><button class="btn btn-ghost btn-small narrow" id="kGen" type="button" style="flex:0 0 auto">Nouveau code</button></div>
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-ghost" id="kClose" type="button">Fermer</button>
+    <button class="btn btn-primary" id="kSave" type="button" style="padding:12px">Enregistrer</button>
+  </div>
+  <label class="check hidden" id="kAutoRow"><input type="checkbox" id="kAuto"> <span>Me déclarer « ne peut pas » quand mon planning dit que je travaille à l'heure de sortie</span></label>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-ghost btn-small" id="kShow" type="button">Afficher mon code</button>
+    <button class="btn btn-cancel btn-small" id="kReset" type="button">Repartir de zéro avec mon code</button>
+  </div>
+  <p style="text-align:center;margin:12px 0 0"><a href="#" id="kForget" class="muted">Quitter ce covoiturage sur ce téléphone</a></p>
+</div></div>
+
+<div class="overlay" id="newsBox"><div class="sheet">
+  <h3>🍽️ Réponse du portail</h3>
+  <div id="newsList"></div>
+  <button class="btn btn-primary" id="newsOk" type="button" style="margin-top:16px">OK</button>
+</div></div>
+
+<div class="overlay" id="cPlanSet"><div class="sheet">
+  <h3>Lien avec mon planning</h3>
+  <p class="muted">Mêmes réglages que dans Planning Commandes › Réglages › Partage du planning. Le planning est seulement lu, jamais modifié.</p>
+  <label for="pAdr">Adresse du serveur</label><input id="pAdr" type="text" placeholder="numéro du kDrive, ou monnas.synology.me">
+  <label for="pId">Identifiant</label><input id="pId" type="text" autocomplete="off">
+  <label for="pMdp">Mot de passe</label><input id="pMdp" type="password" autocomplete="off">
+  <label for="pDos">Dossier</label><input id="pDos" type="text" placeholder="Planning">
+  <label for="pCode">Code de partage</label><input id="pCode" type="text" autocomplete="off" placeholder="ABCD-EFGH-JKLM">
+  <label for="pExcl">Ne jamais conseiller d'annuler la cantine si le planning du jour contient</label>
+  <input id="pExcl" type="text" placeholder="code ou lieu de service" autocomplete="off">
+  <p class="muted" style="margin:4px 0 0;font-size:12px">Plusieurs mots séparés par des virgules (codes de service, lieux…).</p>
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-ghost" id="pClose" type="button">Fermer</button>
+    <button class="btn btn-primary" id="pSave" type="button" style="padding:12px">Enregistrer</button>
+  </div>
+  <p style="text-align:center;margin:12px 0 0"><a href="#" id="pForget" class="muted">Supprimer le lien</a></p>
+</div></div>
+
+<div class="overlay" id="cConfirm"><div class="sheet">
+  <h3>Valider les changements ?</h3>
+  <p id="cConfText" style="white-space:pre-line"></p>
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-ghost" id="cConfNo" type="button">Retour</button>
+    <button class="btn btn-primary" id="cConfYes" type="button" style="padding:12px">Confirmer</button>
+  </div>
+</div></div>
+
+<main id="form" class="hidden">
+  <!-- Favoris -->
+  <section class="card" id="favCard">
+    <h2>Mes trajets favoris <small>1 touche pour remplir</small></h2>
+    <div class="chips" id="favs"></div>
+    <p class="muted" id="favEmpty">Aucun favori. Remplis un trajet puis touche « Enregistrer ce trajet ».</p>
+  </section>
+
+  <!-- 1 - Identité -->
+  <section class="card">
+    <h2>1 · Voyageurs</h2>
+    <p id="idSum" style="margin:0"></p>
+    <div id="extras"></div>
+    <div style="margin-top:12px"><button class="btn btn-ghost btn-small" id="addPers" type="button">+ Ajouter une personne</button></div>
+  </section>
+
+  <!-- 2 - Prise en charge -->
+  <section class="card">
+    <h2>2 · Votre trajet</h2>
+    <label for="date">Date du SAD *</label><input id="date" type="date">
+    <label for="ligne">Ligne *</label><select id="ligne" disabled></select>
+
+    <div class="row">
+      <div><label for="aDep">Arrêt de prise en charge</label><select id="aDep" disabled></select></div>
+      <div class="narrow"><label for="aDepT">Horaire</label><select id="aDepT" disabled></select></div>
+    </div>
+    <div class="row">
+      <div><label for="aDst">Arrêt de destination</label><select id="aDst" disabled></select></div>
+      <div class="narrow"><label for="aDstT">Horaire</label><select id="aDstT" disabled></select></div>
+    </div>
+
+    <label class="check hidden" id="retourRow"><input type="checkbox" id="retour" disabled> Réserver le retour</label>
+    <div id="retourBox" class="hidden">
+      <div class="row">
+        <div><label for="rDep">Retour : prise en charge</label><select id="rDep"></select></div>
+        <div class="narrow"><label for="rDepT">Horaire</label><select id="rDepT"></select></div>
+      </div>
+      <div class="row">
+        <div><label for="rDst">Retour : destination</label><select id="rDst"></select></div>
+        <div class="narrow"><label for="rDstT">Horaire</label><select id="rDstT"></select></div>
+      </div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-ghost btn-small" id="saveFav" type="button">★ Enregistrer ce trajet</button></div>
+  </section>
+
+  <section class="card">
+    <label class="check"><input type="checkbox" id="reglement"> <span>J'ai lu et j'accepte le <a href="https://ardenne-metropole-tad.nuamouv.com/Reglement.pdf" target="_blank">règlement</a>.</span></label>
+    <div id="err" class="alert alert-err hidden"></div>
+  </section>
+</main>
+
+<main id="doneView" class="hidden">
+  <section class="card done">
+    <div class="big">✅</div>
+    <h2 style="justify-content:center">Demande envoyée</h2>
+    <p>Votre demande a bien été transmise. Attention : une réservation par internet doit être <b>confirmée par l'équipe TAC</b> pour être réalisée.</p>
+    <button class="btn btn-primary" id="newReq" type="button">Nouvelle demande</button>
+  </section>
+</main>
+
+<div class="footer hidden" id="footer"><div class="inner">
+  <button class="btn btn-primary" id="send" type="button">Vérifier et envoyer</button>
+</div></div>
+
+<div class="overlay" id="confirm"><div class="sheet">
+  <h3>Confirmer la demande</h3>
+  <dl class="sum" id="sum"></dl>
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-ghost" id="cancel" type="button">Modifier</button>
+    <button class="btn btn-primary" id="go" type="button" style="padding:12px">Envoyer</button>
+  </div>
+</div></div>
+
+<div class="loading" id="loading"><div class="spinner"></div></div>
+
+<script>
+(function(){
+"use strict";
+var API = window.Android ? "https://ardenne-metropole-tad.nuamouv.com/api" : "/api";
+/* Réglages personnels : prénoms, trajet de bus, portail cantine — gardés UNIQUEMENT sur le téléphone */
+window.perso = function(){
+  var o = {};
+  try{ o = JSON.parse((window.Android ? window.Android.getPref("perso") : localStorage.getItem("perso")) || "{}") || {}; }catch(e){}
+  o.route = o.route || {};
+  return o;
+};
+window.kidBus = function(){ return window.perso().busKid || ""; };
+window.kidsCov = function(){ return window.perso().covKids || "les enfants"; };
+/* Certificat du NAS non reconnu par Android : proposer d'y faire confiance (comme Planning Commandes) */
+window.offerTrust = function(r, retry){
+  if(!r || !r.certificat || !r.serveur || !window.Android || !window.Android.trustCertificate) return false;
+  var ok = confirm("Ton Synology utilise un certificat qu'Android ne reconnaît pas (souvent le certificat d'origine du NAS).\n\n" +
+    "Empreinte du certificat :\n" + r.certificat + "\n\n" +
+    "Si c'est bien ton NAS (même empreinte que celle acceptée dans Planning Commandes), faire confiance à CE certificat ?\n" +
+    "Seul ce certificat-là sera accepté pour " + r.serveur.replace(/^https:\/\//, "").replace(/\/$/, "") + ".");
+  if(!ok) return false;
+  window.Android.trustCertificate(r.serveur, r.certificat);
+  setTimeout(retry, 100);
+  return true;
+};
+/* Données du widget calendrier (bus, cantine, covoiturage), partagées avec l'écran d'accueil Android */
+window.widgetData = function(update){
+  var d;
+  try{ d = JSON.parse((window.Android ? window.Android.getPref("widget_cal") : localStorage.getItem("widget_cal")) || "{}"); }catch(e){ d = {}; }
+  d.cantine = d.cantine || {}; d.bus = d.bus || {};
+  update(d);
+  // on ne garde que les 60 derniers jours
+  var lim = new Date(); lim.setDate(lim.getDate() - 60); var limK = lim.toISOString().slice(0, 10);
+  ["cantine", "bus"].forEach(function(k){ Object.keys(d[k]).forEach(function(day){ if(day < limK) delete d[k][day]; }); });
+  var txt = JSON.stringify(d);
+  try{ if(window.Android){ window.Android.setPref("widget_cal", txt); if(window.Android.updateWidget) window.Android.updateWidget(); } else localStorage.setItem("widget_cal", txt); }catch(e){}
+};
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------- Réseau : pont natif Android (pas de restriction CORS) ou fetch ---------- */
+var pending = {}, seq = 0;
+window.__httpDone = function(id, status, body){
+  var p = pending[id]; delete pending[id]; if(p) p(status, body);
+};
+function http(method, path, body){
+  return new Promise(function(resolve, reject){
+    var done = function(status, text){
+      if(status >= 200 && status < 300){
+        try{ resolve(text ? JSON.parse(text) : null); }catch(e){ resolve(text); }
+      } else {
+        var e = new Error("HTTP " + status); e.status = status; e.body = text; reject(e);
+      }
+    };
+    if(window.Android){
+      var id = "r" + (++seq); pending[id] = done;
+      window.Android.request(id, method, API + path, body || "");
+    } else {
+      fetch(API + path, {method:method, headers: body ? {"Content-Type":"application/json"} : {}, body: body || undefined})
+        .then(function(r){ return r.text().then(function(t){ done(r.status, t); }); })
+        .catch(function(){ done(0, ""); });
+    }
+  });
+}
+
+/* ---------- Stockage ---------- */
+function load(k, def){
+  try{
+    var v = window.Android ? window.Android.getPref(k) : localStorage.getItem(k);
+    return v ? JSON.parse(v) : def;
+  }catch(e){ return def; }
+}
+function save(k, v){
+  var s = JSON.stringify(v);
+  try{ if(window.Android) window.Android.setPref(k, s); else localStorage.setItem(k, s); }catch(e){}
+}
+
+/* ---------- Utilitaires ---------- */
+function ymd(d){ var m = "" + (d.getMonth()+1), j = "" + d.getDate(); return d.getFullYear() + "-" + (m.length<2?"0"+m:m) + "-" + (j.length<2?"0"+j:j); }
+function hm(t){ if(!t) return ""; var p = t.split(":"); return p[0] + "h" + p[1]; }
+function mins(t){ var p = t.split(":").map(Number); return p[0]*60 + p[1] + (p[2]||0)/60; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function busy(on){ $("loading").classList.toggle("show", !!on); }
+function showErr(msg){ var e = $("err"); e.textContent = msg || ""; e.classList.toggle("hidden", !msg); if(msg) e.scrollIntoView({behavior:"smooth", block:"center"}); }
+
+/* ---------- État (reprend la logique du site officiel) ---------- */
+/* Trajet fixe : seule cette ligne et ces deux arrêts sont proposés */
+var FIXED = window.perso().route;   // trajet habituel choisi dans ⚙️ Réglages (vide = toutes les lignes)
+window.reloadRoute = function(){ FIXED = window.perso().route; $("retourRow").classList.toggle("hidden", !!FIXED.dep); if($("date").value) loadRoutes(); };
+var routes = [], stoptimes = [], route = null, retourOn = false;
+function blank(){ return {depart:{stopId:null, stopTime:null}, destination:{stopId:null, stopTime:null}}; }
+var aller = blank(), ret = blank();
+var extras = load("extras", []);
+
+function sameDir(z, ee){ return (z.directionId === route.directionId) === ee; }
+
+// Arrêts de prise en charge
+function departStops(ee){
+  if(!route) return [];
+  var seen = [], list = [], maxSeq = {};
+  stoptimes.forEach(function(z){
+    if(sameDir(z, ee)){ var w = parseInt(z.stopSequence); if(!maxSeq[z.stopId] || maxSeq[z.stopId] < w) maxSeq[z.stopId] = w; }
+  });
+  stoptimes.forEach(function(z){ if(seen.indexOf(z.stopId) < 0){ seen.push(z.stopId); list.push(z); } });
+  if(FIXED.dep) return list.filter(function(z){ return z.stopId === FIXED.dep; });
+  return list.sort(function(a, b){ return maxSeq[a.stopId] && maxSeq[b.stopId] ? maxSeq[a.stopId] - maxSeq[b.stopId] : 0; });
+}
+// Horaires de prise en charge
+function departTimes(ee){
+  var R = ee ? aller : ret;
+  if(!R.depart.stopId) return [];
+  var seenT = {};
+  return stoptimes.filter(function(z){
+      if(!(sameDir(z, ee) && z.stopId === R.depart.stopId)) return false;
+      if(!FIXED.dst) return true;
+      return stoptimes.some(function(y){ return y.tripId === z.tripId && y.stopId === FIXED.dst && parseInt(y.stopSequence) > parseInt(z.stopSequence); });
+    })
+    .sort(function(a, b){ return mins(a.departureTime) - mins(b.departureTime); })
+    .filter(function(z){ if(seenT[z.departureTime]) return false; seenT[z.departureTime] = 1; return true; });
+}
+// Arrêts de destination
+function destStops(ee){
+  var R = ee ? aller : ret;
+  if(ee && !R.depart.stopTime) return [];
+  var seen = [], list = [], minSeq = ee ? parseInt(R.depart.stopTime.stopSequence) : -1, maxSeq = {};
+  stoptimes.forEach(function(z){
+    if(sameDir(z, ee)){ var w = parseInt(z.stopSequence); maxSeq[z.stopId] = Math.max(maxSeq[z.stopId] || 0, w); }
+  });
+  stoptimes.forEach(function(z){
+    if(R.depart.stopTime && z.tripId !== R.depart.stopTime.tripId) return;
+    if(parseInt(z.stopSequence) <= minSeq || seen.indexOf(z.stopId) >= 0) return;
+    seen.push(z.stopId); list.push(z);
+  });
+  if(FIXED.dst) return list.filter(function(z){ return z.stopId === FIXED.dst; });
+  return list.sort(function(a, b){ return maxSeq[a.stopId] - maxSeq[b.stopId]; });
+}
+// Horaires de destination
+function destTimes(ee){
+  var R = ee ? aller : ret;
+  if(!R.destination.stopId || !R.depart.stopTime) return [];
+  var s = parseInt(R.depart.stopTime.stopSequence);
+  var list = stoptimes.filter(function(z){
+    return sameDir(z, ee) && z.tripId === R.depart.stopTime.tripId && parseInt(z.stopSequence) > s && z.stopId === R.destination.stopId;
+  });
+  list.sort(function(a, b){ return mins(a.departureTime) - mins(b.departureTime); });
+  if(list.length === 1) R.destination.stopTime = list[0];
+  return list;
+}
+
+/* ---------- Affichage des listes ---------- */
+function fill(sel, items, label, isSel, placeholder){
+  var html = '<option value="">' + esc(placeholder) + '</option>', chosen = -1;
+  items.forEach(function(it, i){
+    if(isSel(it)) chosen = i;
+    html += '<option value="' + i + '">' + esc(label(it)) + '</option>';
+  });
+  sel.innerHTML = html; sel.value = chosen >= 0 ? String(chosen) : ""; sel._items = items;
+}
+function sameSt(a, b){ return a && b && a.tripId === b.tripId && a.stopId === b.stopId && a.stopSequence === b.stopSequence; }
+
+function renderTrip(ee, pre){
+  var R = ee ? aller : ret;
+  var ds = departStops(ee);
+  if(!R.depart.stopId && ds.length === 1) R.depart.stopId = ds[0].stopId;
+  var dt = departTimes(ee);
+  if(!R.depart.stopTime && dt.length === 1) R.depart.stopTime = dt[0];
+  if(R.depart.stopTime && !dt.some(function(x){ return sameSt(x, R.depart.stopTime); })) R.depart.stopTime = null;
+  var as = destStops(ee);
+  if(!R.destination.stopId && as.length === 1) R.destination.stopId = as[0].stopId;
+  var at = destTimes(ee);
+  if(R.destination.stopTime && !at.some(function(x){ return sameSt(x, R.destination.stopTime); })) R.destination.stopTime = null;
+  fill($(pre+"Dep"), ds, function(x){ return x.name; }, function(x){ return x.stopId === R.depart.stopId; }, "Choisir l'arrêt");
+  fill($(pre+"DepT"), dt, function(x){ return hm(x.departureTime); }, function(x){ return sameSt(x, R.depart.stopTime); }, "--");
+  fill($(pre+"Dst"), as, function(x){ return x.name; }, function(x){ return x.stopId === R.destination.stopId; }, R.depart.stopTime || !ee ? "Choisir l'arrêt" : "Choisir d'abord l'horaire");
+  fill($(pre+"DstT"), at, function(x){ return hm(x.departureTime); }, function(x){ return sameSt(x, R.destination.stopTime); }, "--");
+}
+function render(){
+  var on = !!($("date").value && route);
+  ["aDep","aDepT","aDst","aDstT","retour"].forEach(function(id){ $(id).disabled = !on; });
+  renderTrip(true, "a");
+  $("retour").checked = retourOn;
+  $("retourBox").classList.toggle("hidden", !retourOn);
+  if(retourOn) renderTrip(false, "r");
+}
+
+/* ---------- Chargement des lignes / horaires ---------- */
+function loadRoutes(){
+  var d = $("date").value;
+  route = null; stoptimes = []; aller = blank(); ret = blank(); retourOn = false;
+  $("ligne").disabled = !d;
+  if(!d){ fill($("ligne"), [], function(){}, function(){ return false; }, ""); render(); return Promise.resolve(); }
+  busy(true);
+  return http("GET", "/tad/routes/" + d).then(function(data){
+    routes = (data || []).filter(function(r){ return !FIXED.routeId || (r.routeId === FIXED.routeId && r.headsign === FIXED.headsign); });
+    route = FIXED.routeId ? (routes[0] || null) : null;
+    fill($("ligne"), routes, function(r){ return r.name + " vers " + r.headsign; }, function(r){ return r === route; },
+      routes.length ? "Choisir la ligne" : "La ligne ne circule pas ce jour-là");
+    if(!routes.length) showErr("Ta ligne ne circule pas le " + dateFr(d) + ". Choisis un autre jour.");
+    render();
+    if(route){ busy(false); return loadStoptimes(); }
+  }).catch(function(){ showErr("Impossible de charger les lignes. Vérifie ta connexion internet."); })
+    .then(function(){ busy(false); });
+}
+function loadStoptimes(){
+  aller = blank(); ret = blank(); retourOn = false; stoptimes = [];
+  if(!route){ render(); return Promise.resolve(); }
+  busy(true);
+  return http("GET", "/tad/stoptimes/" + encodeURIComponent(route.routeId) + "/" + $("date").value).then(function(data){
+    stoptimes = data || []; render();
+  }).catch(function(){ showErr("Impossible de charger les horaires de la ligne."); })
+    .then(function(){ busy(false); });
+}
+
+/* ---------- Événements du formulaire ---------- */
+function pick(sel){ var i = sel.value; return i === "" ? null : sel._items[+i]; }
+$("date").addEventListener("change", function(){ showErr(""); loadRoutes(); });
+$("ligne").addEventListener("change", function(){ showErr(""); route = pick(this); loadStoptimes(); });
+function bindTrip(ee, pre){
+  var R = function(){ return ee ? aller : ret; };
+  $(pre+"Dep").addEventListener("change", function(){ var x = pick(this); R().depart.stopId = x ? x.stopId : null; R().depart.stopTime = null; render(); });
+  $(pre+"DepT").addEventListener("change", function(){ R().depart.stopTime = pick(this); if(ee){ R().destination.stopId = null; R().destination.stopTime = null; } render(); });
+  $(pre+"Dst").addEventListener("change", function(){ var x = pick(this); R().destination.stopId = x ? x.stopId : null; R().destination.stopTime = null; render(); });
+  $(pre+"DstT").addEventListener("change", function(){ R().destination.stopTime = pick(this); render(); });
+}
+bindTrip(true, "a"); bindTrip(false, "r");
+$("retour").addEventListener("change", function(){
+  retourOn = this.checked; ret = blank();
+  if(retourOn){ ret.depart.stopId = aller.destination.stopId; ret.destination.stopId = aller.depart.stopId; }
+  render();
+});
+
+/* ---------- Identité + personnes supplémentaires ---------- */
+var profile = load("profile", {});
+["nom","prenom","tel","email"].forEach(function(k){
+  $(k).value = profile[k] || "";
+  $(k).addEventListener("input", function(){ profile[k] = this.value.trim(); save("profile", profile); });
+});
+function renderExtras(){
+  var box = $("extras"); box.innerHTML = "";
+  extras.forEach(function(p, i){
+    var d = document.createElement("div"); d.className = "extra";
+    d.innerHTML = '<div class="row"><div><label>Nom *</label><input type="text" data-k="nom"></div>' +
+      '<div><label>Prénom *</label><input type="text" data-k="prenom"></div></div>' +
+      '<button type="button" class="btn btn-link">Retirer cette personne</button>';
+    d.querySelectorAll("input").forEach(function(inp){
+      inp.value = p[inp.dataset.k] || "";
+      inp.addEventListener("input", function(){ p[inp.dataset.k] = inp.value.trim(); save("extras", extras); });
+    });
+    d.querySelector("button").addEventListener("click", function(){ extras.splice(i, 1); save("extras", extras); renderExtras(); });
+    box.appendChild(d);
+  });
+}
+$("addPers").addEventListener("click", function(){ extras.push({nom:"", prenom:""}); save("extras", extras); renderExtras(); });
+renderExtras();
+
+/* ---------- Favoris ---------- */
+var favs = load("favs", []);
+function snapTrip(R){
+  return {dep: R.depart.stopId, depTime: R.depart.stopTime && R.depart.stopTime.departureTime,
+          dst: R.destination.stopId, dstTime: R.destination.stopTime && R.destination.stopTime.arrivalTime};
+}
+function renderFavs(){
+  var box = $("favs"); box.innerHTML = "";
+  $("favEmpty").classList.toggle("hidden", favs.length > 0);
+  favs.forEach(function(f, i){
+    var c = document.createElement("div"); c.className = "chip";
+    c.innerHTML = '<button type="button">' + esc(f.label) + '</button><button type="button" class="x" aria-label="Supprimer">✕</button>';
+    c.children[0].addEventListener("click", function(){ applyFav(f); });
+    c.children[1].addEventListener("click", function(){
+      if(confirm("Supprimer le favori « " + f.label + " » ?")){ favs.splice(i, 1); save("favs", favs); renderFavs(); }
+    });
+    box.appendChild(c);
+  });
+}
+$("saveFav").addEventListener("click", function(){
+  if(!route || !aller.depart.stopTime || !aller.destination.stopTime){ showErr("Remplis d'abord la ligne, les arrêts et les horaires de l'aller."); return; }
+  var def = aller.depart.stopTime.name + " → " + aller.destination.stopTime.name + " " + hm(aller.depart.stopTime.departureTime);
+  var label = prompt("Nom du favori :", def);
+  if(!label) return;
+  favs.push({label: label, routeId: route.routeId, directionId: route.directionId, aller: snapTrip(aller), retour: retourOn ? snapTrip(ret) : null});
+  save("favs", favs); renderFavs(); showErr("");
+});
+function applyTrip(R, ee, s){
+  R.depart.stopId = s.dep;
+  R.depart.stopTime = departTimes(ee).filter(function(x){ return x.departureTime === s.depTime; })[0] || null;
+  R.destination.stopId = s.dst;
+  R.destination.stopTime = null;
+  var at = destTimes(ee);
+  if(!R.destination.stopTime) R.destination.stopTime = at.filter(function(x){ return x.arrivalTime === s.dstTime; })[0] || null;
+}
+function applyFav(f){
+  showErr("");
+  var p = $("date").value ? Promise.resolve() : (function(){
+    var t = new Date(); t.setDate(t.getDate() + 1); $("date").value = ymd(t); return loadRoutes();
+  })();
+  p.then(function(){
+    var idx = -1;
+    routes.forEach(function(r, i){ if(idx < 0 && r.routeId === f.routeId && r.directionId === f.directionId) idx = i; });
+    if(idx < 0) routes.forEach(function(r, i){ if(idx < 0 && r.routeId === f.routeId) idx = i; });
+    if(idx < 0){ showErr("La ligne de ce favori ne circule pas le " + $("date").value + ". Choisis une autre date."); return; }
+    $("ligne").value = String(idx); route = routes[idx];
+    return loadStoptimes().then(function(){
+      applyTrip(aller, true, f.aller);
+      if(f.retour){ retourOn = true; ret = blank(); applyTrip(ret, false, f.retour); }
+      render();
+      if(!aller.depart.stopTime || !aller.destination.stopTime || (f.retour && (!ret.depart.stopTime || !ret.destination.stopTime)))
+        showErr("Certains horaires de ce favori n'existent pas ce jour-là : vérifie les listes.");
+    });
+  });
+}
+renderFavs();
+
+/* ---------- Validation + envoi ---------- */
+function tripPayload(R){
+  return {routeId: route.routeId, tripId: R.destination.stopTime.tripId,
+    departStopId: R.depart.stopId, horaireDepart: R.depart.stopTime.departureTime,
+    destinationStopId: R.destination.stopId, horaireDestination: R.destination.stopTime.arrivalTime,
+    departLatitude: R.depart.stopTime.latitude, departLongitude: R.depart.stopTime.longitude,
+    destinationLatitude: R.destination.stopTime.latitude, destinationLongitude: R.destination.stopTime.longitude};
+}
+function validate(){
+  var n = $("nom").value.trim(), p = $("prenom").value.trim(), t = $("tel").value.trim(), e = $("email").value.trim();
+  if(!n || !p || !t || !e) return "Remplis ton nom, prénom, téléphone et email dans ⚙️ Réglages.";
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return "L'adresse email ne semble pas valide.";
+  for(var i = 0; i < extras.length; i++) if(!extras[i].nom || !extras[i].prenom) return "Remplis le nom et prénom de chaque personne ajoutée (ou retire-la).";
+  if(!$("date").value) return "Choisis la date.";
+  if(!route) return "Choisis la ligne.";
+  if(!aller.depart.stopTime || !aller.destination.stopTime) return "Choisis les arrêts et horaires de l'aller.";
+  if(retourOn && (!ret.depart.stopTime || !ret.destination.stopTime)) return "Choisis les arrêts et horaires du retour (ou décoche le retour).";
+  if(!$("reglement").checked) return "Coche la case d'acceptation du règlement.";
+  return null;
+}
+function buildPayload(){
+  return {demandeAgence: false, jour: $("date").value,
+    trajetAller: tripPayload(aller), trajetRetour: retourOn ? tripPayload(ret) : null,
+    usagers: [{nom: $("nom").value.trim(), prenom: $("prenom").value.trim(), emailContact: $("email").value.trim(), telContact: $("tel").value.trim()}]
+      .concat(extras.map(function(x){ return {nom: x.nom, prenom: x.prenom}; }))};
+}
+function dateFr(d){ var p = d.split("-"); var dt = new Date(+p[0], +p[1]-1, +p[2]); return dt.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"}); }
+function tripText(R){ return R.depart.stopTime.name + " à " + hm(R.depart.stopTime.departureTime) + " → " + R.destination.stopTime.name + " à " + hm(R.destination.stopTime.arrivalTime); }
+
+$("send").addEventListener("click", function(){
+  var m = validate(); showErr(m); if(m) return;
+  var pers = [$("prenom").value.trim() + " " + $("nom").value.trim()].concat(extras.map(function(x){ return x.prenom + " " + x.nom; }));
+  $("sum").innerHTML =
+    "<dt>Date</dt><dd>" + esc(dateFr($("date").value)) + "</dd>" +
+    "<dt>Ligne</dt><dd>" + esc(route.name + " vers " + route.headsign) + "</dd>" +
+    "<dt>Aller</dt><dd>" + esc(tripText(aller)) + "</dd>" +
+    (retourOn ? "<dt>Retour</dt><dd>" + esc(tripText(ret)) + "</dd>" : "") +
+    "<dt>Voyageur(s)</dt><dd>" + esc(pers.join(", ")) + "</dd>" +
+    "<dt>Contact</dt><dd>" + esc($("tel").value.trim() + " · " + $("email").value.trim()) + "</dd>";
+  $("confirm").classList.add("show");
+});
+$("cancel").addEventListener("click", function(){ $("confirm").classList.remove("show"); });
+$("go").addEventListener("click", function(){
+  $("confirm").classList.remove("show");
+  busy(true);
+  var sent = buildPayload();
+  http("POST", "/demande-tad", JSON.stringify(sent)).then(function(){
+    window.widgetData(function(d){
+      d.bus[sent.jour] = {aller: hm(sent.trajetAller.horaireDepart), retour: sent.trajetRetour ? hm(sent.trajetRetour.horaireDepart) : null};
+    });
+    $("form").classList.add("hidden"); $("footer").classList.add("hidden"); $("doneView").classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }).catch(function(e){
+    if(e.status === 400) showErr(String(e.body || "Demande refusée par le serveur."));
+    else if(!e.status) showErr("Pas de connexion internet : la demande n'a pas été envoyée.");
+    else showErr("Erreur du serveur (" + e.status + "). La demande n'a pas été envoyée, réessaie plus tard.");
+  }).then(function(){ busy(false); });
+});
+$("newReq").addEventListener("click", function(){
+  $("doneView").classList.add("hidden"); $("form").classList.remove("hidden"); $("footer").classList.remove("hidden");
+  $("reglement").checked = false; showErr(""); loadRoutes();
+});
+
+/* ---------- Dates autorisées : aujourd'hui → +3 mois ---------- */
+var now = new Date(), max = new Date(); max.setMonth(max.getMonth() + 3);
+$("date").min = ymd(now); $("date").max = ymd(max);
+render();
+
+/* ---------- Navigation entre les parties (bouton retour Android compris) ---------- */
+var VIEWS = {
+  "": {title: "Gestion administrative enfants", sub: "Cantine, bus et covoiturage", show: ["home"]},
+  "bus": {title: "Bus", sub: "Demande de transport", show: ["form", "footer"]},
+  "cantine": {title: "Cantine", sub: "Réservations des repas", show: ["cantine"]},
+  "covoit": {title: "Covoiturage", sub: "Qui va les chercher ?", show: ["covoit"]},
+  "reglages": {title: "Réglages", sub: "Tous les réglages de l'appli", show: ["reglages"]}
+};
+function route_(){
+  var key = location.hash.replace("#", "");
+  var v = VIEWS[key] || VIEWS[""];
+  ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
+  var sub = v.sub, P = window.perso();
+  if(key === "bus" && P.route.label) sub = P.route.label;
+  if(key === "covoit" && P.covKids) sub = "Récupérer " + P.covKids;
+  $("title").textContent = v.title; $("subtitle").textContent = sub;
+  $("back").classList.toggle("hidden", !VIEWS[key] || key === "");
+  $("gear").classList.toggle("hidden", key === "reglages");
+  setTimeout(function(){ window.scrollTo(0, 0); }, 0);   // le navigateur saute sinon vers l'élément du même nom
+  if(key === "bus") idSummary();
+  if(key === "reglages"){ refreshSettings(); persoFill(); }
+  if(key === "") renderToday();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("[data-go]").forEach(function(b){
+  b.addEventListener("click", function(){ location.hash = b.getAttribute("data-go"); });
+});
+$("back").addEventListener("click", function(){ history.back(); });
+$("gear").addEventListener("click", function(){ location.hash = "reglages"; });
+function idSummary(){
+  var n = ($("prenom").value + " " + $("nom").value).trim(), c = [$("tel").value, $("email").value].filter(Boolean).join(" · ");
+  $("idSum").innerHTML = n ? "👤 " + esc(n) + (c ? '<br><small class="muted">' + esc(c) + "</small>" : "") + ' <a href="#reglages">modifier</a>'
+    : '<span style="color:var(--danger)">Ton identité n\'est pas encore remplie.</span> <a href="#reglages">La remplir dans Réglages</a>';
+}
+/* Page Réglages : état de chaque partie, et boutons vers leurs réglages */
+function refreshSettings(){
+  var A = window.Android;
+  var saved = A && A.hasSavedLogin && A.hasSavedLogin();
+  $("rgPortal").textContent = saved ? "Identifiants enregistrés : l'appli se reconnecte toute seule." : "Enregistre ton identifiant et ton mot de passe : l'appli se connectera toute seule.";
+  $("rgForget").classList.toggle("hidden", !saved);
+  if(A && A.savedLoginName && document.activeElement !== $("rgUser")) $("rgUser").value = A.savedLoginName();
+  $("rgPass").value = ""; $("rgPass").placeholder = saved ? "enregistré (laisser vide pour le garder)" : "";
+  var hasPlan = A && A.hasPlanningLink && A.hasPlanningLink();
+  $("rgPlanCard").classList.toggle("hidden", !hasPlan);
+  if(hasPlan){ var ps = {}; try{ ps = JSON.parse(A.planningSettings()); }catch(e){}
+    $("rgPlan").textContent = ps.actif ? "Relié à Planning Commandes (" + (ps.adresse || "") + ", dossier " + (ps.dossier || "") + ")." : "Pas encore relié.";
+    $("rgPlanBtn").textContent = ps.actif ? "Modifier" : "Relier à Planning Commandes"; }
+  var cs = {}; try{ cs = JSON.parse(A.carpoolSettings()); }catch(e){}
+  $("rgCov").textContent = cs.actif ? "Activé · tu apparais comme « " + (cs.nom || "?") + " »." : "Pas encore réglé.";
+  $("rgCovBtn").textContent = cs.actif ? "Modifier" : "Régler le covoiturage";
+  var nw = A && A.widgetCount ? A.widgetCount() : 0, wb = $("rgWidBtns");
+  wb.innerHTML = "";
+  $("rgWid").textContent = nw ? (nw === 1 ? "Un widget est posé sur ton écran d'accueil." : nw + " widgets sont posés sur ton écran d'accueil.")
+    : "Aucun widget posé. Pour l'ajouter : appui long sur un espace vide de l'écran d'accueil › Widgets › Gestion… › « Ma famille ». Ses réglages s'ouvrent alors tout seuls.";
+  for(var wi = 0; wi < nw; wi++){
+    (function(k){
+      var b = document.createElement("button"); b.type = "button"; b.className = "btn btn-ghost btn-small"; b.style.marginRight = "6px";
+      b.textContent = nw === 1 ? "Personnaliser le widget" : "Personnaliser le widget " + (k + 1);
+      b.addEventListener("click", function(){ A.configureWidget(k); });
+      wb.appendChild(b);
+    })(wi);
+  }
+}
+window.refreshSettings = refreshSettings;
+
+/* ---------- Mes enfants et trajets (réglages personnels) ---------- */
+var psRoutes = [], psStops = [];
+function savePerso(o){ var t = JSON.stringify(o); try{ if(window.Android) window.Android.setPref("perso", t); else localStorage.setItem("perso", t); }catch(e){}
+  try{ if(window.Android && window.Android.persoChanged) window.Android.persoChanged(); }catch(e){} }
+function nextSchoolDay(){ var d = new Date(); d.setDate(d.getDate() + 1); while(d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); return ymd(d); }
+function persoFill(){
+  var P = window.perso();
+  $("psBusKid").value = P.busKid || ""; $("psCovKids").value = P.covKids || ""; $("psPortal").value = P.portal || "";
+  $("psRouteNow").textContent = P.route.label ? "Actuel : " + P.route.label : "Aucun : la demande de bus propose toutes les lignes.";
+  if(psRoutes.length) return;
+  http("GET", "/tad/routes/" + nextSchoolDay()).then(function(data){
+    psRoutes = data || [];
+    var h = '<option value="">Choisir la ligne…</option>';
+    psRoutes.forEach(function(r, i){ h += '<option value="' + i + '">' + esc(r.name + " vers " + r.headsign) + '</option>'; });
+    $("psLine").innerHTML = h;
+  }).catch(function(){ $("psRouteNow").textContent += " (liste des lignes indisponible : pas de connexion ?)"; });
+}
+$("psLine").addEventListener("change", function(){
+  var r = psRoutes[+this.value]; psStops = [];
+  $("psDep").innerHTML = '<option value="">Arrêt de départ</option>'; $("psDst").innerHTML = '<option value="">Arrêt d\'arrivée</option>';
+  if(!r) return;
+  http("GET", "/tad/stoptimes/" + encodeURIComponent(r.routeId) + "/" + nextSchoolDay()).then(function(st){
+    var seq = {};
+    (st || []).forEach(function(z){ if(z.directionId === r.directionId){ var q = parseInt(z.stopSequence); if(!(z.stopId in seq) || q < seq[z.stopId].q) seq[z.stopId] = {q: q, name: z.name, id: z.stopId}; } });
+    psStops = Object.keys(seq).map(function(k){ return seq[k]; }).sort(function(a, b){ return a.q - b.q; });
+    var h = ""; psStops.forEach(function(x, i){ h += '<option value="' + i + '">' + esc(x.name) + '</option>'; });
+    $("psDep").innerHTML = '<option value="">Arrêt de départ</option>' + h; $("psDst").innerHTML = '<option value="">Arrêt d\'arrivée</option>' + h;
+  });
+});
+$("psSave").addEventListener("click", function(){
+  var P = window.perso();
+  P.busKid = $("psBusKid").value.trim(); P.covKids = $("psCovKids").value.trim();
+  var url = $("psPortal").value.trim();
+  if(url && !/^https:\/\//i.test(url)){ alert("L'adresse du portail doit commencer par https://"); return; }
+  if(url){ url = url.replace(/[?#].*$/, ""); var m = url.match(/^(https:\/\/[^\/]+\/[^\/]+\/)/); if(m) url = m[1]; }
+  P.portal = url;
+  var r = psRoutes[+$("psLine").value], dep = psStops[+$("psDep").value], dst = psStops[+$("psDst").value];
+  if($("psLine").value !== "" ){
+    if($("psDep").value === "" || $("psDst").value === "" || !dep || !dst){ alert("Choisis aussi l'arrêt de départ et l'arrêt d'arrivée."); return; }
+    if(dst.q <= dep.q){ alert("L'arrêt d'arrivée doit venir après l'arrêt de départ sur cette ligne."); return; }
+    P.route = {routeId: r.routeId, headsign: r.headsign, name: r.name, dep: dep.id, dst: dst.id,
+      label: r.name + " · " + dep.name.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); }) + " → " + dst.name.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); })};
+  }
+  savePerso(P); persoFill(); persoTiles(); if(window.reloadRoute) window.reloadRoute();
+  alert("Enregistré sur ce téléphone.");
+});
+$("psNoRoute").addEventListener("click", function(){
+  var P = window.perso(); P.route = {}; savePerso(P); persoFill(); persoTiles(); if(window.reloadRoute) window.reloadRoute();
+});
+function persoTiles(){
+  var P = window.perso();
+  $("tileBus").textContent = P.route.label ? P.route.name + (P.busKid ? " pour " + P.busKid : "") : (P.busKid ? "Pour " + P.busKid : "Demande de transport");
+  $("tileCov").textContent = P.covKids ? "Covoiturage pour " + P.covKids : "Covoiturage";
+}
+persoTiles();
+
+/* ---------- Réponses du portail cantine (acceptée / refusée) ---------- */
+window.showNews = function(list){
+  if(!list || !list.length) return;
+  var box = $("newsList");
+  list.forEach(function(t){ var p = document.createElement("p"); p.textContent = t; box.appendChild(p); });
+  $("newsBox").classList.add("show");
+};
+$("newsOk").addEventListener("click", function(){ $("newsBox").classList.remove("show"); $("newsList").innerHTML = ""; renderToday(); });
+window.checkNews = function(){
+  try{ if(window.Android && window.Android.cantineNews) window.showNews(JSON.parse(window.Android.cantineNews())); }catch(e){}
+  if(location.hash === "" || location.hash === "#") renderToday();
+};
+setTimeout(window.checkNews, 600);
+
+/* ---------- Couleurs de l'appli ---------- */
+var THEMES = [
+  {id: "menthe", nom: "Menthe", a: "#0E8A6A", b: "#E8962E", bar: "#0E8A6A"},
+  {id: "ocean", nom: "Océan", a: "#1C67B0", b: "#E9A23B", bar: "#1C67B0"},
+  {id: "prune", nom: "Prune", a: "#7B3FA0", b: "#E0873A", bar: "#7B3FA0"},
+  {id: "corail", nom: "Corail", a: "#D8465F", b: "#2E77C9", bar: "#D8465F"},
+  {id: "ardoise", nom: "Ardoise", a: "#1C2229", b: "#46C99D", bar: "#46C99D"}
+];
+function applyTheme(id){
+  var t = THEMES.filter(function(x){ return x.id === id; })[0] || THEMES[0];
+  document.documentElement.setAttribute("data-theme", t.id);
+  try{ if(window.Android && window.Android.setBarColor) window.Android.setBarColor(t.bar); }catch(e){}
+  var box = $("swatches"); box.innerHTML = "";
+  THEMES.forEach(function(x){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "swatch" + (x.id === t.id ? " on" : "");
+    b.setAttribute("aria-pressed", x.id === t.id ? "true" : "false");
+    b.innerHTML = '<i style="--a:' + x.a + ';--b:' + x.b + '"></i>' + x.nom;
+    b.addEventListener("click", function(){ save("theme", x.id); applyTheme(x.id); });
+    box.appendChild(b);
+  });
+}
+applyTheme(load("theme", "menthe"));
+
+/* ---------- Accueil : la journée en un coup d'œil ---------- */
+function renderToday(){
+  var w = load("widget_cal", {}) || {};
+  var d = new Date(), rel;
+  if(d.getHours() >= 18){ d.setDate(d.getDate() + 1); rel = "demain"; } else rel = "aujourd'hui";
+  while(d.getDay() === 0 || d.getDay() === 6){ d.setDate(d.getDate() + 1); rel = "prochain jour de classe"; }
+  var k = ymd(d), lines = "";
+  function line(go, cls, ico, title, sub, st, stCls){
+    return '<div class="tline" data-go="' + go + '" role="button" tabindex="0"><span class="dot ' + cls + '">' + ico + '</span>' +
+      '<span class="what"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="st ' + stCls + '">' + esc(st) + '</span></div>';
+  }
+  var c = (w.cantine || {})[k], cs = "Pas encore vu", cc = "no";
+  if(c){ var v = c[Object.keys(c)[0]]; cs = v === "ok" ? "Réservée" : v === "wait" ? "En attente" : v === "abs" ? "Absente" : "Non réservée"; cc = v === "ok" ? "ok" : v === "no" ? "warn" : "no"; }
+  var cantKid = c ? Object.keys(c)[0] : "";
+  lines += line("cantine", "c-cantine", "🍽️", "Cantine", cantKid, cs, cc);
+  var b = (w.bus || {})[k];
+  lines += line("bus", "c-bus", "🚌", "Bus", [window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · "), b ? "Demandé · " + b.aller : "Pas de demande", b ? "ok" : "no");
+  var cv = (w.covoit || {})[k], cvs = "—", cvc = "no";
+  if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
+  lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);
+  $("today").innerHTML = '<p class="when">' + esc(d.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"})) + '</p>' +
+    '<p class="rel">' + rel.charAt(0).toUpperCase() + rel.slice(1) + '</p>' + lines;
+  $("today").querySelectorAll("[data-go]").forEach(function(el){
+    el.addEventListener("click", function(){ location.hash = el.getAttribute("data-go"); });
+  });
+}
+$("rgLogin").addEventListener("click", function(){ if(window.Android && window.Android.portalLogin) window.Android.portalLogin(); });
+$("rgSaveLogin").addEventListener("click", function(){
+  var u = $("rgUser").value.trim(), pw = $("rgPass").value;
+  if(!u || (!pw && !(window.Android.hasSavedLogin && window.Android.hasSavedLogin()))){ alert("Indique ton identifiant et ton mot de passe du portail famille."); return; }
+  var ok = window.Android.saveLogin(u, pw);
+  alert(ok ? "Identifiants enregistrés. Ils sont chiffrés et gardés uniquement sur ce téléphone." : "Enregistrement impossible.");
+  refreshSettings();
+});
+$("rgForget").addEventListener("click", function(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  if(confirm("Oublier l'identifiant et le mot de passe du portail enregistrés sur ce téléphone ?")){ window.Android.forgetLogin(); refreshSettings(); }
+});
+$("rgPlanBtn").addEventListener("click", function(){ if(window.openPlanSet) window.openPlanSet(); });
+$("rgCovBtn").addEventListener("click", function(){ if(window.openCarpoolSet) window.openCarpoolSet(); });
+window.addEventListener("hashchange", route_);
+window.addEventListener("load", function(){ setTimeout(function(){ window.scrollTo(0, 0); }, 0); });
+if(window.Android && window.Android.appVersion) $("appVer").textContent = "Version " + window.Android.appVersion();
+$("checkUpd").addEventListener("click", function(ev){ ev.preventDefault(); if(window.Android && window.Android.checkUpdate) window.Android.checkUpdate(); });
+route_();
+})();
+</script>
+
+<script>
+/* ======================= PARTIE CANTINE ======================= */
+(function(){
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+var ACT = "Restauration Scolaire";
+var portalBase = (location.pathname.match(/^\/[^\/]+\//) || ["/"])[0];
+var inPortal = /^https:\/\/portail\./.test(location.origin);
+
+/* --- Réseau vers le portail (cookies de connexion gérés par l'appli Android) --- */
+var pend = {}, n = 0;
+window.__portalDone = function(id, status, url, body){ var f = pend[id]; delete pend[id]; if(f) f({status: status, url: url, body: body}); };
+function portal(method, path, body, ctype, csrf){
+  return new Promise(function(resolve){
+    if(window.Android && window.Android.portal){
+      var id = "p" + (++n); pend[id] = resolve;
+      window.Android.portal(id, method, path, body || "", ctype || "", csrf || "");
+    } else {
+      var h = {}; if(ctype) h["Content-Type"] = ctype; if(csrf) h["X-CSRF-TOKEN"] = csrf;
+      fetch(portalBase + path, {method: method, headers: h, body: body || undefined, credentials: "include"})
+        .then(function(r){ return r.text().then(function(t){ resolve({status: r.status, url: r.url, body: t}); }); })
+        .catch(function(){ resolve({status: 0, url: "", body: ""}); });
+    }
+  });
+}
+
+/* --- Lecture des créneaux dans la page Planning (sans exécuter le code du site) --- */
+function parseEvents(html){
+  var out = [], parts = html.split(/eventItem\s*=\s*\{/);
+  for(var i = 1; i < parts.length; i++){
+    var block = parts[i].split(/\};/)[0], ev = {}, m;
+    var re = /(\w+)\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|-?\d+(?:\.\d+)?|true|false|null)\s*,/g;
+    while((m = re.exec(block))){
+      var v = m[2];
+      if(v[0] === '"') v = JSON.parse(v);
+      else if(v[0] === "'") v = v.slice(1, -1);
+      else v = JSON.parse(v);
+      ev[m[1]] = v;
+    }
+    if(ev.start && ev.title) out.push(ev);
+  }
+  return out;
+}
+function csrfOf(html){ var m = html.match(/name="_csrf"\s+value="([^"]+)"/); return m ? m[1] : null; }
+
+/* --- État --- */
+var events = {}, loadedWeeks = {}, csrf = null, monday = startOfWeek(new Date()), busyC = false;
+function startOfWeek(d){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); var wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x; }
+function addDays(d, k){ var x = new Date(d); x.setDate(x.getDate() + k); return x; }
+function key(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+function frDate(d){ return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth()+1)).slice(-2) + "/" + d.getFullYear(); }
+function cap(s){ return String(s || "").toLowerCase().replace(/(^|[\s-])\S/g, function(c){ return c.toUpperCase(); }); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function err(msg){ var e = $("cErr"); e.textContent = msg || ""; e.classList.toggle("hidden", !msg); }
+function spin(on){ busyC = on; $("loading").classList.toggle("show", !!on); }
+
+function canBook(e){ var t = e.typePlanningDemande; var ok = t ? (t === "ABSENCE" || t === "INSCRIT") : (e.etatPresence === "INSCRIPTION_OK" || e.etatPresence === "ABSENCE_OK" || e.etatPresence === "ABSENCE_FACTUREE"); return ok && e.autoriseDemandeReservation; }
+function canCancel(e){ var t = e.typePlanningDemande; var ok = t ? t === "RESERVATION" : (e.etatPresence === "LISTEATTENTE_OK" || e.etatPresence === "RESERVATION_OK"); return ok && e.autoriseDemandeAbsence; }
+function status(e){
+  var t = e.typePlanningDemande;
+  if(t === "RESERVATION") return ["t-wait", "⏳ Réservation demandée", "en attente de validation"];
+  if(t === "ABSENCE") return ["t-wait", "⏳ Annulation demandée", "en attente de validation"];
+  switch(e.etatPresence){
+    case "RESERVATION_OK": return ["t-ok", "✅ Réservé", ""];
+    case "PRESENT_OK": return ["t-ok", "✅ Présent", ""];
+    case "INSCRIPTION_OK": return ["t-no", "Non réservé", ""];
+    case "ABSENCE_OK": return ["t-abs", "❌ Absent", ""];
+    case "ABSENCE_FACTUREE": return ["t-abs", "❌ Absent (facturé)", ""];
+    case "LISTEATTENTE_OK": return ["t-wait", "Liste d'attente", ""];
+    default: return ["t-no", e.etatPresence || "?", ""];
+  }
+}
+
+/* --- Chargement (le portail renvoie ~6 semaines à partir de la date demandée) --- */
+var autoTried = false;
+function needLogin(){
+  // Identifiants retenus : reconnexion automatique (une seule tentative d'affilée)
+  if(window.Android && window.Android.hasSavedLogin && window.Android.hasSavedLogin() && !autoTried){
+    autoTried = true; window.Android.portalLogin(); return;
+  }
+  $("cLogin").classList.remove("hidden"); $("cMain").classList.add("hidden"); $("cSaveBar").classList.add("hidden");
+}
+function loadFrom(mon){
+  var go = csrf ? Promise.resolve() : portal("GET", "activites/planning").then(function(r){
+    if(r.status !== 200 || r.body.indexOf("getEventsList") < 0) throw "login";
+    csrf = csrfOf(r.body); store(r.body, null);
+  });
+  return go.then(function(){
+    var body = "_csrf=" + encodeURIComponent(csrf) + "&defaultView=fiveDayGrid&defaultDate=" + encodeURIComponent(frDate(mon));
+    return portal("POST", "activites/planning", body, "application/x-www-form-urlencoded");
+  }).then(function(r){
+    if(r.status !== 200 || r.body.indexOf("getEventsList") < 0){ csrf = null; throw "login"; }
+    csrf = csrfOf(r.body) || csrf; store(r.body, mon);
+  });
+}
+function code(e){ var c = status(e)[0]; return c === "t-ok" ? "ok" : c === "t-wait" ? "wait" : c === "t-abs" ? "abs" : "no"; }
+function saveWidget(){
+  window.widgetData(function(d){
+    Object.keys(events).forEach(function(k){
+      var e = events[k], day = key(new Date(Date.parse(e.start)));
+      d.cantine[day] = d.cantine[day] || {};
+      d.cantine[day][cap(e.individu)] = code(e);
+    });
+  });
+}
+function store(html, mon){
+  var got = parseEvents(html).filter(function(e){ return e.title === ACT; });
+  got.forEach(function(e){ events[e.id] = e; });
+  // demandes en attente devenues acceptées / refusées : fenêtre d'information
+  try{
+    if(window.Android && window.Android.cantineObserve && got.length){
+      var news = JSON.parse(window.Android.cantineObserve(JSON.stringify(got.map(function(e){
+        return {id: e.id, title: e.title, start: e.start, individu: e.individu, etatPresence: e.etatPresence, typePlanningDemande: e.typePlanningDemande || ""};
+      }))));
+      if(news.length && window.showNews) window.showNews(news);
+    }
+  }catch(x){}
+  if(mon) for(var k = 0; k < 6; k++) loadedWeeks[key(addDays(mon, 7*k))] = true;
+  saveWidget();
+}
+
+/* --- Mois affiché --- */
+var month = new Date(); month = new Date(month.getFullYear(), month.getMonth(), 1);
+var changes = {};   // id de créneau -> "book" | "cancel"
+function monthWeeks(){ var w = [], m = startOfWeek(month); while(m.getMonth() === month.getMonth() || m < month){ w.push(m); m = addDays(m, 7); if(w.length > 6) break; } return w.filter(function(x){ for(var i = 0; i < 5; i++) if(addDays(x, i).getMonth() === month.getMonth()) return true; return false; }); }
+function show(force){
+  err("");
+  if(force){ loadedWeeks = {}; events = {}; changes = {}; }
+  var weeks = monthWeeks(), first = null;
+  for(var i = 0; i < weeks.length; i++) if(!loadedWeeks[key(weeks[i])]){ first = weeks[i]; break; }
+  var p = first ? (spin(true), loadFrom(first)) : Promise.resolve();
+  return p.then(function(){
+    autoTried = false;
+    $("cLogin").classList.add("hidden"); $("cMain").classList.remove("hidden"); render();
+  }).catch(function(e){
+    if(e === "login") needLogin(); else err("Impossible de joindre le portail. Vérifie ta connexion internet.");
+  }).then(function(){ spin(false); });
+}
+function byDay(){ var m = {}; Object.keys(events).forEach(function(k){ var e = events[k]; var d = key(new Date(Date.parse(e.start))); (m[d] = m[d] || []).push(e); }); return m; }
+function render(){
+  $("cMonth").textContent = month.toLocaleDateString("fr-FR", {month: "long", year: "numeric"});
+  var days = byDay(), today = key(new Date()), html = "", booked = 0, kids = {};
+  ["Lun", "Mar", "Mer", "Jeu", "Ven"].forEach(function(h){ html += '<div class="h">' + h + '</div>'; });
+  monthWeeks().forEach(function(mon){
+    for(var i = 0; i < 5; i++){
+      var d = addDays(mon, i), k = key(d), inMonth = d.getMonth() === month.getMonth();
+      if(!inMonth){ html += '<div></div>'; continue; }
+      var evs = days[k] || [], e = evs[0], cls = "cell", sub = "", tap = false;
+      if(e){
+        kids[cap(e.individu)] = 1;
+        var c = code(e), past = k < today, ch = changes[e.id];
+        if(ch === "book") c = "ok"; else if(ch === "cancel") c = "cxl";
+        if(c === "ok") booked++;
+        cls += " s-" + c + (past ? " past" : "") + (ch ? " chg" : "");
+        tap = !past && (ch || canBook(e) || canCancel(e));
+        if(tap) cls += " tap";
+        if(c === "wait") sub = "<small>attente</small>";
+        if(ch === "book") sub = "<small>réserver</small>";
+        if(ch === "cancel") sub = "<small>annuler</small>";
+      }
+      if(k === today) cls += " today";
+      html += '<button type="button" class="' + cls + '"' + (tap ? ' data-id="' + esc(e.id) + '"' : ' disabled') + '>' + d.getDate() + sub + '</button>';
+    }
+  });
+  $("cGrid").innerHTML = html;
+  $("cGrid").querySelectorAll("[data-id]").forEach(function(b){ b.addEventListener("click", function(){ toggle(b.getAttribute("data-id")); }); });
+  var who = Object.keys(kids).join(", ") || "Cantine";
+  $("cCount").textContent = who + " : " + booked + " repas réservé" + (booked > 1 ? "s" : "") + " ce mois-ci";
+  var n = Object.keys(changes).length, nb = 0, nc = 0;
+  Object.keys(changes).forEach(function(i){ if(changes[i] === "book") nb++; else nc++; });
+  var parts = [];
+  if(nb) parts.push(nb + " réservation" + (nb > 1 ? "s" : ""));
+  if(nc) parts.push(nc + " annulation" + (nc > 1 ? "s" : ""));
+  $("cSaveBar").classList.toggle("hidden", n === 0);
+  $("cSave").textContent = "Valider : " + parts.join(", ");
+  $("cHint").classList.toggle("hidden", n > 0);
+  if(typeof renderPlan === "function") renderPlan();
+}
+function toggle(id){
+  var e = events[id]; if(!e) return;
+  if(changes[id]) delete changes[id];
+  else if(canBook(e)) changes[id] = "book";
+  else if(canCancel(e)) changes[id] = "cancel";
+  render();
+}
+
+/* --- Envoi des changements --- */
+function dayTxt(e){ return new Date(Date.parse(e.start)).toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"}); }
+$("cSave").addEventListener("click", function(){
+  var ids = Object.keys(changes); if(!ids.length) return;
+  var b = ids.filter(function(i){ return changes[i] === "book"; }).map(function(i){ return events[i]; });
+  var c = ids.filter(function(i){ return changes[i] === "cancel"; }).map(function(i){ return events[i]; });
+  var txt = "";
+  if(b.length) txt += "Réserver : " + b.map(dayTxt).join(", ") + "\n";
+  if(c.length) txt += "Annuler : " + c.map(dayTxt).join(", ");
+  $("cConfText").textContent = txt.trim();
+  $("cConfYes").textContent = c.length && !b.length ? "Confirmer l'annulation" : "Confirmer";
+  $("cConfirm").classList.add("show");
+});
+$("cConfNo").addEventListener("click", function(){ $("cConfirm").classList.remove("show"); });
+$("cConfYes").addEventListener("click", function(){
+  $("cConfirm").classList.remove("show");
+  var ids = Object.keys(changes); spin(true); err("");
+  var fails = [], chain = Promise.resolve();
+  ids.forEach(function(id){
+    var e = events[id], kind = changes[id];
+    chain = chain.then(function(){
+      var data = {idPlanning: e.idPlanning == null ? null : parseInt(e.idPlanning), idInscription: parseInt(e.idInscription),
+        dateDebut: Date.parse(e.start) / 1000, dateFin: Date.parse(e.end || e.start) / 1000, raison: kind === "book" ? null : ""};
+      return portal("POST", "activites/" + (kind === "book" ? "createOneDemandeReservation" : "requestAbsence"), JSON.stringify(data), "application/json; charset=utf-8", csrf)
+        .then(function(r){
+          if(r.status >= 200 && r.status < 300){
+            delete changes[id];
+            try{ var j = JSON.parse(r.body); if(j && j.id && events[j.id]){ events[j.id].etatPresence = j.etatPresence; events[j.id].typePlanningDemande = j.typePlanningDemande || ""; events[j.id].idPlanning = j.idPlanning; } }catch(x){}
+          } else fails.push(dayTxt(e) + " : " + reason(r));
+        });
+    });
+  });
+  chain.then(function(){ return new Promise(function(res){ setTimeout(res, 2500); }); })
+  .then(function(){ var keep = changes; loadedWeeks = {}; events = {}; return loadFrom(monthWeeks()[0]).catch(function(){}).then(function(){ changes = {}; Object.keys(keep).forEach(function(i){ if(events[i]) changes[i] = keep[i]; }); }); })
+  .then(function(){ render(); spin(false); saveWidget();
+    if(fails.length) err("Certaines demandes n'ont pas abouti :\n" + fails.join("\n")); });
+});
+function reason(r){
+  if(r.status === 0) return "pas de connexion internet";
+  if(r.status === 401 || r.status === 403 || /<html/i.test(r.body)) return "session expirée, reconnecte-toi";
+  try{ var j = JSON.parse(r.body); if(Array.isArray(j) && j[0] && j[0].defaultMessage) return j.map(function(x){ return x.defaultMessage; }).join(", "); if(j.message) return j.message; }catch(x){}
+  return "refusé par le portail (" + r.status + ")";
+}
+
+/* --- Lien avec Planning Commandes : conseils réserver / annuler --- */
+var LUNCH = [11*60+45, 13*60+20];          // heure du repas de la cantine
+var REPOS = /^(RP|RPP|RU|RQ|CA|RN|RM|CET|JF|VT|RS)\b|repos|cong[ée]/i;
+var plan = {days: null, envoye: "", err: "", loading: false};
+var ppend = {}, pn = 0;
+window.__planningDone = function(id, res){ var f = ppend[id]; delete ppend[id]; if(f) f(JSON.parse(res)); };
+function planSettings(){ try{ return JSON.parse(window.Android.planningSettings()); }catch(e){ return {}; } }
+function planAvailable(){ return !!(window.Android && window.Android.hasPlanningLink && window.Android.hasPlanningLink()); }
+function loadPlanning(){
+  if(!planAvailable() || !planSettings().actif){ renderPlan(); return; }
+  plan.loading = true; plan.err = ""; renderPlan();
+  var id = "pl" + (++pn);
+  ppend[id] = function(r){
+    plan.loading = false;
+    if(r.ok){ try{ var w = JSON.parse(r.widget || "{}"); plan.days = w.jours || {}; plan.cal = (w.cal && w.cal.j) || {}; plan.envoye = r.envoye || ""; }catch(e){ plan.err = "planning illisible"; } }
+    else { if(window.offerTrust(r, loadPlanning)) return; plan.err = r.erreur || "lecture impossible"; }
+    renderPlan();
+  };
+  window.Android.planningFetch(id);
+}
+// true = tu travailles pendant le repas ; false = repos ; null = pas d'information
+function workAtLunch(day){
+  var j = plan.days && plan.days[day];
+  if(!j) return null;
+  var m = String(j.h || "").match(/(\d{1,2}):(\d{2})\D+(\d{1,2}):(\d{2})/);
+  if(!m) return REPOS.test(String(j.n || "")) ? false : null;
+  var a = +m[1]*60 + +m[2], b = +m[3]*60 + +m[4];
+  if(b <= a) b += 24*60;                 // service de nuit
+  return a < LUNCH[1] && b > LUNCH[0];
+}
+function exclusions(){
+  var v = null;
+  try{ v = window.Android.getPref("plan_exclusions"); }catch(e){}
+  if(v === null || v === undefined) v = "";
+  return String(v).split(",").map(function(x){ return x.trim().toLowerCase(); }).filter(Boolean);
+}
+// le planning du jour (nom du service, horaires, lieux…) contient-il un des mots d'exclusion ?
+function excluded(day){
+  var words = exclusions(); if(!words.length || !plan.days) return false;
+  var txt = (JSON.stringify(plan.days[day] || {}) + " " + JSON.stringify((plan.cal || {})[day] || {})).toLowerCase();
+  return words.some(function(w){ return txt.indexOf(w) >= 0; });
+}
+function suggestions(){
+  if(!plan.days) return [];
+  var today = key(new Date()), out = [];
+  Object.keys(events).forEach(function(k){
+    var e = events[k], day = key(new Date(Date.parse(e.start)));
+    if(day < today || changes[e.id]) return;
+    var w = workAtLunch(day), c = code(e), j = plan.days[day] || {};
+    if(w === true && (c === "no" || c === "abs") && canBook(e)) out.push({e: e, kind: "book", why: "tu travailles " + (j.h || "")});
+    else if(w === false && c === "ok" && canCancel(e) && !excluded(day)){
+      var hs = String(j.h || "").match(/\d{1,2}:\d{2}/);
+      var tag = j.n && !REPOS.test(j.n) ? String(j.n) : (j.h && hs ? hs[0] : "");
+      var why = j.h ? "service " + (j.n ? j.n + " " : "") + j.h + ", libre à midi" : (j.n ? j.n + " · " : "") + "tu es libre à midi";
+      out.push({e: e, kind: "cancel", why: why, tag: tag});
+    }
+  });
+  return out.sort(function(a, b){ return Date.parse(a.e.start) - Date.parse(b.e.start); });
+}
+function renderPlan(){
+  var box = $("cPlan");
+  if(!planAvailable()){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  var st = planSettings();
+  if(!st.actif){
+    box.innerHTML = '<h2>🔗 Lien avec mon planning</h2><p class="muted" style="margin:0 0 10px">L\'appli te dira quels jours réserver ou annuler selon ton planning de travail.</p><button class="btn btn-ghost btn-small" type="button" id="pOpen">⚙️ Relier dans Réglages</button>';
+  } else if(plan.loading){
+    box.innerHTML = '<h2>🔗 Mon planning</h2><p class="muted" style="margin:0">Lecture du planning…</p>';
+  } else if(plan.err){
+    box.innerHTML = '<h2>🔗 Mon planning</h2><p class="muted" style="margin:0 0 8px;color:var(--danger)">' + esc(plan.err) + '</p><button class="btn btn-ghost btn-small" type="button" id="pRetry">Réessayer</button> <button class="btn btn-ghost btn-small" type="button" id="pOpen">⚙️ Réglages</button>';
+  } else {
+    var s = suggestions(), html = '<h2>🔗 D\'après ton planning</h2>';
+    if(!s.length) html += '<p class="muted" style="margin:0">✓ La cantine correspond à ton planning.</p>';
+    else {
+      s.slice(0, 10).forEach(function(x){
+        var d = new Date(Date.parse(x.e.start));
+        html += '<div class="sug"><span><b>' + esc(d.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"})) + '</b> · ' + esc(x.why) +
+          (x.tag ? '<br><button type="button" class="ign" data-tag="' + esc(x.tag) + '">Ignorer ce service</button>' : '') + '</span>' +
+          '<span class="go ' + x.kind + '">' + (x.kind === "book" ? "→ réserver" : "→ annuler") + '</span></div>';
+      });
+      if(s.length > 10) html += '<p class="muted" style="margin:4px 0 0">… et ' + (s.length - 10) + ' autre(s).</p>';
+      html += '<button class="btn btn-primary" type="button" id="pApply" style="margin-top:10px">Appliquer ' + (s.length > 1 ? "ces " + s.length + " changements" : "ce changement") + '</button>';
+    }
+    if(plan.envoye.length >= 16) html += '<p class="muted" style="margin:8px 0 0;font-size:12px">Planning envoyé le ' + plan.envoye.substring(8, 10) + "/" + plan.envoye.substring(5, 7) + " à " + plan.envoye.substring(11, 16) + '.</p>';
+    box.innerHTML = html;
+  }
+  var o = $("pOpen"); if(o) o.addEventListener("click", function(ev){ ev.preventDefault(); location.hash = "reglages"; });
+  var r = $("pRetry"); if(r) r.addEventListener("click", loadPlanning);
+  box.querySelectorAll(".ign").forEach(function(b){
+    b.addEventListener("click", function(){
+      var t = b.getAttribute("data-tag");
+      if(!confirm("Ne plus jamais conseiller d'annuler la cantine les jours de service « " + t + " » ?\n\n(Modifiable dans ⚙️ Réglages › Lien avec mon planning.)")) return;
+      var list = exclusions(); if(list.indexOf(t.toLowerCase()) < 0) list.push(t.toLowerCase());
+      try{ window.Android.setPref("plan_exclusions", list.join(", ")); }catch(e){}
+      renderPlan();
+    });
+  });
+  var ap = $("pApply"); if(ap) ap.addEventListener("click", function(){
+    suggestions().forEach(function(x){ changes[x.e.id] = x.kind; });
+    render();
+    $("cSaveBar").scrollIntoView({behavior: "smooth"});
+  });
+}
+window.openPlanSet = function(){ openPlanSet(); };
+function openPlanSet(){
+  var st = planSettings();
+  $("pAdr").value = st.adresse || ""; $("pId").value = st.identifiant || ""; $("pDos").value = st.dossier || "Planning";
+  $("pMdp").value = ""; $("pMdp").placeholder = st.motDePasse ? "inchangé" : "";
+  $("pCode").value = ""; $("pCode").placeholder = st.code ? "inchangé" : "ABCD-EFGH-JKLM";
+  $("pExcl").value = exclusions().map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(", ");
+  $("pForget").classList.toggle("hidden", !st.actif);
+  $("cPlanSet").classList.add("show");
+}
+$("pClose").addEventListener("click", function(){ $("cPlanSet").classList.remove("show"); });
+$("pSave").addEventListener("click", function(){
+  var st = planSettings();
+  var v = {adresse: $("pAdr").value.trim(), identifiant: $("pId").value.trim(), dossier: $("pDos").value.trim() || "Planning", motDePasse: $("pMdp").value, code: $("pCode").value.trim()};
+  if(!v.adresse || !v.identifiant || (!v.motDePasse && !st.motDePasse) || (!v.code && !st.code)){ alert("Remplis l'adresse, l'identifiant, le mot de passe et le code de partage."); return; }
+  window.Android.planningSave(JSON.stringify(v));
+  try{ window.Android.setPref("plan_exclusions", $("pExcl").value.trim()); }catch(e){}
+  $("cPlanSet").classList.remove("show");
+  loadPlanning(); if(window.refreshSettings) window.refreshSettings();
+});
+$("pForget").addEventListener("click", function(ev){
+  ev.preventDefault();
+  if(!confirm("Supprimer le lien avec ton planning ?")) return;
+  window.Android.planningSave(JSON.stringify({oublier: true}));
+  plan.days = null; $("cPlanSet").classList.remove("show"); renderPlan(); if(window.refreshSettings) window.refreshSettings();
+});
+
+window.planningRaw = function(day){ return plan.days ? (plan.days[day] || null) : null; };
+window.planningLoaded = function(){ return !!plan.days; };
+window.planningForDay = function(day){
+  if(!plan.days) return null;
+  var j = plan.days[day]; if(!j) return null;
+  return j.h ? j.h : (j.n || null);
+};
+window.loadMyPlanning = function(cb){
+  if(!plan.days && !plan.loading) loadPlanning();      // pas encore lu : on le lit
+  if(!cb) return;
+  if(!plan.loading){ cb(); return; }
+  var t = setInterval(function(){ if(!plan.loading){ clearInterval(t); cb(); } }, 400);   // lecture en cours : on attend la fin
+};
+window.planningError = function(){ return plan.err || ""; };
+
+/* --- Navigation et connexion --- */
+function moveMonth(k){
+  if(busyC) return;
+  if(Object.keys(changes).length && !confirm("Tu as des changements non validés. Les abandonner ?")) return;
+  changes = {}; month = new Date(month.getFullYear(), month.getMonth() + k, 1); show(false);
+}
+$("cPrev").addEventListener("click", function(){ moveMonth(-1); });
+$("cNext").addEventListener("click", function(){ moveMonth(1); });
+$("cRefresh").addEventListener("click", function(ev){ ev.preventDefault(); show(true); });
+function forgetVis(){ if(window.refreshSettings && location.hash === "#reglages") window.refreshSettings(); }
+$("cLoginBtn").addEventListener("click", function(){
+  if(window.Android && window.Android.portalLogin) window.Android.portalLogin();
+  else if(inPortal) show(true);
+});
+window.onPortalLogin = function(){ csrf = null; forgetVis(); if(location.hash === "#cantine") show(true); };
+var opened = false;
+function onRoute(){
+  var on = location.hash === "#cantine";
+  if(!on) $("cSaveBar").classList.add("hidden");
+  if(on) forgetVis();
+  if(on && !opened){ opened = true; show(true); loadPlanning(); } else if(on) render();
+}
+window.addEventListener("hashchange", onRoute); onRoute();
+if(!opened && window.Android) loadFrom(startOfWeek(new Date())).catch(function(){ csrf = null; });
+})();
+</script>
+
+<script>
+/* ======================= COVOITURAGE DE LÉA ======================= */
+(function(){
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+var A = window.Android;
+var NB_JOURS = 15;     // jours de classe affichés
+var pend = {}, n = 0;
+window.__carpoolDone = function(id, res){ var f = pend[id]; delete pend[id]; if(f) f(JSON.parse(res)); };
+function call(m, arg){ return new Promise(function(res){ var id = "k" + (++n); pend[id] = res; A[m](id, arg || ""); }); }
+function settings(){ try{ return JSON.parse(A.carpoolSettings()); }catch(e){ return {}; } }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function key(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+function wd(d){ return ((d.getDay() + 6) % 7) + 1; }  // 1 = lundi
+var JOURS = ["", "lundis", "mardis", "mercredis", "jeudis", "vendredis"];
+function label(day){ var p = day.split("-"); return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"}); }
+function err(m){ var e = $("kErr"); e.textContent = m || ""; e.classList.toggle("hidden", !m); if(m) window.scrollTo({top: 0, behavior: "smooth"}); }
+function busy(on){ $("loading").classList.toggle("show", !!on); }
+
+var data = null, me = {}, loaded = false;
+function empty(){ return {version: 1, members: {}, days: {}, defaults: {}}; }
+function norm(d){ d.members = d.members || {}; d.days = d.days || {}; d.defaults = d.defaults || {}; return d; }
+function hourOf(d, day){ var x = d.days[day] || {}; if(x.heure) return x.heure; var p = day.split("-"); return d.defaults[wd(new Date(+p[0], +p[1]-1, +p[2]))] || ""; }
+function nameOf(id){ return (data && data.members[id] && data.members[id].nom) || "?"; }
+function schoolDays(){ var out = [], d = new Date(); d.setHours(12); while(out.length < NB_JOURS){ if(d.getDay() !== 0 && d.getDay() !== 6) out.push(key(d)); d.setDate(d.getDate() + 1); } return out; }
+
+/* --- lecture --- */
+function load(){
+  if(!A || !A.carpoolSettings) return;
+  me = settings();
+  if(!me.actif){ $("kSetup").classList.remove("hidden"); $("kMain").classList.add("hidden"); return; }
+  $("kSetup").classList.add("hidden");
+  busy(true); err("");
+  call("carpoolFetch").then(function(r){
+    if(!r.ok){ if(window.offerTrust(r, load)) return; err("Covoiturage : " + r.erreur); return; }
+    data = norm(r.status === 404 ? empty() : JSON.parse(r.data));
+    loaded = true; seen(); render(); widget();
+    autoFromPlanning();
+  }).then(function(){ busy(false); });
+  if(window.loadMyPlanning && A.hasPlanningLink && A.hasPlanningLink()) window.loadMyPlanning(function(){ if(loaded){ render(); autoFromPlanning(); } });
+}
+function seen(){ var m = 0; Object.keys(data.days).forEach(function(k){ var x = data.days[k].maj; if(x && x.at > m) m = x.at; }); if(m) A.carpoolSeen(String(m)); }
+
+/* --- écriture : relire, modifier, réécrire (et recommencer si quelqu'un a écrit entre-temps) --- */
+var noCond = false;   // Synology qui refuse les écritures conditionnelles : détecté une fois, retenu
+function mutate(day, fn, txt){
+  busy(true); err("");
+  var tries = 0, prev = null;
+  function attempt(){
+    return call("carpoolFetch").then(function(r){
+      if(!r.ok){ if(window.offerTrust(r, function(){ mutate(day, fn, txt); })) throw "__trust"; throw r.erreur; }
+      var d = norm(r.status === 404 ? empty() : JSON.parse(r.data));
+      fn(d);
+      d.members[me.id] = {nom: me.nom, badge: me.badge || ""};
+      if(day){ d.days[day] = d.days[day] || {}; d.days[day].maj = {by: me.id, at: Date.now(), txt: txt}; }
+      // ménage : jours passés de plus de 30 jours
+      var lim = new Date(); lim.setDate(lim.getDate() - 30); var limK = key(lim);
+      Object.keys(d.days).forEach(function(k){ if(k < limK) delete d.days[k]; });
+      var state = (r.etag || "") + "|" + r.status;
+      return call("carpoolPut", JSON.stringify({data: JSON.stringify(d), etag: noCond ? "" : (r.etag || ""), creer: !noCond && r.status === 404})).then(function(p){
+        if(!p.ok && p.status === 412 && ++tries < 5){
+          // refus alors que personne n'a écrit (fichier identique) : le serveur gère mal les conditions → sans condition
+          if(prev === state) noCond = true;
+          prev = state;
+          return attempt();
+        }
+        if(!p.ok) throw (p.status === 412 ? "quelqu'un modifie le covoiturage en même temps, réessaie" : p.erreur);
+        data = d; seen();
+      });
+    });
+  }
+  attempt().catch(function(e){ if(e !== "__trust") err("Covoiturage : " + e); }).then(function(){ busy(false); if(data) { render(); widget(); } });
+}
+
+/* --- actions --- */
+function claim(day){
+  var x = (data.days[day] || {});
+  if(x.qui && x.qui !== me.id && !confirm(nameOf(x.qui) + " s'en occupe déjà. Prendre sa place ?")) return;
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.qui = me.id; y.non = (y.non || []).filter(function(i){ return i !== me.id; }); y.nonAuto = (y.nonAuto || []).filter(function(i){ return i !== me.id; }); y.off = false; },
+    me.nom + " récupère " + window.kidsCov() + " " + label(day));
+}
+function cannot(day){
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.non = y.non || []; if(y.non.indexOf(me.id) < 0) y.non.push(me.id); if(y.qui === me.id) y.qui = null; },
+    me.nom + " ne peut pas récupérer " + window.kidsCov() + " " + label(day));
+}
+function release(day){
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; if(y.qui === me.id) y.qui = null; },
+    me.nom + " ne peut plus récupérer " + window.kidsCov() + " " + label(day) + " : il faut quelqu'un");
+}
+function undoCannot(day){
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.non = (y.non || []).filter(function(i){ return i !== me.id; }); y.nonAuto = (y.nonAuto || []).filter(function(i){ return i !== me.id; }); y.manuel = y.manuel || []; if(y.manuel.indexOf(me.id) < 0) y.manuel.push(me.id); },
+    me.nom + " est finalement disponible " + label(day));
+}
+function editHour(day){
+  var cur = hourOf(data, day);
+  var v = prompt("Heure de sortie (" + window.kidsCov() + "), " + label(day) + " (ex. 17:00).\nLaisse vide s'il n'y a personne à aller chercher ce jour-là.", cur);
+  if(v === null) return;
+  v = v.trim().toLowerCase();
+  if(v){
+    var m = v.match(/^(\d{1,2})\s*(?:[h:.]\s*(\d{2})?)?$/);   // 17, 17h, 17h30, 17:30, 17.30
+    if(!m || +m[1] > 23){ alert("Heure non comprise. Exemple : 17:00 ou 17h30"); return; }
+    v = ("0" + m[1]).slice(-2) + ":" + (m[2] || "00");
+  }
+  if(!v){
+    mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = true; y.qui = null; }, "Pas besoin d'aller chercher " + window.kidsCov() + " " + label(day) + " (" + me.nom + ")");
+    return;
+  }
+  var p = day.split("-"), w = wd(new Date(+p[0], +p[1]-1, +p[2]));
+  var all = confirm("Mettre " + v + " pour tous les " + JOURS[w] + " ?\n\nOK = tous les " + JOURS[w] + "  ·  Annuler = seulement ce jour");
+  mutate(day, function(d){
+    var y = d.days[day] = d.days[day] || {}; y.off = false;
+    if(all){ d.defaults[w] = v; delete y.heure; } else y.heure = v;
+  }, me.nom + " : sortie de " + window.kidsCov() + " à " + v + " " + (all ? "tous les " + JOURS[w] : label(day)));
+}
+function reactivate(day){ mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = false; }, "Il faut aller chercher " + window.kidsCov() + " " + label(day) + " (" + me.nom + ")"); }
+
+/* --- disponibilité d'après le planning (version avec planning) --- */
+var AVANT = 30, APRES = 15;     // minutes : trajet jusqu'au collège avant la sortie, marge après
+var REPOS_K = /^(RP|RPP|RU|RQ|CA|RN|RM|CET|JF|VT|RS)\b|repos|cong[ée]/i;
+function autoOn(){ try{ return A.getPref("covoit_auto") !== "0"; }catch(e){ return true; } }
+function hasPlan(){ return !!(A.hasPlanningLink && A.hasPlanningLink() && window.planningRaw && window.planningLoaded && window.planningLoaded()); }
+// true = tu travailles à l'heure de sortie ; false = libre ; null = on ne sait pas
+function busyAt(day, heure){
+  var j = window.planningRaw(day); if(!j || !heure) return null;
+  var m = String(j.h || "").match(/(\d{1,2}):(\d{2})\D+(\d{1,2}):(\d{2})/);
+  if(!m) return REPOS_K.test(String(j.n || "")) ? false : null;
+  var a = +m[1]*60 + +m[2], b = +m[3]*60 + +m[4]; if(b <= a) b += 1440;
+  var t = heure.split(":"), T = +t[0]*60 + +t[1];
+  return a < T + APRES && b > T - AVANT;
+}
+var autoRunning = false;
+function autoFromPlanning(){
+  if(autoRunning || !data || !hasPlan() || !autoOn() || !me.id) return;
+  var ops = [];
+  schoolDays().forEach(function(day){
+    var x = data.days[day] || {}, h = hourOf(data, day);
+    if(x.off || !h) return;
+    var busy = busyAt(day, h), non = (x.non || []).indexOf(me.id) >= 0, auto = (x.nonAuto || []).indexOf(me.id) >= 0;
+    var manual = (x.manuel || []).indexOf(me.id) >= 0;
+    if(busy === true && !non && x.qui !== me.id && !manual) ops.push({day: day, add: true});
+    else if(busy === false && auto) ops.push({day: day, add: false});
+  });
+  if(!ops.length) return;
+  autoRunning = true;
+  mutate(null, function(d){
+    ops.forEach(function(o){
+      var y = d.days[o.day] = d.days[o.day] || {};
+      y.non = y.non || []; y.nonAuto = y.nonAuto || [];
+      if(o.add){
+        if(y.non.indexOf(me.id) < 0) y.non.push(me.id);
+        if(y.nonAuto.indexOf(me.id) < 0) y.nonAuto.push(me.id);
+        y.maj = {by: me.id, at: Date.now(), txt: me.nom + " ne peut pas récupérer " + window.kidsCov() + " " + label(o.day) + " (planning)"};
+      } else {
+        y.non = y.non.filter(function(i){ return i !== me.id; });
+        y.nonAuto = y.nonAuto.filter(function(i){ return i !== me.id; });
+        y.maj = {by: me.id, at: Date.now(), txt: me.nom + " est finalement disponible " + label(o.day) + " (planning)"};
+      }
+    });
+  }, "");
+  setTimeout(function(){ autoRunning = false; }, 3000);
+}
+
+/* --- affichage --- */
+function render(){
+  if(!data) return;
+  $("kMain").classList.remove("hidden");
+  var html = "", free = 0, showPlan = A.hasPlanningLink && A.hasPlanningLink() && window.planningForDay;
+  schoolDays().forEach(function(day){
+    var x = data.days[day] || {}, h = hourOf(data, day), cls = "kday";
+    var who, acts = "";
+    if(x.off){
+      cls += " off";
+      who = '<div class="who">Pas besoin d\'aller les chercher</div>';
+      acts = '<button class="btn btn-ghost" data-a="react" data-d="' + day + '">Il faut y aller</button>';
+    } else if(!x.qui){
+      free++; cls += " free";
+      who = '<div class="who none">❓ Personne pour l\'instant</div>';
+      acts = '<button class="btn btn-primary" style="width:auto" data-a="claim" data-d="' + day + '">Je les récupère</button>';
+      acts += (x.non || []).indexOf(me.id) >= 0 ? '<button class="btn btn-ghost" data-a="undo" data-d="' + day + '">Finalement dispo</button>'
+        : '<button class="btn btn-ghost" data-a="cannot" data-d="' + day + '">Je ne peux pas</button>';
+    } else if(x.qui === me.id){
+      cls += " mine";
+      who = '<div class="who me">✅ C\'est toi</div>';
+      acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
+    } else {
+      who = '<div class="who">👤 ' + esc(nameOf(x.qui)) + '</div>';
+      acts = '<button class="btn btn-ghost" data-a="claim" data-d="' + day + '">Prendre le relais</button>';
+    }
+    var non = (x.non || []).filter(function(i){ return i !== x.qui; }).map(function(i){ return nameOf(i) + ((x.nonAuto || []).indexOf(i) >= 0 ? " (planning)" : ""); });
+    var sub = non.length ? '<div class="sub">Ne peut pas : ' + esc(non.join(", ")) + '</div>' : "";
+    if(showPlan){ var pl = window.planningForDay(day); if(pl) sub += '<div class="pl">🗓️ Planning : ' + esc(pl) + '</div>'; }
+    if(showPlan && x.qui === me.id && !x.off && hasPlan() && busyAt(day, h) === true) sub += '<div class="sub" style="color:var(--danger);font-weight:650">⚠️ Ton planning dit que tu travailles à cette heure-là.</div>';
+    html += '<div class="' + cls + '"><div class="top"><span class="dt">' + esc(label(day)) + '</span>' +
+      '<button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button></div>' +
+      who + '<div class="acts">' + acts + '</div>' + sub + '</div>';
+  });
+  $("kDays").innerHTML = html;
+  // état du lien avec le planning : ce que l'appli a pu décider
+  var ks = $("kState"), txt = "", bad = false;
+  if(A.hasPlanningLink && A.hasPlanningLink()){
+    var pe = window.planningError ? window.planningError() : "";
+    if(!autoOn()) txt = "🗓️ Indisponibilité automatique désactivée (⚙️ Réglages › Covoiturage).";
+    else if(pe){ txt = "🗓️ Planning non lu : " + pe + ". L'appli ne peut pas savoir quand tu travailles."; bad = true; }
+    else if(!hasPlan()) txt = "🗓️ Lecture du planning…";
+    else {
+      var sans = 0, occ = 0, inc = 0;
+      schoolDays().forEach(function(day){
+        var x = data.days[day] || {}; if(x.off) return;
+        var h = hourOf(data, day); if(!h){ sans++; return; }
+        var b = busyAt(day, h); if(b === true) occ++; else if(b === null) inc++;
+      });
+      txt = "🗓️ Planning lu : tu travailles à l'heure de sortie " + occ + " jour" + (occ > 1 ? "s" : "") + " sur les 15 affichés.";
+      if(sans){ txt += " " + sans + " jour" + (sans > 1 ? "s n'ont" : " n'a") + " pas d'heure de sortie (🕔 heure ?) : l'appli ne peut pas décider ces jours-là."; bad = true; }
+      if(inc) txt += " " + inc + " jour" + (inc > 1 ? "s" : "") + " sans information dans ton planning.";
+    }
+  }
+  ks.textContent = txt; ks.classList.toggle("hidden", !txt); ks.classList.toggle("bad", bad);
+  $("kInfo").textContent = free ? free + " jour" + (free > 1 ? "s" : "") + " sans personne" : "Tous les jours sont couverts";
+  $("kDays").querySelectorAll("[data-a]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var d = b.getAttribute("data-d"), a = b.getAttribute("data-a");
+      if(a === "claim") claim(d); else if(a === "cannot") cannot(d); else if(a === "release") release(d);
+      else if(a === "undo") undoCannot(d); else if(a === "hour") editHour(d); else if(a === "react") reactivate(d);
+    });
+  });
+}
+function widget(){
+  if(!window.widgetData || !data) return;
+  window.widgetData(function(w){
+    var cov = {};
+    schoolDays().forEach(function(day){
+      var x = data.days[day] || {}; if(x.off) return;
+      var h = hourOf(data, day); if(!h && !x.qui) return;
+      cov[day] = x.qui ? nameOf(x.qui) : "?";
+    });
+    w.covoit = cov;
+    w.covoitNoms = Object.keys(data.members).map(function(i){ var m = data.members[i]; return {nom: m.nom || "", badge: m.badge || ""}; }).filter(function(m){ return m.nom; });
+  });
+}
+
+/* --- réglages --- */
+function openSet(){
+  var st = settings();
+  $("kNom").value = st.nom || ""; $("kBadge").value = st.badge || ""; $("kAdr").value = st.adresse || ""; $("kId").value = st.identifiant || "";
+  $("kDos").value = st.dossier || "Covoiturage";
+  $("kMdp").value = ""; $("kMdp").placeholder = st.motDePasse ? "inchangé" : "";
+  $("kCode").value = ""; $("kCode").placeholder = st.code ? "inchangé" : "ABCD-EFGH-JKLM";
+  $("kForget").classList.toggle("hidden", !st.actif);
+  var hp = A.hasPlanningLink && A.hasPlanningLink();
+  $("kAutoRow").classList.toggle("hidden", !hp);
+  $("kAuto").checked = autoOn();
+  $("kSet").classList.add("show");
+}
+if(A && A.carpoolSettings){
+  $("kSetupBtn").addEventListener("click", function(){ location.hash = "reglages"; });
+  window.openCarpoolSet = openSet;
+  $("kRefresh").addEventListener("click", function(ev){ ev.preventDefault(); load(); });
+  $("kClose").addEventListener("click", function(){ $("kSet").classList.remove("show"); });
+  $("kGen").addEventListener("click", function(){
+    if(settings().code && !confirm("Un nouveau code n'est utile que pour CRÉER un covoiturage. Pour rejoindre celui d'un autre, tape son code. Continuer ?")) return;
+    $("kCode").value = A.carpoolNewCode();
+  });
+  $("kSave").addEventListener("click", function(){
+    var st = settings();
+    var bd = Array.from($("kBadge").value.trim()).slice(0, 2).join("");
+    var v = {nom: $("kNom").value.trim(), badge: bd, adresse: $("kAdr").value.trim(), identifiant: $("kId").value.trim(),
+      dossier: $("kDos").value.trim() || "Covoiturage", motDePasse: $("kMdp").value, code: $("kCode").value.trim()};
+    if(!v.nom || !v.adresse || !v.identifiant || (!v.motDePasse && !st.motDePasse) || (!v.code && !st.code)){
+      alert("Remplis ton prénom, l'adresse, l'identifiant, le mot de passe et le code du covoiturage."); return;
+    }
+    A.carpoolSave(JSON.stringify(v));
+    try{ A.setPref("covoit_auto", $("kAuto").checked ? "1" : "0"); }catch(e){}
+    A.askNotifications();
+    $("kSet").classList.remove("show");
+    if(window.refreshSettings) window.refreshSettings();
+    me = settings();
+    mutate(null, function(){}, "");   // met à jour ton prénom et tes initiales dans le fichier partagé
+    if(location.hash === "#covoit") load();
+  });
+  $("kShow").addEventListener("click", function(){
+    var c = A.carpoolShowCode();
+    alert(c ? "Code du covoiturage sur ce téléphone :\n\n" + c + "\n\nTous les téléphones du covoiturage doivent avoir exactement ce code (majuscules, espaces et tirets ne comptent pas)."
+            : "Aucun code enregistré sur ce téléphone.");
+  });
+  $("kReset").addEventListener("click", function(){
+    if(!confirm("Recréer le fichier du covoiturage avec le code de CE téléphone ?\n\nLes choix déjà faits (qui récupère, heures) seront effacés. Les autres téléphones devront ensuite saisir ce même code.")) return;
+    me = settings();
+    busy(true); err("");
+    var d = empty(); d.members[me.id] = {nom: me.nom, badge: me.badge || ""};
+    call("carpoolPut", JSON.stringify({data: JSON.stringify(d), etag: ""})).then(function(p){
+      busy(false);
+      if(!p.ok){ alert("Impossible de recréer le fichier : " + (p.erreur || p.status)); return; }
+      $("kSet").classList.remove("show");
+      alert("Covoiturage recréé avec ton code. Donne ce code aux autres téléphones (⚙️ Réglages › Covoiturage › Modifier › Code).");
+      data = d; loaded = true; if(location.hash === "#covoit"){ render(); widget(); }
+    });
+  });
+  $("kForget").addEventListener("click", function(ev){
+    ev.preventDefault();
+    if(!confirm("Quitter le covoiturage sur ce téléphone ? (les autres le gardent)")) return;
+    A.carpoolSave(JSON.stringify({oublier: true})); data = null; loaded = false;
+    $("kSet").classList.remove("show"); $("kMain").classList.add("hidden"); $("kSetup").classList.remove("hidden");
+    if(window.refreshSettings) window.refreshSettings();
+  });
+}
+function onRoute(){ if(location.hash === "#covoit") load(); }
+window.addEventListener("hashchange", onRoute); onRoute();
+})();
+</script>
+</body>
+</html>

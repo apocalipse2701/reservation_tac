@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône : page de cahier de liaison (calendrier), les deux sœurs, pastille « c'est réglé » (zone sûre 66dp sur 108dp) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- page du calendrier -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M35,32 h38 a7,7 0 0 1 7,7 v36 a7,7 0 0 1 -7,7 h-38 a7,7 0 0 1 -7,-7 v-36 a7,7 0 0 1 7,-7 z" />
+    <path android:fillColor="#E8962E"
+        android:pathData="M35,32 h38 a7,7 0 0 1 7,7 v6 h-52 v-6 a7,7 0 0 1 7,-7 z" />
+    <!-- anneaux -->
+    <path android:fillColor="#11302A"
+        android:pathData="M40,27 h4 a1,1 0 0 1 1,1 v9 a1,1 0 0 1 -1,1 h-4 a1,1 0 0 1 -1,-1 v-9 a1,1 0 0 1 1,-1 z" />
+    <path android:fillColor="#11302A"
+        android:pathData="M64,27 h4 a1,1 0 0 1 1,1 v9 a1,1 0 0 1 -1,1 h-4 a1,1 0 0 1 -1,-1 v-9 a1,1 0 0 1 1,-1 z" />
+    <!-- les deux sœurs -->
+    <path android:fillColor="#0E8A6A" android:pathData="M38.5,56 a5.5,5.5 0 1 0 11,0 a5.5,5.5 0 1 0 -11,0 z" />
+    <path android:fillColor="#0E8A6A" android:pathData="M35,76 a9,9 0 0 1 18,0 v1 h-18 z" />
+    <path android:fillColor="#3D6FD6" android:pathData="M55.5,61 a4.5,4.5 0 1 0 9,0 a4.5,4.5 0 1 0 -9,0 z" />
+    <path android:fillColor="#3D6FD6" android:pathData="M52.5,76 a7.5,7.5 0 0 1 15,0 v1 h-15 z" />
+    <!-- pastille « c'est réglé » -->
+    <path android:fillColor="#FFFFFF" android:pathData="M64,77 a12,12 0 1 0 24,0 a12,12 0 1 0 -24,0 z" />
+    <path android:fillColor="#2E9D5B" android:pathData="M66.5,77 a9.5,9.5 0 1 0 19,0 a9.5,9.5 0 1 0 -19,0 z" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M71.5,77.5 l3,3 l6,-6.5" />
+</vector>

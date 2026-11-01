@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Numéro de version = numéro de compilation GitHub (augmente à chaque publication)
+def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace 'fr.tac.sad'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "fr.tac.sad"
+        minSdk 26
+        targetSdk 34
+        versionCode runNumber
+        versionName "1." + runNumber
+    }
+
+    // Clé de signature fixe : indispensable pour que chaque mise à jour s'installe par-dessus la précédente
+    buildFeatures {
+        buildConfig true
+        resValues true
+    }
+
+    // Deux versions de l'appli : avec le lien vers Planning Commandes, et sans
+    flavorDimensions "version"
+    productFlavors {
+        planning {
+            dimension "version"
+            resValue "string", "app_name", "Gestion administrative enfants"
+            buildConfigField "boolean", "PLANNING", "true"
+            buildConfigField "String", "APK_NAME", "\"ResaSAD.apk\""
+        }
+        simple {
+            dimension "version"
+            applicationIdSuffix ".simple"
+            resValue "string", "app_name", "Gestion enfants (sans planning)"
+            buildConfigField "boolean", "PLANNING", "false"
+            buildConfigField "String", "APK_NAME", "\"GestionEnfants-sans-planning.apk\""
+        }
+    }
+
+    signingConfigs {
+        fixed {
+            storeFile file('signing.keystore')
+            storePassword 'gestionenfants'
+            keyAlias 'app'
+            keyPassword 'gestionenfants'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.fixed
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.fixed
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
