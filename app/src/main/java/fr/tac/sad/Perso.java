@@ -7,6 +7,9 @@ import org.json.JSONObject;
 /** Réglages personnels (prénoms, adresse du portail) saisis dans l'appli et gardés sur le téléphone. */
 public class Perso {
 
+    /** Portail famille par défaut (modifiable dans ⚙️ Réglages). */
+    static final String DEFAULT_PORTAL = "https://portail.berger-levrault.fr/SIPSDeTournes08090/";
+
     static JSONObject get(Context c) {
         try {
             return new JSONObject(c.getSharedPreferences("tac_sad", Context.MODE_PRIVATE).getString("perso", "{}"));
@@ -18,6 +21,7 @@ public class Perso {
     /** Recharge l'adresse du portail famille (à appeler au démarrage et après un changement). */
     static void refresh(Context c) {
         String u = get(c).optString("portal", "").trim();
+        if (u.isEmpty()) u = DEFAULT_PORTAL;
         if (!u.isEmpty() && !u.endsWith("/")) u += "/";
         LoginActivity.PORTAL = u.startsWith("https://") ? u : "";
     }
