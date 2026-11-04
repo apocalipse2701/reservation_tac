@@ -179,8 +179,12 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        // d'abord fermer une sous-page ouverte (réglages du covoiturage, du planning…)
+        web.evaluateJavascript("window.closeTopSheet ? window.closeTopSheet() : false", v -> {
+            if ("true".equals(v)) return;
+            if (web.canGoBack()) web.goBack();
+            else MainActivity.super.onBackPressed();
+        });
     }
 
     /** Pont appelé depuis la page : requêtes réseau (sans restriction CORS) et stockage local. */

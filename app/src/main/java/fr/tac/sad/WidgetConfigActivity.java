@@ -46,9 +46,18 @@ public class WidgetConfigActivity extends Activity {
         col.setOrientation(LinearLayout.VERTICAL);
         col.setPadding(px(16), px(16), px(16), px(24));
 
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.HORIZONTAL);
+        head.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        Button back = new Button(this);
+        back.setText("‹ Retour");
+        back.setOnClickListener(v -> finish());
+        head.addView(back);
         TextView h = text("Personnaliser le widget", 20, true);
         h.setTextColor(Color.parseColor("#0A6E4F"));
-        col.addView(h);
+        h.setPadding(px(10), 0, 0, 0);
+        head.addView(h, new LinearLayout.LayoutParams(0, -2, 1f));
+        col.addView(head);
 
         // Aperçu sur un fond « fond d'écran »
         preview = new FrameLayout(this);

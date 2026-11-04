@@ -93,6 +93,9 @@
   .overlay.show{display:flex}
   .sheet{background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;width:100%;max-width:640px;padding:22px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
   .sheet h3{margin:0 0 10px;font:700 20px var(--disp);font-stretch:90%}
+  .shead{display:flex;align-items:center;gap:10px;position:sticky;top:-22px;margin:-22px -18px 10px;padding:14px 18px 8px;background:var(--card);z-index:1}
+  .shead h3{margin:0;flex:1}
+  .sback{background:var(--soft);color:var(--brand);border:0;border-radius:12px;height:40px;padding:0 14px;font-weight:700;font-size:15px;cursor:pointer;flex:0 0 auto}
   .sum{font-size:15px}.sum dt{color:var(--muted);font-size:12px;margin-top:10px}.sum dd{margin:0}
   .spinner{width:34px;height:34px;border:4px solid var(--soft);border-top-color:var(--brand);border-radius:50%;animation:s .9s linear infinite;margin:0 auto}
   @keyframes s{to{transform:rotate(360deg)}}
@@ -378,7 +381,7 @@
 </main>
 
 <div class="overlay" id="kSet"><div class="sheet">
-  <h3>Réglages du covoiturage</h3>
+  <div class="shead"><button class="sback" type="button" data-back="kSet">‹ Retour</button><h3>Réglages du covoiturage</h3></div>
   <label for="kNom">Ton prénom (vu par les autres)</label><input id="kNom" type="text" placeholder="ex. Papa, Sophie, Famille Martin">
   <label>Ma photo (vue par les autres téléphones)</label>
   <div class="myph"><span id="kPhoto"></span>
@@ -405,7 +408,7 @@
 </div></div>
 
 <div class="overlay" id="codeBox"><div class="sheet">
-  <h3 id="codeTitle"></h3>
+  <div class="shead"><button class="sback" type="button" data-back="codeBox">‹ Retour</button><h3 id="codeTitle"></h3></div>
   <p id="codeValue" style="font:700 26px/1.2 var(--disp);letter-spacing:.06em;text-align:center;margin:18px 0;user-select:all"></p>
   <p class="muted" id="codeHelp" style="margin:0 0 14px"></p>
   <div class="row"><button class="btn btn-ghost" id="codeCopy" type="button">Copier</button>
@@ -419,7 +422,7 @@
 </div></div>
 
 <div class="overlay" id="cPlanSet"><div class="sheet">
-  <h3>Lien avec mon planning</h3>
+  <div class="shead"><button class="sback" type="button" data-back="cPlanSet">‹ Retour</button><h3>Lien avec mon planning</h3></div>
   <p class="muted">Mêmes réglages que dans Planning Commandes › Réglages › Partage du planning. Le planning est seulement lu, jamais modifié.</p>
   <label for="pAdr">Adresse du serveur</label><input id="pAdr" type="text" placeholder="numéro du kDrive, ou monnas.synology.me">
   <label for="pId">Identifiant</label><input id="pId" type="text" autocomplete="off">
@@ -949,6 +952,16 @@ document.querySelectorAll("[data-go]").forEach(function(b){
   b.addEventListener("click", function(){ location.hash = b.getAttribute("data-go"); });
 });
 // retour : page précédente, ou l'accueil si l'appli a été ouverte directement sur cette page
+// sous-pages (feuilles) : « ‹ Retour » et touche retour du téléphone
+document.querySelectorAll("[data-back]").forEach(function(b){
+  b.addEventListener("click", function(){ var o = $(b.getAttribute("data-back")); o.classList.remove("show"); if(o.id === "codeBox") $("codeCopy").textContent = "Copier"; });
+});
+window.closeTopSheet = function(){
+  var open = document.querySelectorAll(".overlay.show");
+  if(!open.length) return false;
+  open[open.length - 1].classList.remove("show");
+  return true;
+};
 function goBack(){ if(history.length > 1) history.back(); else location.hash = ""; }
 $("back").addEventListener("click", goBack);
 $("rgBack").addEventListener("click", function(){ location.hash = ""; });

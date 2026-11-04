@@ -74,8 +74,14 @@ public class LoginActivity extends Activity {
         int pad = (int) (12 * getResources().getDisplayMetrics().density);
         bar.setPadding(pad, pad / 2, pad / 2, pad / 2);
 
+        Button back = new Button(this);
+        back.setText("‹ Retour");
+        back.setOnClickListener(v -> finish());
+        bar.addView(back);
+
         TextView title = new TextView(this);
         title.setText("Connexion au portail famille");
+        title.setPadding(pad / 2, 0, 0, 0);
         title.setTextColor(Color.WHITE);
         title.setTextSize(16);
         bar.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));

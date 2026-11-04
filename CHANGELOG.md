@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.5.2 — 04/11/2026
+- Sous-pages des réglages (covoiturage, lien avec le planning, affichage d'un code) : bouton « ‹ Retour » en haut, qui reste visible quand on fait défiler.
+- Personnaliser le widget et Connexion au portail famille : bouton « ‹ Retour » en haut.
+- La touche retour du téléphone ferme d'abord la sous-page ouverte, au lieu de quitter les réglages.
+
 ## 2.5.1 — 04/11/2026
 - Réglages : grand bouton « ‹ Retour à l'accueil » en bas de la page.
 - Le bouton « ‹ » en haut ramène toujours à l'accueil, même quand l'appli a été ouverte directement sur une page.
