@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.5.1 — 04/11/2026
+- Réglages : grand bouton « ‹ Retour à l'accueil » en bas de la page.
+- Le bouton « ‹ » en haut ramène toujours à l'accueil, même quand l'appli a été ouverte directement sur une page.
+
 ## 2.5.0 — 04/11/2026
 - Covoiturage : nouvel encadré « 🎒 Heures de sortie (emploi du temps) ». On y saisit l'heure de fin des cours de chaque jour, en semaine A et en semaine B. L'heure de sortie de chaque jour est alors calculée automatiquement, et partagée avec tout le covoiturage.
 - Vacances scolaires (zone B, 2026-2027) et jours fériés : affichés « 🏖️ … : pas d'école », sans covoiturage. Ces jours sont aussi ignorés par le widget et par l'indisponibilité automatique. On peut quand même ajouter un de ces jours en touchant son heure.

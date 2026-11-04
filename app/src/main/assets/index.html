@@ -316,6 +316,7 @@
     <div class="row"><button class="btn btn-ghost btn-small" id="checkUpd" type="button">Rechercher une mise à jour</button>
     <button class="btn btn-ghost btn-small" id="whatsNew" type="button">Nouveautés</button></div>
   </section>
+  <button class="btn btn-primary" id="rgBack" type="button" style="margin:4px 0 18px">‹ Retour à l'accueil</button>
 </main>
 
 <main id="cantine" class="hidden">
@@ -947,7 +948,10 @@ function route_(){
 document.querySelectorAll("[data-go]").forEach(function(b){
   b.addEventListener("click", function(){ location.hash = b.getAttribute("data-go"); });
 });
-$("back").addEventListener("click", function(){ history.back(); });
+// retour : page précédente, ou l'accueil si l'appli a été ouverte directement sur cette page
+function goBack(){ if(history.length > 1) history.back(); else location.hash = ""; }
+$("back").addEventListener("click", goBack);
+$("rgBack").addEventListener("click", function(){ location.hash = ""; });
 $("gear").addEventListener("click", function(){ location.hash = "reglages"; });
 /* Demandes de bus en attente : validation ou refus à la main (mail non reçu) */
 function busPendRender(){
