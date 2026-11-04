@@ -114,6 +114,9 @@
   .tline .what span{font-size:13px;color:var(--muted)}
   .tline .st{font-weight:700;font-size:14px;white-space:nowrap}
   .c-cantine{background:var(--soft2);color:var(--brand2)} .c-bus{background:var(--soft);color:var(--brand)} .c-covoit{background:var(--soft3);color:var(--brand3)}
+  .bdays{margin-top:6px;display:flex;flex-direction:column;gap:3px}
+  .bdays div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+  .bdays .j{color:var(--muted)} .bdays .st{font-size:13px}
   .st.ok{color:var(--ok)} .st.no{color:var(--muted)} .st.warn{color:var(--danger)}
 
   .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -1149,10 +1152,20 @@ function renderToday(){
   if(c){ var v = c[Object.keys(c)[0]]; cs = v === "ok" ? "Réservée" : v === "wait" ? "En attente" : v === "abs" ? "Absente" : "Non réservée"; cc = v === "ok" ? "ok" : v === "no" ? "warn" : "no"; }
   var cantKid = c ? Object.keys(c)[0] : "";
   lines += line("cantine", "c-cantine", "🍽️", "Cantine", cantKid, cs, cc);
-  var b = (w.bus || {})[k];
-  lines += line("bus", "c-bus", "🚌", "Bus", [window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · "),
-    !b ? "Pas de demande" : b.st === "ok" ? "Pris en compte · " + b.aller : b.st === "ko" ? "Refusé · " + b.aller : b.st === "wait" ? "En attente · " + b.aller : "Demandé · " + b.aller,
-    !b ? "no" : b.st === "ko" ? "warn" : b.st === "wait" ? "no" : "ok");
+  // bus : les 3 prochains jours de classe
+  var bd = new Date(d), rows = "";
+  for(var n = 0; n < 3; n++){
+    while(bd.getDay() === 0 || bd.getDay() === 6) bd.setDate(bd.getDate() + 1);
+    var b = (w.bus || {})[ymd(bd)], al = b && b.aller ? " · " + b.aller : "";
+    var bs = !b ? "Pas de demande" : b.st === "ok" ? "✅ Pris en compte" + al : b.st === "ko" ? "❌ Refusé" + al : b.st === "wait" ? "⏳ En attente" + al : "Demandé" + al;
+    var bc = !b ? "no" : b.st === "ko" ? "warn" : b.st === "wait" ? "no" : "ok";
+    var jl = bd.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric"});
+    rows += '<div><span class="j">' + esc(jl.charAt(0).toUpperCase() + jl.slice(1)) + '</span><span class="st ' + bc + '">' + esc(bs) + '</span></div>';
+    bd.setDate(bd.getDate() + 1);
+  }
+  lines += '<div class="tline" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
+    '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · ")) + '</span>' +
+    '<span class="bdays">' + rows + '</span></span></div>';
   var cv = (w.covoit || {})[k], cvs = "—", cvc = "no";
   if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
   lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);

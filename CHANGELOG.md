@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.4.0 — 04/11/2026
+- Accueil : la ligne Bus affiche les 3 prochains jours de classe, chacun avec son statut (✅ pris en compte, ⏳ en attente, ❌ refusé ou pas de demande) et l'horaire.
+
 ## 2.3.1 — 04/11/2026
 - Accueil : le mercredi, la ligne Cantine affiche « Pas de cantine Mercredi » au lieu de « Pas encore vu ».
 
