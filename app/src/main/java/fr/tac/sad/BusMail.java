@@ -138,6 +138,29 @@ public class BusMail {
         return false;
     }
 
+    /** Réservation forcée à la main sur un jour choisi : st = ok / ko / none (retirer). */
+    static synchronized void force(Context c, String day, String aller, String st) {
+        try {
+            JSONArray p = pending(c), keep = new JSONArray();
+            for (int i = 0; i < p.length(); i++) if (!day.equals(p.getJSONObject(i).optString("day"))) keep.put(p.getJSONObject(i));
+            prefs(c).edit().putString("bus_pending", keep.toString()).apply();
+            JSONObject w = new JSONObject(prefs(c).getString("widget_cal", "{}"));
+            JSONObject bus = w.optJSONObject("bus");
+            if (bus == null) w.put("bus", bus = new JSONObject());
+            if ("none".equals(st)) bus.remove(day);
+            else {
+                JSONObject d = bus.optJSONObject(day);
+                if (d == null) bus.put(day, d = new JSONObject());
+                if (aller != null && !aller.isEmpty()) d.put("aller", aller);
+                d.put("st", st);
+                d.put("manuel", true);
+            }
+            prefs(c).edit().putString("widget_cal", w.toString()).apply();
+            CalendarWidget.refreshAll(c);
+        } catch (Exception ignored) {
+        }
+    }
+
     private static void setWidget(Context c, String day, String st) {
         try {
             JSONObject w = new JSONObject(prefs(c).getString("widget_cal", "{}"));

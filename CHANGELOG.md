@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.2.0 — 04/11/2026
+- Bus : nouvel encadré « ⏳ Suivi des réservations », toujours visible.
+- « Forcer un jour » : sur n'importe quelle date, marquer le bus comme ✅ pris en compte, ❌ refusé, ou 🗑️ le retirer (horaire facultatif). Utile pour une réservation faite par téléphone ou sur le site, ou pour corriger un jour.
+- Une demande en attente pour ce jour-là est réglée en même temps ; l'accueil et le widget sont mis à jour.
+
 ## 2.1.0 — 04/11/2026
 
 **Bus**

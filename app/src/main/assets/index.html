@@ -426,10 +426,23 @@
 <main id="form" class="hidden">
   <!-- Favoris -->
   <!-- Demandes envoyées, en attente de la réponse de la compagnie -->
-  <section class="card hidden" id="busPend">
-    <h2>⏳ Demandes en attente</h2>
-    <p class="muted" style="margin:0 0 6px">Si la compagnie a répondu sans que le mail soit reconnu, indique sa réponse ici.</p>
-    <div id="busPendList"></div>
+  <section class="card" id="busPend">
+    <h2>⏳ Suivi des réservations</h2>
+    <div id="busPendBox">
+      <p class="muted" style="margin:0 0 6px">Demandes en attente : si la compagnie a répondu sans que le mail soit reconnu, indique sa réponse ici.</p>
+      <div id="busPendList"></div>
+    </div>
+    <details id="busForce" style="margin-top:10px">
+      <summary style="cursor:pointer;font-weight:650;color:var(--brand)">Forcer un jour</summary>
+      <p class="muted" style="margin:8px 0 0">Pour une réservation faite par téléphone ou sur le site, ou pour corriger un jour.</p>
+      <div class="row"><div><label for="bfDay">Jour</label><input id="bfDay" type="date"></div>
+        <div class="narrow"><label for="bfTime">Horaire (facultatif)</label><input id="bfTime" type="text" placeholder="12h31"></div></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-ghost btn-small" type="button" data-bf="ok">✅ Prise en compte</button>
+        <button class="btn btn-cancel btn-small" type="button" data-bf="ko">❌ Refusée</button>
+        <button class="btn btn-ghost btn-small" type="button" data-bf="none" style="flex:0 0 auto">🗑️ Retirer</button>
+      </div>
+    </details>
   </section>
 
   <section class="card" id="favCard">
@@ -919,7 +932,8 @@ $("gear").addEventListener("click", function(){ location.hash = "reglages"; });
 function busPendRender(){
   var A = window.Android, list = [];
   try{ list = JSON.parse(A && A.busPending ? A.busPending() : "[]"); }catch(e){}
-  $("busPend").classList.toggle("hidden", !list.length);
+  $("busPendBox").classList.toggle("hidden", !list.length);
+  if(!list.length) $("busForce").open = true;
   var box = $("busPendList"); box.innerHTML = "";
   list.sort(function(a, b){ return a.at - b.at; }).forEach(function(p){
     var parts = String(p.day).split("-"), d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
@@ -940,6 +954,22 @@ function busPendRender(){
     box.appendChild(row);
   });
 }
+$("busForce").querySelectorAll("[data-bf]").forEach(function(b){
+  b.addEventListener("click", function(){
+    var day = $("bfDay").value, st = b.getAttribute("data-bf");
+    if(!day){ alert("Choisis le jour."); return; }
+    var t = $("bfTime").value.trim().toLowerCase(), aller = "";
+    if(t){ var m = t.match(/^(\d{1,2})\s*[h:.]\s*(\d{2})?$/); if(!m){ alert("Horaire non compris. Exemple : 12h31"); return; }
+      aller = ("0" + m[1]).slice(-2) + "h" + (m[2] || "00"); }
+    var parts = day.split("-"), lib = new Date(+parts[0], +parts[1] - 1, +parts[2]).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"});
+    var q = st === "ok" ? "Marquer le bus du " + lib + (aller ? " (" + aller + ")" : "") + " comme pris en compte ?"
+          : st === "ko" ? "Marquer le bus du " + lib + " comme refusé ?" : "Retirer le bus du " + lib + " de l'accueil et du widget ?";
+    if(!confirm(q)) return;
+    window.Android.busForce(day, aller, st);
+    $("bfTime").value = ""; busPendRender(); renderToday();
+    alert(st === "none" ? "Retiré." : "Enregistré.");
+  });
+});
 function idSummary(){
   var n = ($("prenom").value + " " + $("nom").value).trim(), c = [$("tel").value, $("email").value].filter(Boolean).join(" · ");
   $("idSum").innerHTML = n ? "👤 " + esc(n) + (c ? '<br><small class="muted">' + esc(c) + "</small>" : "") + ' <a href="#reglages">modifier</a>'

@@ -232,6 +232,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void busForce(String day, String aller, String st) {
+            BusMail.force(MainActivity.this, day, aller, st);
+        }
+
+        @JavascriptInterface
         public String mailSettings() {
             return BusMail.settings(MainActivity.this);
         }
