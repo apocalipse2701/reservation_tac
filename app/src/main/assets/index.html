@@ -948,6 +948,7 @@ function busPendRender(){
         var st = b.getAttribute("data-st");
         if(!confirm(st === "ok" ? "Marquer cette demande comme prise en compte par la compagnie ?" : "Marquer cette demande comme refusée ?")) return;
         A.busResolve(String(p.at), st);
+        if(window.covBusSync) window.covBusSync();
         busPendRender(); renderToday();
       });
     });
@@ -966,6 +967,7 @@ $("busForce").querySelectorAll("[data-bf]").forEach(function(b){
           : st === "ko" ? "Marquer le bus du " + lib + " comme refusé ?" : "Retirer le bus du " + lib + " de l'accueil et du widget ?";
     if(!confirm(q)) return;
     window.Android.busForce(day, aller, st);
+    if(window.covBusSync) window.covBusSync();
     $("bfTime").value = ""; busPendRender(); renderToday();
     alert(st === "none" ? "Retiré." : "Enregistré.");
   });
@@ -1652,7 +1654,7 @@ function load(){
     if(!r.ok){ if(window.offerTrust(r, load)) return; err("Covoiturage : " + r.erreur); return; }
     data = norm(r.status === 404 ? empty() : JSON.parse(r.data));
     loaded = true; seen(); render(); widget();
-    autoFromPlanning();
+    busSync(autoFromPlanning);
   }).then(function(){ busy(false); });
   if(window.loadMyPlanning && A.hasPlanningLink && A.hasPlanningLink()) window.loadMyPlanning(function(){ if(loaded){ render(); autoFromPlanning(); } });
 }
@@ -1660,7 +1662,7 @@ function seen(){ var m = 0; Object.keys(data.days).forEach(function(k){ var x = 
 
 /* --- écriture : relire, modifier, réécrire (et recommencer si quelqu'un a écrit entre-temps) --- */
 var noCond = false;   // Synology qui refuse les écritures conditionnelles : détecté une fois, retenu
-function mutate(day, fn, txt){
+function mutate(day, fn, txt, after){
   busy(true); err("");
   var tries = 0, prev = null;
   function attempt(){
@@ -1686,7 +1688,7 @@ function mutate(day, fn, txt){
       });
     });
   }
-  attempt().catch(function(e){ if(e !== "__trust") err("Covoiturage : " + e); }).then(function(){ busy(false); if(data) { render(); widget(); } });
+  attempt().catch(function(e){ if(e !== "__trust") err("Covoiturage : " + e); }).then(function(){ busy(false); if(data) { render(); widget(); } if(after) after(); });
 }
 
 /* --- actions --- */
@@ -1730,6 +1732,44 @@ function editHour(day){
   }, me.nom + " : sortie de " + window.kidsCov() + " à " + v + " " + (all ? "tous les " + JOURS[w] : label(day)));
 }
 function reactivate(day){ mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = false; }, "Il faut aller chercher " + window.kidsCov() + " " + label(day) + " (" + me.nom + ")"); }
+
+/* --- bus validé : personne à aller chercher ce jour-là (partagé avec les autres téléphones) --- */
+function isBus(x){ return !!(x && x.off && x.bus); }
+function busOkDays(){
+  var o = {};
+  try{ var b = JSON.parse(A.getPref("widget_cal") || "{}").bus || {}; Object.keys(b).forEach(function(k){ if(b[k] && b[k].st === "ok") o[k] = b[k]; }); }catch(e){}
+  return o;
+}
+function busOps(d){
+  var ok = busOkDays(), ops = [];
+  schoolDays().forEach(function(day){
+    var x = d.days[day] || {};
+    if(ok[day] && !isBus(x)) ops.push({day: day, on: true});
+    else if(!ok[day] && isBus(x) && x.busBy === me.id) ops.push({day: day, on: false});
+  });
+  return ops;
+}
+var busRunning = false;
+function busSync(after){
+  if(busRunning || !data || !me || !me.id || !busOps(data).length){ if(after) after(); return; }
+  busRunning = true;
+  var kid = window.kidBus() || "La petite";
+  mutate(null, function(d){
+    busOps(d).forEach(function(o){
+      var y = d.days[o.day] = d.days[o.day] || {};
+      if(o.on){ y.off = true; y.bus = true; y.busBy = me.id; y.qui = null;
+        y.maj = {by: me.id, at: Date.now(), txt: "🚌 " + kid + " prend le bus " + label(o.day) + " : personne à aller chercher"}; }
+      else { y.off = false; y.bus = false; delete y.busBy;
+        y.maj = {by: me.id, at: Date.now(), txt: "Bus annulé " + label(o.day) + " : il faut aller chercher " + window.kidsCov()}; }
+    });
+  }, "", function(){ busRunning = false; if(after) after(); });
+}
+window.covBusSync = function(){
+  if(!A || !A.carpoolSettings) return;
+  me = settings(); if(!me.actif) return;
+  if(loaded && data){ busSync(); return; }
+  call("carpoolFetch").then(function(r){ if(!r.ok) return; data = norm(r.status === 404 ? empty() : JSON.parse(r.data)); loaded = true; busSync(); });
+};
 
 /* --- disponibilité d'après le planning (version avec planning) --- */
 var AVANT = 30, APRES = 15;     // minutes : trajet jusqu'au collège avant la sortie, marge après
@@ -1785,7 +1825,11 @@ function render(){
   schoolDays().forEach(function(day){
     var x = data.days[day] || {}, h = hourOf(data, day), cls = "kday", pic = "";
     var who, acts = "";
-    if(x.off){
+    if(isBus(x)){
+      cls += " off";
+      who = '<div class="who">🚌 ' + esc(window.kidBus() || "") + ' prend le bus : personne à aller chercher</div>';
+      acts = '<span class="muted" style="font-size:13px">Pour changer, modifie le bus (Bus › Suivi des réservations).</span>';
+    } else if(x.off){
       cls += " off";
       who = '<div class="who">Pas besoin d\'aller les chercher</div>';
       acts = '<button class="btn btn-ghost" data-a="react" data-d="' + day + '">Il faut y aller</button>';
@@ -1811,7 +1855,7 @@ function render(){
     // colonne de droite : heure de sortie, et dessous la photo de qui les récupère
     html += '<div class="' + cls + '"><div class="kbody"><div class="kleft"><span class="dt">' + esc(label(day)) + '</span>' +
       who + (pic ? '<div class="acts">' + acts + '</div>' : '') + '</div>' +
-      '<div class="kright"><button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button>' + pic + '</div></div>' +
+      '<div class="kright">' + (isBus(x) ? '<span class="hr">🚌</span>' : '<button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button>') + pic + '</div></div>' +
       (pic ? '' : '<div class="acts">' + acts + '</div>') + sub + '</div>';
   });
   $("kDays").innerHTML = html;
@@ -1944,6 +1988,7 @@ if(A && A.carpoolSettings){
 }
 function onRoute(){ if(location.hash === "#covoit") load(); }
 window.addEventListener("hashchange", onRoute); onRoute();
+if(location.hash !== "#covoit") setTimeout(function(){ try{ window.covBusSync(); }catch(e){} }, 1500);   // au lancement
 })();
 </script>
 </body>

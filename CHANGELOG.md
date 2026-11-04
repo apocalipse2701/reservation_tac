@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.3.0 — 04/11/2026
+- Covoiturage : quand le bus de Léa est validé (✅) pour un jour, ce jour passe en « 🚌 Léa prend le bus : personne à aller chercher » et on ne peut plus le prendre en covoiturage. C'est partagé avec tous les téléphones du covoiturage (ils sont prévenus).
+- Si le bus est ensuite refusé ou retiré, le jour redevient à prendre (« il faut aller chercher… »).
+- La synchronisation se fait à l'ouverture de l'appli, à l'ouverture du covoiturage et dès qu'une réponse de bus est indiquée à la main.
+
 ## 2.2.0 — 04/11/2026
 - Bus : nouvel encadré « ⏳ Suivi des réservations », toujours visible.
 - « Forcer un jour » : sur n'importe quelle date, marquer le bus comme ✅ pris en compte, ❌ refusé, ou 🗑️ le retirer (horaire facultatif). Utile pour une réservation faite par téléphone ou sur le site, ou pour corriger un jour.
