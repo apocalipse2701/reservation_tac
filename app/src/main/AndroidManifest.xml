@@ -37,6 +37,10 @@
             </intent-filter>
         </activity>
         <service
+            android:name=".BusMailWatch"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service
             android:name=".CantineWatch"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />

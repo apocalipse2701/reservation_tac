@@ -253,6 +253,17 @@
     <p class="muted" style="margin:8px 0 0">Enregistré automatiquement sur ce téléphone.</p>
   </section>
   <section class="card">
+    <h2>📬 Réponses de la compagnie de bus</h2>
+    <p class="muted" id="mlState" style="margin:0"></p>
+    <label for="mlAdr">Adresse mail (celle qui reçoit leurs réponses)</label><input id="mlAdr" type="email" autocomplete="off" autocapitalize="off">
+    <label for="mlPwd">Mot de passe de la boîte (ou mot de passe d'application)</label><input id="mlPwd" type="password" autocomplete="off">
+    <label for="mlSrv">Serveur de messagerie (IMAP)</label><input id="mlSrv" type="text" autocomplete="off" autocapitalize="off" placeholder="rempli selon ton adresse">
+    <label for="mlFrom">Expéditeur des réponses</label><input id="mlFrom" type="email" autocomplete="off" autocapitalize="off">
+    <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="mlSave" type="button">Enregistrer</button>
+    <button class="btn btn-ghost btn-small" id="mlCheck" type="button">Vérifier maintenant</button></div>
+    <p class="muted" style="margin:10px 0 0;font-size:12px">Lecture seule : l'appli lit uniquement les mails de cet expéditeur, sans les marquer comme lus ni les déplacer.</p>
+  </section>
+  <section class="card">
     <h2>🍽️ Portail cantine</h2>
     <p class="muted" id="rgPortal" style="margin:0 0 4px"></p>
     <label for="rgUser">Identifiant du portail famille</label><input id="rgUser" type="text" autocomplete="off" autocapitalize="off">
@@ -349,7 +360,7 @@
 </div></div>
 
 <div class="overlay" id="newsBox"><div class="sheet">
-  <h3>🍽️ Réponse du portail</h3>
+  <h3>📬 Nouvelles</h3>
   <div id="newsList"></div>
   <button class="btn btn-primary" id="newsOk" type="button" style="margin-top:16px">OK</button>
 </div></div>
@@ -815,8 +826,10 @@ $("go").addEventListener("click", function(){
   var sent = buildPayload();
   http("POST", "/demande-tad", JSON.stringify(sent)).then(function(){
     window.widgetData(function(d){
-      d.bus[sent.jour] = {aller: hm(sent.trajetAller.horaireDepart), retour: sent.trajetRetour ? hm(sent.trajetRetour.horaireDepart) : null};
+      d.bus[sent.jour] = {aller: hm(sent.trajetAller.horaireDepart), retour: sent.trajetRetour ? hm(sent.trajetRetour.horaireDepart) : null, st: "wait"};
     });
+    // en attente de la réponse de la compagnie (mail)
+    try{ if(window.Android && window.Android.busSent) window.Android.busSent(sent.jour, hm(sent.trajetAller.horaireDepart)); }catch(e){}
     $("form").classList.add("hidden"); $("footer").classList.add("hidden"); $("doneView").classList.remove("hidden");
     window.scrollTo(0, 0);
   }).catch(function(e){
@@ -855,7 +868,7 @@ function route_(){
   $("gear").classList.toggle("hidden", key === "reglages");
   setTimeout(function(){ window.scrollTo(0, 0); }, 0);   // le navigateur saute sinon vers l'élément du même nom
   if(key === "bus") idSummary();
-  if(key === "reglages"){ refreshSettings(); persoFill(); }
+  if(key === "reglages"){ refreshSettings(); persoFill(); mailFill(); }
   if(key === "") renderToday();
   window.scrollTo(0, 0);
 }
@@ -899,6 +912,36 @@ function refreshSettings(){
   }
 }
 window.refreshSettings = refreshSettings;
+
+/* ---------- Réponses de la compagnie de bus (boîte mail) ---------- */
+var mlPend = {}, mlN = 0;
+window.__mailDone = function(id, res){ var f = mlPend[id]; delete mlPend[id]; if(f) f(JSON.parse(res)); };
+function mailFill(){
+  var A = window.Android; if(!A || !A.mailSettings) return;
+  var m = {}; try{ m = JSON.parse(A.mailSettings()); }catch(e){}
+  $("mlAdr").value = m.adresse || ""; $("mlSrv").value = m.serveur || ""; $("mlFrom").value = m.expediteur || "";
+  $("mlPwd").value = ""; $("mlPwd").placeholder = m.motDePasse ? "enregistré (laisser vide pour le garder)" : "";
+  $("mlState").textContent = !m.actif ? "Pas encore réglé : l'appli ne peut pas savoir si tes demandes de bus sont prises en compte."
+    : (m.attente ? m.attente + " demande" + (m.attente > 1 ? "s" : "") + " de bus en attente de réponse." : "Aucune demande de bus en attente.");
+}
+$("mlAdr").addEventListener("change", function(){ if(!$("mlSrv").value && window.Android && window.Android.mailServerFor) $("mlSrv").value = window.Android.mailServerFor(this.value.trim()); });
+$("mlSave").addEventListener("click", function(){
+  var A = window.Android, m = {}; try{ m = JSON.parse(A.mailSettings()); }catch(e){}
+  var v = {adresse: $("mlAdr").value.trim(), motDePasse: $("mlPwd").value, serveur: $("mlSrv").value.trim(), expediteur: $("mlFrom").value.trim()};
+  if(!v.adresse || (!v.motDePasse && !m.motDePasse)){ alert("Indique l'adresse mail et son mot de passe."); return; }
+  if(!v.serveur && !A.mailServerFor(v.adresse)){ alert("Je ne connais pas le serveur de cette boîte : indique-le (il figure dans l'aide de ton fournisseur, rubrique IMAP)."); return; }
+  A.mailSave(JSON.stringify(v)); mailFill(); alert("Enregistré sur ce téléphone.");
+});
+$("mlCheck").addEventListener("click", function(){
+  var id = "m" + (++mlN); busy(true);
+  mlPend[id] = function(r){
+    busy(false);
+    if(!r.ok){ alert("Boîte mail : " + r.erreur); return; }
+    if(r.news && r.news.length) window.showNews(r.news); else alert("Pas de nouvelle réponse de la compagnie pour le moment.");
+    mailFill(); renderToday();
+  };
+  window.Android.mailCheck(id);
+});
 
 /* ---------- Mes enfants et trajets (réglages personnels) ---------- */
 var psRoutes = [], psStops = [];
@@ -1010,7 +1053,9 @@ function renderToday(){
   var cantKid = c ? Object.keys(c)[0] : "";
   lines += line("cantine", "c-cantine", "🍽️", "Cantine", cantKid, cs, cc);
   var b = (w.bus || {})[k];
-  lines += line("bus", "c-bus", "🚌", "Bus", [window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · "), b ? "Demandé · " + b.aller : "Pas de demande", b ? "ok" : "no");
+  lines += line("bus", "c-bus", "🚌", "Bus", [window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · "),
+    !b ? "Pas de demande" : b.st === "ok" ? "Pris en compte · " + b.aller : b.st === "ko" ? "Refusé · " + b.aller : b.st === "wait" ? "En attente · " + b.aller : "Demandé · " + b.aller,
+    !b ? "no" : b.st === "ko" ? "warn" : b.st === "wait" ? "no" : "ok");
   var cv = (w.covoit || {})[k], cvs = "—", cvc = "no";
   if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
   lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);

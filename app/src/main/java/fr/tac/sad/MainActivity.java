@@ -88,6 +88,11 @@ public class MainActivity extends Activity {
         super.onResume();
         foreground = this;
         if (web != null) web.evaluateJavascript("window.checkNews && window.checkNews()", null);
+        // une demande de bus attend sa réponse : coup d'œil à la boîte mail
+        if (BusMail.pending(this).length() > 0 && Vault.getSecret(this, BusMail.SECRET) != null) {
+            final android.content.Context c = getApplicationContext();
+            new Thread(() -> BusMail.checkAndTell(c)).start();
+        }
     }
 
     @Override
@@ -145,6 +150,48 @@ public class MainActivity extends Activity {
                 } catch (Exception ignored) {
                 }
             });
+        }
+
+        // ---------------- Réponses de la compagnie de bus par mail
+        @JavascriptInterface
+        public void busSent(String day, String aller) {
+            BusMail.sent(MainActivity.this, day, aller);
+            if (Vault.getSecret(MainActivity.this, BusMail.SECRET) != null) BusMailWatch.schedule(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public String mailSettings() {
+            return BusMail.settings(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public String mailServerFor(String address) {
+            return BusMail.serverFor(address);
+        }
+
+        @JavascriptInterface
+        public void mailSave(String json) {
+            BusMail.save(MainActivity.this, json);
+            if (BusMail.pending(MainActivity.this).length() > 0) BusMailWatch.schedule(MainActivity.this);
+        }
+
+        /** Relève tout de suite ; {ok, news[], erreur}. */
+        @JavascriptInterface
+        public void mailCheck(final String id) {
+            new Thread(() -> {
+                JSONObject r = new JSONObject();
+                try {
+                    r.put("ok", true).put("news", new org.json.JSONArray(BusMail.check(MainActivity.this)));
+                } catch (Throwable t) {
+                    try {
+                        String m = t.getMessage();
+                        if (t instanceof java.net.UnknownHostException) m = "serveur de messagerie introuvable";
+                        r.put("ok", false).put("erreur", m == null ? t.getClass().getSimpleName() : m);
+                    } catch (Exception ignored) {
+                    }
+                }
+                answer("__mailDone", id, r.toString());
+            }).start();
         }
 
         /** Réglages personnels modifiés : adresse du portail, widget. */

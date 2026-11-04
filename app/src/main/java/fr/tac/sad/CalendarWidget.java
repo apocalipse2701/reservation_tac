@@ -208,6 +208,10 @@ public class CalendarWidget extends AppWidgetProvider {
         String s = "🚌 " + (kid.isEmpty() ? "" : kid + " ") + day.optString("aller", "");
         String r = day.optString("retour", "");
         if (!r.isEmpty() && !"null".equals(r)) s += " / " + r;
+        String st = day.optString("st", "");
+        if (st.equals("ok")) s += " ✅";
+        else if (st.equals("ko")) s += " ❌";
+        else if (st.equals("wait")) s += " ⏳";
         return s;
     }
 
