@@ -48,7 +48,42 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
 
         // Affiche les boîtes de dialogue JavaScript (confirm / prompt)
-        web.setWebChromeClient(new WebChromeClient());
+        // confirmations et saisies : fenêtre sans le titre « La page file:// indique »
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onJsAlert(WebView v, String url, String msg, android.webkit.JsResult r) {
+                new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                        .setMessage(msg).setPositiveButton("OK", (d, w) -> r.confirm())
+                        .setOnCancelListener(d -> r.confirm()).show();
+                return true;
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView v, String url, String msg, android.webkit.JsResult r) {
+                new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                        .setMessage(msg).setPositiveButton("OK", (d, w) -> r.confirm())
+                        .setNegativeButton("Annuler", (d, w) -> r.cancel())
+                        .setOnCancelListener(d -> r.cancel()).show();
+                return true;
+            }
+
+            @Override
+            public boolean onJsPrompt(WebView v, String url, String msg, String def, android.webkit.JsPromptResult r) {
+                final android.widget.EditText in = new android.widget.EditText(MainActivity.this);
+                in.setText(def == null ? "" : def);
+                in.setSelection(in.getText().length());
+                android.widget.FrameLayout f = new android.widget.FrameLayout(MainActivity.this);
+                int p = (int) (20 * getResources().getDisplayMetrics().density);
+                f.setPadding(p, 0, p, 0);
+                f.addView(in);
+                new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                        .setMessage(msg).setView(f)
+                        .setPositiveButton("OK", (d, w) -> r.confirm(in.getText().toString()))
+                        .setNegativeButton("Annuler", (d, w) -> r.cancel())
+                        .setOnCancelListener(d -> r.cancel()).show();
+                return true;
+            }
+        });
         // Les liens (ex. règlement PDF) s'ouvrent dans le navigateur du téléphone
         web.setWebViewClient(new WebViewClient() {
             @Override

@@ -91,6 +91,13 @@
   .footer .inner{max-width:640px;margin:0 auto}
   .overlay{position:fixed;inset:0;background:rgba(10,18,24,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
   .overlay.show{display:flex}
+  .overlay.pop{align-items:center;padding:24px;z-index:40}
+  .popc{background:var(--card);color:var(--ink);border-radius:26px;padding:24px 20px 18px;width:100%;max-width:340px;text-align:center;box-shadow:var(--shadow);animation:popin .18s ease-out}
+  .popi{width:56px;height:56px;border-radius:18px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--soft);color:var(--brand)}
+  .popi.warn{background:var(--danger-bg);color:var(--danger)}
+  .popm{font-size:16px;font-weight:600;line-height:1.4;white-space:pre-line;margin:0 0 18px}
+  @keyframes popin{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.popc{animation:none}}
   .sheet{background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;width:100%;max-width:640px;padding:22px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
   .sheet h3{margin:0 0 10px;font:700 20px var(--disp);font-stretch:90%}
   .shead{display:flex;align-items:center;gap:10px;position:sticky;top:-22px;margin:-22px -18px 10px;padding:14px 18px 8px;background:var(--card);z-index:1}
@@ -210,6 +217,32 @@
   .kday .pl{font-size:12.5px;color:var(--brand3);margin-top:5px;font-weight:600}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<script>
+/* Messages : petite fenêtre aux couleurs du thème (au lieu de « La page file:// indique ») */
+(function(){
+  var queue = [], box = null;
+  function show(){
+    if(!queue.length || (box && box.classList.contains("show"))) return;
+    var m = queue.shift();
+    if(!box){
+      box = document.createElement("div"); box.className = "overlay pop"; box.id = "popBox";
+      box.innerHTML = '<div class="popc" role="alertdialog" aria-modal="true"><div class="popi"></div><p class="popm"></p><button class="btn btn-primary" type="button">OK</button></div>';
+      document.body.appendChild(box);
+      box.querySelector("button").addEventListener("click", function(){ box.classList.remove("show"); setTimeout(show, 120); });
+      new MutationObserver(function(){ if(!box.classList.contains("show")) setTimeout(show, 120); }).observe(box, {attributes: true, attributeFilter: ["class"]});
+    }
+    var bad = /impossible|erreur|non compris|incorrect|refus|échec|n'a pas pu|choisis|indique|remplis|aucun/i.test(m);
+    var ok = !bad && /enregistr|retiré|recréé|copié|envoyé|supprimé|validé|terminé/i.test(m);
+    var ic = box.querySelector(".popi"); ic.className = "popi" + (bad ? " warn" : ""); ic.textContent = bad ? "⚠️" : ok ? "✓" : "💬";
+    box.querySelector(".popm").textContent = m;
+    box.classList.add("show");
+  }
+  window.alert = function(m){
+    queue.push(String(m == null ? "" : m));
+    if(document.body) show(); else document.addEventListener("DOMContentLoaded", show);
+  };
+})();
+</script>
 <script>
 (function(){
   var t = null;
@@ -1065,7 +1098,7 @@ $("mlSave").addEventListener("click", function(){
   var v = {adresse: $("mlAdr").value.trim(), motDePasse: $("mlPwd").value, serveur: $("mlSrv").value.trim(), expediteur: $("mlFrom").value.trim()};
   if(!v.adresse || (!v.motDePasse && !m.motDePasse)){ alert("Indique l'adresse mail et son mot de passe."); return; }
   if(!v.serveur && !A.mailServerFor(v.adresse)){ alert("Je ne connais pas le serveur de cette boîte : indique-le (il figure dans l'aide de ton fournisseur, rubrique IMAP)."); return; }
-  A.mailSave(JSON.stringify(v)); mailFill(); alert("Enregistré sur ce téléphone.");
+  A.mailSave(JSON.stringify(v)); mailFill(); alert("Enregistré sur le téléphone.");
 });
 $("mlCheck").addEventListener("click", function(){
   var id = "m" + (++mlN); busy(true);
@@ -1122,7 +1155,7 @@ $("psSave").addEventListener("click", function(){
       label: r.name + " · " + dep.name.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); }) + " → " + dst.name.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); })};
   }
   savePerso(P); persoFill(); persoTiles(); if(window.reloadRoute) window.reloadRoute();
-  alert("Enregistré sur ce téléphone.");
+  alert("Enregistré sur le téléphone.");
 });
 $("psNoRoute").addEventListener("click", function(){
   var P = window.perso(); P.route = {}; savePerso(P); persoFill(); persoTiles(); if(window.reloadRoute) window.reloadRoute();
