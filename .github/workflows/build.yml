@@ -67,9 +67,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete apk --yes --cleanup-tag || true
           # le titre commence par le numéro de compilation : les anciennes versions de l'appli le lisent
-          gh release create apk GestionEnfants-sans-planning.apk ResaSAD.apk --title "Version ${{ github.run_number }} (${VERSION}) — dernière" --notes-file notes.md
+          # (plusieurs essais : GitHub répond parfois « 502 » un moment)
+          for i in 1 2 3 4 5; do
+            gh release delete apk --yes --cleanup-tag || true
+            gh release create apk GestionEnfants-sans-planning.apk ResaSAD.apk --title "Version ${{ github.run_number }} (${VERSION}) — dernière" --notes-file notes.md && exit 0
+            sleep $((i * 20))
+          done
+          exit 1
 
       - name: Publier la version numérotée (une fois par numéro)
         env:
@@ -78,5 +83,9 @@ jobs:
           if gh release view "v${VERSION}" > /dev/null 2>&1; then
             echo "v${VERSION} existe déjà : pense à augmenter version.txt pour une nouvelle version."
           else
-            gh release create "v${VERSION}" GestionEnfants-sans-planning.apk ResaSAD.apk --title "v${VERSION}" --notes-file notes.md --latest=false
+            for i in 1 2 3 4 5; do
+              gh release create "v${VERSION}" GestionEnfants-sans-planning.apk ResaSAD.apk --title "v${VERSION}" --notes-file notes.md --latest=false && exit 0
+              sleep $((i * 20)); gh release delete "v${VERSION}" --yes --cleanup-tag || true
+            done
+            exit 1
           fi
