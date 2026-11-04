@@ -287,6 +287,24 @@ public class MainActivity extends Activity {
             return PlanningLink.settings(MainActivity.this);
         }
 
+        /** Copie un texte dans le presse-papiers du téléphone. */
+        @JavascriptInterface
+        public void copyText(String text) {
+            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (cm != null) cm.setPrimaryClip(android.content.ClipData.newPlainText("Code", text));
+        }
+
+        /** Code de partage du planning enregistré sur ce téléphone. */
+        @JavascriptInterface
+        public String planningShowCode() {
+            try {
+                String s = Vault.getSecret(MainActivity.this, "planning_link");
+                return s == null ? "" : new JSONObject(s).optString("code");
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
         @JavascriptInterface
         public void planningSave(String json) {
             PlanningLink.save(MainActivity.this, json);

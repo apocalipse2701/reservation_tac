@@ -275,12 +275,14 @@
   <section class="card hidden" id="rgPlanCard">
     <h2>🗓️ Lien avec mon planning</h2>
     <p class="muted" id="rgPlan" style="margin:0 0 10px"></p>
-    <button class="btn btn-ghost btn-small" id="rgPlanBtn" type="button">Modifier</button>
+    <div class="row"><button class="btn btn-ghost btn-small" id="rgPlanBtn" type="button">Modifier</button>
+    <button class="btn btn-ghost btn-small" id="rgPlanCode" type="button">Afficher le code</button></div>
   </section>
   <section class="card">
     <h2>🚗 Covoiturage</h2>
     <p class="muted" id="rgCov" style="margin:0 0 10px"></p>
-    <button class="btn btn-ghost btn-small" id="rgCovBtn" type="button">Modifier</button>
+    <div class="row"><button class="btn btn-ghost btn-small" id="rgCovBtn" type="button">Modifier</button>
+    <button class="btn btn-ghost btn-small" id="rgCovCode" type="button">Afficher le code</button></div>
   </section>
   <section class="card">
     <h2>🧩 Widget</h2>
@@ -357,6 +359,14 @@
     <button class="btn btn-cancel btn-small" id="kReset" type="button">Repartir de zéro avec mon code</button>
   </div>
   <p style="text-align:center;margin:12px 0 0"><a href="#" id="kForget" class="muted">Quitter ce covoiturage sur ce téléphone</a></p>
+</div></div>
+
+<div class="overlay" id="codeBox"><div class="sheet">
+  <h3 id="codeTitle"></h3>
+  <p id="codeValue" style="font:700 26px/1.2 var(--disp);letter-spacing:.06em;text-align:center;margin:18px 0;user-select:all"></p>
+  <p class="muted" id="codeHelp" style="margin:0 0 14px"></p>
+  <div class="row"><button class="btn btn-ghost" id="codeCopy" type="button">Copier</button>
+  <button class="btn btn-primary" id="codeOk" type="button" style="padding:12px">OK</button></div>
 </div></div>
 
 <div class="overlay" id="newsBox"><div class="sheet">
@@ -894,10 +904,12 @@ function refreshSettings(){
   $("rgPlanCard").classList.toggle("hidden", !hasPlan);
   if(hasPlan){ var ps = {}; try{ ps = JSON.parse(A.planningSettings()); }catch(e){}
     $("rgPlan").textContent = ps.actif ? "Relié à Planning Commandes (" + (ps.adresse || "") + ", dossier " + (ps.dossier || "") + ")." : "Pas encore relié.";
-    $("rgPlanBtn").textContent = ps.actif ? "Modifier" : "Relier à Planning Commandes"; }
+    $("rgPlanBtn").textContent = ps.actif ? "Modifier" : "Relier à Planning Commandes";
+    $("rgPlanCode").classList.toggle("hidden", !ps.actif); }
   var cs = {}; try{ cs = JSON.parse(A.carpoolSettings()); }catch(e){}
   $("rgCov").textContent = cs.actif ? "Activé · tu apparais comme « " + (cs.nom || "?") + " »." : "Pas encore réglé.";
   $("rgCovBtn").textContent = cs.actif ? "Modifier" : "Régler le covoiturage";
+  $("rgCovCode").classList.toggle("hidden", !cs.actif);
   var nw = A && A.widgetCount ? A.widgetCount() : 0, wb = $("rgWidBtns");
   wb.innerHTML = "";
   $("rgWid").textContent = nw ? (nw === 1 ? "Un widget est posé sur ton écran d'accueil." : nw + " widgets sont posés sur ton écran d'accueil.")
@@ -1078,6 +1090,27 @@ $("rgForget").addEventListener("click", function(ev){
   if(confirm("Oublier l'identifiant et le mot de passe du portail enregistrés sur ce téléphone ?")){ window.Android.forgetLogin(); refreshSettings(); }
 });
 $("rgPlanBtn").addEventListener("click", function(){ if(window.openPlanSet) window.openPlanSet(); });
+function showCode(titre, code, aide){
+  if(!code){ alert("Aucun code enregistré sur ce téléphone."); return; }
+  $("codeTitle").textContent = titre; $("codeValue").textContent = code; $("codeHelp").textContent = aide;
+  $("codeBox").classList.add("show");
+}
+$("rgPlanCode").addEventListener("click", function(){
+  showCode("Code de partage du planning", window.Android.planningShowCode(),
+    "Le même que dans Planning Commandes › Réglages › Partage du planning.");
+});
+$("rgCovCode").addEventListener("click", function(){
+  showCode("Code du covoiturage", window.Android.carpoolShowCode(),
+    "Tous les téléphones du covoiturage doivent avoir ce code. Majuscules, espaces et tirets ne comptent pas.");
+});
+$("codeCopy").addEventListener("click", function(){
+  var t = $("codeValue").textContent;
+  try{
+    if(window.Android && window.Android.copyText){ window.Android.copyText(t); $("codeCopy").textContent = "Copié ✓"; }
+    else navigator.clipboard.writeText(t).then(function(){ $("codeCopy").textContent = "Copié ✓"; });
+  }catch(e){}
+});
+$("codeOk").addEventListener("click", function(){ $("codeBox").classList.remove("show"); $("codeCopy").textContent = "Copier"; });
 $("rgCovBtn").addEventListener("click", function(){ if(window.openCarpoolSet) window.openCarpoolSet(); });
 window.addEventListener("hashchange", route_);
 window.addEventListener("load", function(){ setTimeout(function(){ window.scrollTo(0, 0); }, 0); });
