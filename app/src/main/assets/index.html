@@ -184,7 +184,11 @@
   .kday .acts .btn-primary{background:var(--brand3);color:#fff}
   .kday .sub{font-size:12px;color:var(--muted);margin-top:7px}
   .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;object-fit:cover;color:#fff;font-weight:700;flex:0 0 auto;box-shadow:0 0 0 2px var(--card)}
-  .whop{display:flex;align-items:center;gap:10px}
+  .kbody{display:flex;gap:10px;align-items:flex-start}
+  .kleft{flex:1;min-width:0}
+  .kright{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .kright .av{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--soft3)}
+  .kday.mine .kright .av{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ok)}
   .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .nonp{display:inline-flex;align-items:center;gap:4px}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
@@ -1710,7 +1714,7 @@ function render(){
   $("kMain").classList.remove("hidden");
   var html = "", free = 0, showPlan = A.hasPlanningLink && A.hasPlanningLink() && window.planningForDay;
   schoolDays().forEach(function(day){
-    var x = data.days[day] || {}, h = hourOf(data, day), cls = "kday";
+    var x = data.days[day] || {}, h = hourOf(data, day), cls = "kday", pic = "";
     var who, acts = "";
     if(x.off){
       cls += " off";
@@ -1724,10 +1728,10 @@ function render(){
         : '<button class="btn btn-ghost" data-a="cannot" data-d="' + day + '">Je ne peux pas</button>';
     } else if(x.qui === me.id){
       cls += " mine";
-      who = '<div class="who me whop">' + avatar(me.id, 40) + '<span>✅ C\'est toi</span></div>';
+      who = '<div class="who me">✅ C\'est toi</div>'; pic = avatar(me.id, 64);
       acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
     } else {
-      who = '<div class="who whop">' + avatar(x.qui, 40) + '<b>' + esc(nameOf(x.qui)) + '</b></div>';
+      who = '<div class="who"><b>' + esc(nameOf(x.qui)) + '</b></div>'; pic = avatar(x.qui, 64);
       acts = '<button class="btn btn-ghost" data-a="claim" data-d="' + day + '">Prendre le relais</button>';
     }
     var nonIds = (x.non || []).filter(function(i){ return i !== x.qui; });
@@ -1735,9 +1739,11 @@ function render(){
       return '<span class="nonp">' + avatar(i, 20) + esc(nameOf(i) + ((x.nonAuto || []).indexOf(i) >= 0 ? " (planning)" : "")) + '</span>'; }).join(" ") + '</div>' : "";
     if(showPlan){ var pl = window.planningForDay(day); if(pl) sub += '<div class="pl">🗓️ Planning : ' + esc(pl) + '</div>'; }
     if(showPlan && x.qui === me.id && !x.off && hasPlan() && busyAt(day, h) === true) sub += '<div class="sub" style="color:var(--danger);font-weight:650">⚠️ Ton planning dit que tu travailles à cette heure-là.</div>';
-    html += '<div class="' + cls + '"><div class="top"><span class="dt">' + esc(label(day)) + '</span>' +
-      '<button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button></div>' +
-      who + '<div class="acts">' + acts + '</div>' + sub + '</div>';
+    // colonne de droite : heure de sortie, et dessous la photo de qui les récupère
+    html += '<div class="' + cls + '"><div class="kbody"><div class="kleft"><span class="dt">' + esc(label(day)) + '</span>' +
+      who + (pic ? '<div class="acts">' + acts + '</div>' : '') + '</div>' +
+      '<div class="kright"><button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button>' + pic + '</div></div>' +
+      (pic ? '' : '<div class="acts">' + acts + '</div>') + sub + '</div>';
   });
   $("kDays").innerHTML = html;
   // état du lien avec le planning : ce que l'appli a pu décider
