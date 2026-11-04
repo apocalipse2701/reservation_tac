@@ -10,6 +10,13 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.1.0 — 04/11/2026
+
+**Bus**
+- Carte « Demandes en attente » en haut de la partie Bus : chaque demande sans réponse peut être marquée
+  « ✅ Prise en compte » ou « ❌ Refusée » à la main, si le mail de la compagnie n'est pas arrivé ou pas reconnu.
+  L'accueil et le widget sont mis à jour, et l'appli n'attend plus de mail pour cette demande.
+
 ## 2.0.0 — 04/11/2026
 
 Première version numérotée : elle regroupe tout le travail fait jusqu'ici.

@@ -184,6 +184,11 @@
   .kday .acts .btn-primary{background:var(--brand3);color:#fff}
   .kday .sub{font-size:12px;color:var(--muted);margin-top:7px}
   .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;object-fit:cover;color:#fff;font-weight:700;flex:0 0 auto;box-shadow:0 0 0 2px var(--card)}
+  .bpend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-top:1.5px solid var(--line)}
+  .bpend:first-child{border-top:0}
+  .bpend .d{flex:1 1 100%;font-weight:650}
+  .bpend .btn{flex:1}
+  .bpend .d small{display:block;font-weight:400;color:var(--muted);font-size:12px}
   .kbody{display:flex;gap:10px;align-items:flex-start}
   .kleft{flex:1;min-width:0}
   .kright{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -420,6 +425,13 @@
 
 <main id="form" class="hidden">
   <!-- Favoris -->
+  <!-- Demandes envoyées, en attente de la réponse de la compagnie -->
+  <section class="card hidden" id="busPend">
+    <h2>⏳ Demandes en attente</h2>
+    <p class="muted" style="margin:0 0 6px">Si la compagnie a répondu sans que le mail soit reconnu, indique sa réponse ici.</p>
+    <div id="busPendList"></div>
+  </section>
+
   <section class="card" id="favCard">
     <h2>Mes trajets favoris <small>1 touche pour remplir</small></h2>
     <div class="chips" id="favs"></div>
@@ -893,7 +905,7 @@ function route_(){
   $("back").classList.toggle("hidden", !VIEWS[key] || key === "");
   $("gear").classList.toggle("hidden", key === "reglages");
   setTimeout(function(){ window.scrollTo(0, 0); }, 0);   // le navigateur saute sinon vers l'élément du même nom
-  if(key === "bus") idSummary();
+  if(key === "bus"){ idSummary(); busPendRender(); }
   if(key === "reglages"){ refreshSettings(); persoFill(); mailFill(); }
   if(key === "") renderToday();
   window.scrollTo(0, 0);
@@ -903,6 +915,31 @@ document.querySelectorAll("[data-go]").forEach(function(b){
 });
 $("back").addEventListener("click", function(){ history.back(); });
 $("gear").addEventListener("click", function(){ location.hash = "reglages"; });
+/* Demandes de bus en attente : validation ou refus à la main (mail non reçu) */
+function busPendRender(){
+  var A = window.Android, list = [];
+  try{ list = JSON.parse(A && A.busPending ? A.busPending() : "[]"); }catch(e){}
+  $("busPend").classList.toggle("hidden", !list.length);
+  var box = $("busPendList"); box.innerHTML = "";
+  list.sort(function(a, b){ return a.at - b.at; }).forEach(function(p){
+    var parts = String(p.day).split("-"), d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    var sent = new Date(p.at);
+    var row = document.createElement("div"); row.className = "bpend";
+    row.innerHTML = '<span class="d">' + esc(d.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"})) + (p.aller ? " · " + esc(p.aller) : "") +
+      '<small>Demande envoyée le ' + esc(sent.toLocaleDateString("fr-FR", {day: "numeric", month: "short"})) + ' à ' + esc(sent.toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"})) + '</small></span>' +
+      '<button class="btn btn-ghost btn-small" type="button" data-st="ok">✅ Prise en compte</button>' +
+      '<button class="btn btn-cancel btn-small" type="button" data-st="ko">❌ Refusée</button>';
+    row.querySelectorAll("button").forEach(function(b){
+      b.addEventListener("click", function(){
+        var st = b.getAttribute("data-st");
+        if(!confirm(st === "ok" ? "Marquer cette demande comme prise en compte par la compagnie ?" : "Marquer cette demande comme refusée ?")) return;
+        A.busResolve(String(p.at), st);
+        busPendRender(); renderToday();
+      });
+    });
+    box.appendChild(row);
+  });
+}
 function idSummary(){
   var n = ($("prenom").value + " " + $("nom").value).trim(), c = [$("tel").value, $("email").value].filter(Boolean).join(" · ");
   $("idSum").innerHTML = n ? "👤 " + esc(n) + (c ? '<br><small class="muted">' + esc(c) + "</small>" : "") + ' <a href="#reglages">modifier</a>'

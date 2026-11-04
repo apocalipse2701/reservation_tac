@@ -215,6 +215,22 @@ public class MainActivity extends Activity {
             if (Vault.getSecret(MainActivity.this, BusMail.SECRET) != null) BusMailWatch.schedule(MainActivity.this);
         }
 
+        /** Demandes de bus sans réponse : [{day, aller, at}]. */
+        @JavascriptInterface
+        public String busPending() {
+            return BusMail.pending(MainActivity.this).toString();
+        }
+
+        /** Validation (ok) ou refus (ko) à la main. */
+        @JavascriptInterface
+        public boolean busResolve(String at, String st) {
+            try {
+                return BusMail.resolve(MainActivity.this, Long.parseLong(at), "ko".equals(st) ? "ko" : "ok");
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         @JavascriptInterface
         public String mailSettings() {
             return BusMail.settings(MainActivity.this);

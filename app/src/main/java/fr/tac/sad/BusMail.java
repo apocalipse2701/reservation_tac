@@ -121,6 +121,23 @@ public class BusMail {
         }
     }
 
+    /** Réponse saisie à la main (mail jamais reçu) : la demande envoyée à l'instant « at » est réglée. */
+    static synchronized boolean resolve(Context c, long at, String st) {
+        try {
+            JSONArray p = pending(c);
+            for (int i = 0; i < p.length(); i++) {
+                JSONObject d = p.getJSONObject(i);
+                if (d.optLong("at") != at) continue;
+                p.remove(i);
+                prefs(c).edit().putString("bus_pending", p.toString()).apply();
+                setWidget(c, d.optString("day"), st);
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
     private static void setWidget(Context c, String day, String st) {
         try {
             JSONObject w = new JSONObject(prefs(c).getString("widget_cal", "{}"));
