@@ -2,8 +2,10 @@ plugins {
     id 'com.android.application'
 }
 
-// Numéro de version = numéro de compilation GitHub (augmente à chaque publication)
+// versionCode = numéro de compilation GitHub (augmente à chaque publication, sert aux mises à jour) ;
+// versionName = numéro lisible tiré de version.txt (voir CHANGELOG.md)
 def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+def appVersion = rootProject.file("version.txt").text.trim()
 
 android {
     namespace 'fr.tac.sad'
@@ -14,7 +16,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode runNumber
-        versionName "1." + runNumber
+        versionName appVersion
     }
 
     // Clé de signature fixe : indispensable pour que chaque mise à jour s'installe par-dessus la précédente

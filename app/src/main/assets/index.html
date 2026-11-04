@@ -302,7 +302,8 @@
   <section class="card">
     <h2>📱 Application</h2>
     <p class="muted" style="margin:0 0 10px"><span id="appVer">Version ?</span></p>
-    <button class="btn btn-ghost btn-small" id="checkUpd" type="button">Rechercher une mise à jour</button>
+    <div class="row"><button class="btn btn-ghost btn-small" id="checkUpd" type="button">Rechercher une mise à jour</button>
+    <button class="btn btn-ghost btn-small" id="whatsNew" type="button">Nouveautés</button></div>
   </section>
 </main>
 
@@ -1129,7 +1130,8 @@ $("codeOk").addEventListener("click", function(){ $("codeBox").classList.remove(
 $("rgCovBtn").addEventListener("click", function(){ if(window.openCarpoolSet) window.openCarpoolSet(); });
 window.addEventListener("hashchange", route_);
 window.addEventListener("load", function(){ setTimeout(function(){ window.scrollTo(0, 0); }, 0); });
-if(window.Android && window.Android.appVersion) $("appVer").textContent = "Version " + window.Android.appVersion();
+if(window.Android && window.Android.appVersion) $("appVer").textContent = "Version " + (window.Android.appVersionName ? window.Android.appVersionName() + " (compilation " + window.Android.appVersion() + ")" : window.Android.appVersion());
+$("whatsNew").addEventListener("click", function(){ if(window.Android && window.Android.showWhatsNew) window.Android.showWhatsNew(); });
 $("checkUpd").addEventListener("click", function(ev){ ev.preventDefault(); if(window.Android && window.Android.checkUpdate) window.Android.checkUpdate(); });
 route_();
 })();

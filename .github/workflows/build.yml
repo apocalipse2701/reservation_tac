@@ -54,9 +54,29 @@ jobs:
             ResaSAD.apk
             GestionEnfants-sans-planning.apk
 
-      - name: Publier en téléchargement direct (Release)
+      - name: Notes de version
+        run: |
+          V=$(tr -d ' \r\n' < version.txt)
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          # section « ## V » du CHANGELOG
+          awk -v v="$V" '$0 ~ "^## "v"( |$)" {f=1; next} /^## / {if(f) exit} f' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Version $V" > notes.md
+          printf '\n---\nAvec le lien vers Planning Commandes : ResaSAD.apk. Sans planning : GestionEnfants-sans-planning.apk.\n' >> notes.md
+
+      - name: Publier la dernière version (mises à jour automatiques)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete apk --yes --cleanup-tag || true
-          gh release create apk GestionEnfants-sans-planning.apk ResaSAD.apk --title "Version ${{ github.run_number }}" --notes "Avec le lien vers Planning Commandes : ResaSAD.apk. Sans planning : GestionEnfants-sans-planning.apk. Télécharge le fichier voulu depuis le téléphone Android et ouvre-le pour l installer."
+          # le titre commence par le numéro de compilation : les anciennes versions de l'appli le lisent
+          gh release create apk GestionEnfants-sans-planning.apk ResaSAD.apk --title "Version ${{ github.run_number }} (${VERSION}) — dernière" --notes-file notes.md
+
+      - name: Publier la version numérotée (une fois par numéro)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${VERSION}" > /dev/null 2>&1; then
+            echo "v${VERSION} existe déjà : pense à augmenter version.txt pour une nouvelle version."
+          else
+            gh release create "v${VERSION}" GestionEnfants-sans-planning.apk ResaSAD.apk --title "v${VERSION}" --notes-file notes.md --latest=false
+          fi

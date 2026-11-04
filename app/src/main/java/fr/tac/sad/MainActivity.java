@@ -450,6 +450,16 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public String appVersionName() {
+            return Updater.versionName(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void showWhatsNew() {
+            runOnUiThread(() -> Updater.showNotes(MainActivity.this));
+        }
+
+        @JavascriptInterface
         public void checkUpdate() {
             runOnUiThread(() -> Updater.check(MainActivity.this, false));
         }

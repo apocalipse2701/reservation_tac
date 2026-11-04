@@ -28,6 +28,41 @@ public class Updater {
 
     private static final String API = "https://api.github.com/repos/apocalipse2701/reservation_tac/releases/tags/apk";
 
+    /** Numéro lisible (version.txt), ex. « 2.0.0 ». */
+    static String versionName(Context c) {
+        try {
+            return c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "?";
+        }
+    }
+
+    /** Markdown simple → texte lisible dans une boîte de dialogue. */
+    static String plain(String md) {
+        return md.replaceAll("\\*\\*", "").replaceAll("(?m)^#+\\s*", "").replaceAll("(?m)^- ", "• ").replace("`", "").trim();
+    }
+
+    /** Notes de la version installée (page v<version> sur GitHub). */
+    static void showNotes(final Activity a) {
+        final String v = versionName(a);
+        new Thread(() -> {
+            String body = "";
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL("https://api.github.com/repos/apocalipse2701/reservation_tac/releases/tags/v" + v).openConnection();
+                c.setConnectTimeout(10000);
+                c.setReadTimeout(15000);
+                c.setRequestProperty("Accept", "application/vnd.github+json");
+                c.setRequestProperty("User-Agent", "GestionEnfants");
+                if (c.getResponseCode() == 200) body = new JSONObject(read(c.getInputStream())).optString("body", "").split("\n---")[0];
+                c.disconnect();
+            } catch (Exception ignored) {
+            }
+            final String txt = body.trim().isEmpty() ? "Notes indisponibles (pas de connexion ?)." : plain(body);
+            a.runOnUiThread(() -> new AlertDialog.Builder(a).setTitle("Nouveautés de la version " + v).setMessage(txt)
+                    .setPositiveButton("OK", null).show());
+        }).start();
+    }
+
     static int currentVersion(Context c) {
         try {
             PackageInfo p = c.getPackageManager().getPackageInfo(c.getPackageName(), 0);
@@ -41,7 +76,7 @@ public class Updater {
     static void check(final Activity a, final boolean silent) {
         new Thread(() -> {
             int latest = -1;
-            String apkUrl = null;
+            String apkUrl = null, notes = "", name = "";
             try {
                 HttpURLConnection c = (HttpURLConnection) new URL(API).openConnection();
                 c.setConnectTimeout(10000);
@@ -50,8 +85,10 @@ public class Updater {
                 c.setRequestProperty("User-Agent", "GestionEnfants");
                 if (c.getResponseCode() == 200) {
                     JSONObject rel = new JSONObject(read(c.getInputStream()));
-                    Matcher m = Pattern.compile("(\\d+)").matcher(rel.optString("name", ""));
+                    name = rel.optString("name", "");
+                    Matcher m = Pattern.compile("(\\d+)").matcher(name);         // « Version 49 (2.0.0) » : n° de compilation
                     if (m.find()) latest = Integer.parseInt(m.group(1));
+                    notes = rel.optString("body", "").split("\n---")[0].trim();
                     JSONArray assets = rel.optJSONArray("assets");
                     if (assets != null) for (int i = 0; i < assets.length(); i++) {
                         JSONObject as = assets.getJSONObject(i);
@@ -62,22 +99,25 @@ public class Updater {
             } catch (Exception ignored) {
             }
             final int newest = latest;
-            final String url = apkUrl;
+            final String url = apkUrl, relNotes = notes;
+            Matcher vm = Pattern.compile("\\((\\d+\\.\\d+\\.\\d+)\\)").matcher(name);
+            final String newName = vm.find() ? vm.group(1) : String.valueOf(latest);
             final int mine = currentVersion(a);
             a.runOnUiThread(() -> {
                 if (a.isFinishing()) return;
                 if (newest > mine && url != null) {
                     new AlertDialog.Builder(a)
                             .setTitle("Mise à jour disponible")
-                            .setMessage("Une nouvelle version de l'appli est disponible (version " + newest
-                                    + ", tu as la " + mine + ").\n\nTes informations enregistrées sont conservées.")
+                            .setMessage("Version " + newName + " disponible (tu as la " + versionName(a) + ").\n\n"
+                                    + (relNotes.isEmpty() ? "" : "Nouveautés :\n" + plain(relNotes) + "\n\n")
+                                    + "Tes informations enregistrées sont conservées.")
                             .setPositiveButton("Mettre à jour", (d, w) -> start(a, url))
                             .setNegativeButton("Plus tard", null)
                             .show();
                 } else if (!silent) {
                     new AlertDialog.Builder(a)
                             .setMessage(newest < 0 ? "Impossible de vérifier les mises à jour (pas de connexion ?)."
-                                    : "L'appli est à jour (version " + mine + ").")
+                                    : "L'appli est à jour (version " + versionName(a) + ", compilation " + mine + ").")
                             .setPositiveButton("OK", null)
                             .show();
                 }
