@@ -368,8 +368,12 @@ public class Carpool extends JobService {
                 JSONObject day = days == null ? null : days.optJSONObject(k);
                 if (day != null && day.optBoolean("off")) continue;
                 String h = day != null ? day.optString("heure", "") : "";
-                if (h.isEmpty() && defs != null) h = defs.optString(String.valueOf(dow == Calendar.SUNDAY ? 7 : dow - 1), "");
                 String qui = day != null ? day.optString("qui", "") : "";
+                JSONObject edt = d.optJSONObject("edt");
+                if (h.isEmpty() && edt != null) {
+                    if (edt.optBoolean("vac", true) && noSchool(k)) { if (qui.isEmpty()) continue; }
+                    else h = edtHour(edt, cal, dow - 1);
+                } else if (h.isEmpty() && defs != null) h = defs.optString(String.valueOf(dow == Calendar.SUNDAY ? 7 : dow - 1), "");
                 String nom = "?";
                 if (!qui.isEmpty() && members != null && members.optJSONObject(qui) != null) nom = members.optJSONObject(qui).optString("nom", "?");
                 if (h.isEmpty() && qui.isEmpty()) continue;
@@ -386,6 +390,38 @@ public class Carpool extends JobService {
             p.edit().putString("widget_cal", w.toString()).apply();
             CalendarWidget.refreshAll(c);
         } catch (Exception ignored) {
+        }
+    }
+
+    /** Vacances scolaires zone B et jours fériés en semaine (mêmes dates que l'écran Covoiturage). */
+    private static final String[][] VACANCES = {{"2026-10-17", "2026-11-01"}, {"2026-12-19", "2027-01-03"}, {"2027-02-20", "2027-03-07"},
+            {"2027-04-17", "2027-05-02"}, {"2027-05-06", "2027-05-09"}, {"2027-07-03", "2027-08-31"}};
+    private static final String FERIES = "2026-11-11 2027-03-29 2027-05-17";
+
+    static boolean noSchool(String k) {
+        if (FERIES.contains(k)) return true;
+        for (String[] v : VACANCES) if (k.compareTo(v[0]) >= 0 && k.compareTo(v[1]) <= 0) return true;
+        return false;
+    }
+
+    /** Heure de sortie d'après l'emploi du temps (semaines A/B alternées). */
+    static String edtHour(JSONObject edt, Calendar day, int n) {
+        try {
+            String[] r = edt.optString("ref").split("-");
+            Calendar ref = Calendar.getInstance();
+            ref.clear(); ref.set(Integer.parseInt(r[0]), Integer.parseInt(r[1]) - 1, Integer.parseInt(r[2]), 12, 0);
+            Calendar mon = (Calendar) day.clone();
+            mon.set(Calendar.HOUR_OF_DAY, 12); mon.set(Calendar.MINUTE, 0); mon.set(Calendar.SECOND, 0); mon.set(Calendar.MILLISECOND, 0);
+            mon.add(Calendar.DAY_OF_MONTH, -(n - 1));
+            long w = Math.round((mon.getTimeInMillis() - ref.getTimeInMillis()) / 864e5 / 7);
+            boolean a = (w % 2 == 0) == !"B".equals(edt.optString("refL"));
+            JSONObject A = edt.optJSONObject("A"), B = edt.optJSONObject("B");
+            String k = String.valueOf(n), h = "";
+            if (!a && B != null) h = B.optString(k, "");
+            if (h.isEmpty() && A != null) h = A.optString(k, "");
+            return h;
+        } catch (Exception e) {
+            return "";
         }
     }
 

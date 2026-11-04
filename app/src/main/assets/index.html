@@ -177,6 +177,9 @@
   .kday.free{border-left-color:var(--wait)}
   .kday.mine{border-left-color:var(--ok)}
   .kday.off{opacity:.55;border-left-color:var(--line)}
+  .edtg{display:grid;grid-template-columns:22px repeat(5,1fr);gap:5px;align-items:center;margin:10px 0}
+  .edtg b{font-size:12px;text-align:center;color:var(--muted)}
+  .edtg input{padding:8px 2px;font-size:13px;text-align:center;min-width:0}
   .kday .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .kday .dt{font:700 17px var(--disp);font-stretch:90%;display:inline-block}
   .kday .hr{border:0;background:var(--soft3);border-radius:12px;padding:6px 11px;font:inherit;font-weight:700;color:var(--brand3)}
@@ -355,6 +358,21 @@
     <p class="kstate hidden" id="kState"></p>
     <div id="kDays"></div>
     <p class="muted" style="text-align:center"><span id="kInfo"></span> · <a href="#" id="kRefresh">Actualiser</a></p>
+    <section class="card" id="kEdt">
+      <details id="kEdtD">
+        <summary style="cursor:pointer;font-weight:700">🎒 Heures de sortie (emploi du temps)</summary>
+        <p class="muted" style="margin:8px 0 4px">Heure de fin des cours pour chaque jour. Elle sert d'heure de sortie, partagée avec tout le covoiturage. Laisse vide un jour sans personne à aller chercher. La ligne B vide = comme la semaine A.</p>
+        <div class="edtg">
+          <span></span><b>Lun</b><b>Mar</b><b>Mer</b><b>Jeu</b><b>Ven</b>
+          <b>A</b><input type="text" inputmode="decimal" placeholder="–" data-e="A1"><input type="text" inputmode="decimal" placeholder="–" data-e="A2"><input type="text" inputmode="decimal" placeholder="–" data-e="A3"><input type="text" inputmode="decimal" placeholder="–" data-e="A4"><input type="text" inputmode="decimal" placeholder="–" data-e="A5">
+          <b>B</b><input type="text" inputmode="decimal" placeholder="–" data-e="B1"><input type="text" inputmode="decimal" placeholder="–" data-e="B2"><input type="text" inputmode="decimal" placeholder="–" data-e="B3"><input type="text" inputmode="decimal" placeholder="–" data-e="B4"><input type="text" inputmode="decimal" placeholder="–" data-e="B5">
+        </div>
+        <label for="kEdtRef">Cette semaine est une semaine</label>
+        <select id="kEdtRef"><option value="A">A</option><option value="B">B</option></select>
+        <label class="chk" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="kEdtVac" checked style="width:auto"> Pas de covoiturage pendant les vacances scolaires (zone B) et les jours fériés</label>
+        <div class="row" style="margin-top:12px"><button class="btn btn-primary" id="kEdtSave" type="button">Enregistrer</button><button class="btn btn-ghost narrow" id="kEdtOff" type="button" style="flex:0 0 auto">Supprimer</button></div>
+      </details>
+    </section>
   </section>
 </main>
 
@@ -1643,7 +1661,35 @@ function busy(on){ $("loading").classList.toggle("show", !!on); }
 var data = null, me = {}, loaded = false;
 function empty(){ return {version: 1, members: {}, days: {}, defaults: {}}; }
 function norm(d){ d.members = d.members || {}; d.days = d.days || {}; d.defaults = d.defaults || {}; return d; }
-function hourOf(d, day){ var x = d.days[day] || {}; if(x.heure) return x.heure; var p = day.split("-"); return d.defaults[wd(new Date(+p[0], +p[1]-1, +p[2]))] || ""; }
+/* vacances scolaires zone B (après la fin des cours → veille de la reprise) et jours fériés en semaine */
+var VACANCES = [["2026-10-17", "2026-11-01", "Vacances de la Toussaint"], ["2026-12-19", "2027-01-03", "Vacances de Noël"],
+  ["2027-02-20", "2027-03-07", "Vacances d'hiver"], ["2027-04-17", "2027-05-02", "Vacances de printemps"],
+  ["2027-05-06", "2027-05-09", "Pont de l'Ascension"], ["2027-07-03", "2027-08-31", "Vacances d'été"]];
+var FERIES = {"2026-11-11": "Armistice", "2027-03-29": "Lundi de Pâques", "2027-05-17": "Lundi de Pentecôte"};
+function noSchool(d, day){
+  if(!d.edt || d.edt.vac === false) return "";
+  if(FERIES[day]) return FERIES[day];
+  for(var i = 0; i < VACANCES.length; i++) if(day >= VACANCES[i][0] && day <= VACANCES[i][1]) return VACANCES[i][2];
+  return "";
+}
+function weekOf(d, day){   // "A" ou "B" (semaines alternées depuis la semaine de référence)
+  var p = day.split("-"), t = new Date(+p[0], +p[1]-1, +p[2]); t.setDate(t.getDate() - wd(t) + 1);
+  var r = d.edt.ref.split("-"), rt = new Date(+r[0], +r[1]-1, +r[2]);
+  var w = Math.round((t - rt) / 864e5 / 7);
+  return (w % 2 === 0) === (d.edt.refL !== "B") ? "A" : "B";
+}
+function edtHour(d, day){
+  if(!d.edt) return null;
+  var p = day.split("-"), n = wd(new Date(+p[0], +p[1]-1, +p[2])), L = weekOf(d, day);
+  return (L === "B" ? (d.edt.B || {})[n] || (d.edt.A || {})[n] : (d.edt.A || {})[n]) || "";
+}
+function hourOf(d, day){
+  var x = d.days[day] || {}; if(x.heure) return x.heure;
+  if(d.edt){ if(noSchool(d, day)) return ""; return edtHour(d, day); }
+  var p = day.split("-"); return d.defaults[wd(new Date(+p[0], +p[1]-1, +p[2]))] || "";
+}
+// jour sans école (vacances / férié) et personne n'a mis d'heure ni pris le jour
+function holiday(d, day){ var x = d.days[day] || {}; return (!x.heure && !x.qui && noSchool(d, day)) || ""; }
 function nameOf(id){ return (data && data.members[id] && data.members[id].nom) || "?"; }
 // photo de profil (ou pastille avec l'initiale)
 var AV_COLORS = ["#3D6FD6", "#E8962E", "#0E8A6A", "#7B3FA0", "#D8465F", "#14A08C"];
@@ -1738,7 +1784,7 @@ function editHour(day){
     return;
   }
   var p = day.split("-"), w = wd(new Date(+p[0], +p[1]-1, +p[2]));
-  var all = confirm("Mettre " + v + " pour tous les " + JOURS[w] + " ?\n\nOK = tous les " + JOURS[w] + "  ·  Annuler = seulement ce jour");
+  var all = !data.edt && confirm("Mettre " + v + " pour tous les " + JOURS[w] + " ?\n\nOK = tous les " + JOURS[w] + "  ·  Annuler = seulement ce jour");
   mutate(day, function(d){
     var y = d.days[day] = d.days[day] || {}; y.off = false;
     if(all){ d.defaults[w] = v; delete y.heure; } else y.heure = v;
@@ -1804,7 +1850,7 @@ function autoFromPlanning(){
   var ops = [];
   schoolDays().forEach(function(day){
     var x = data.days[day] || {}, h = hourOf(data, day);
-    if(x.off || !h) return;
+    if(x.off || !h || holiday(data, day)) return;
     var busy = busyAt(day, h), non = (x.non || []).indexOf(me.id) >= 0, auto = (x.nonAuto || []).indexOf(me.id) >= 0;
     var manual = (x.manuel || []).indexOf(me.id) >= 0;
     if(busy === true && !non && x.qui !== me.id && !manual) ops.push({day: day, add: true});
@@ -1838,7 +1884,12 @@ function render(){
   schoolDays().forEach(function(day){
     var x = data.days[day] || {}, h = hourOf(data, day), cls = "kday", pic = "";
     var who, acts = "";
-    if(isBus(x)){
+    var hol = !x.off && holiday(data, day);
+    if(hol){
+      cls += " off";
+      who = '<div class="who">🏖️ ' + esc(hol) + ' : pas d\'école</div>';
+      acts = '<span class="muted" style="font-size:13px">Touche l\'heure pour ajouter quand même ce jour.</span>';
+    } else if(isBus(x)){
       cls += " off";
       who = '<div class="who">🚌 ' + esc(window.kidBus() || "") + ' prend le bus : personne à aller chercher</div>';
       acts = '<span class="muted" style="font-size:13px">Pour changer, modifie le bus (Bus › Suivi des réservations).</span>';
@@ -1882,7 +1933,7 @@ function render(){
     else {
       var sans = 0, occ = 0, inc = 0;
       schoolDays().forEach(function(day){
-        var x = data.days[day] || {}; if(x.off) return;
+        var x = data.days[day] || {}; if(x.off || holiday(data, day)) return;
         var h = hourOf(data, day); if(!h){ sans++; return; }
         var b = busyAt(day, h); if(b === true) occ++; else if(b === null) inc++;
       });
@@ -1901,12 +1952,46 @@ function render(){
     });
   });
 }
+function edtFill(){
+  var e = (data && data.edt) || {};
+  document.querySelectorAll("#kEdt [data-e]").forEach(function(i){ var k = i.getAttribute("data-e"); i.value = ((e[k.charAt(0)] || {})[k.charAt(1)]) || ""; });
+  $("kEdtRef").value = e.ref ? weekOf(data, key(new Date())) : "A";
+  $("kEdtVac").checked = e.vac !== false;
+  $("kEdtOff").classList.toggle("hidden", !e.ref);
+}
+function edtSave(){
+  var e = {A: {}, B: {}, vac: $("kEdtVac").checked}, any = false;
+  var bad = "";
+  document.querySelectorAll("#kEdt [data-e]").forEach(function(i){
+    var v = i.value.trim().toLowerCase(); if(!v) return;
+    var m = v.match(/^(\d{1,2})\s*[h:.,]?\s*(\d{2})?$/);
+    if(!m || +m[1] > 23){ bad = v; return; }
+    v = ("0" + m[1]).slice(-2) + ":" + (m[2] || "00"); i.value = v;
+    e[i.getAttribute("data-e").charAt(0)][i.getAttribute("data-e").charAt(1)] = v; any = true;
+  });
+  if(bad){ alert("Heure non comprise : « " + bad + " ». Exemple : 16h40"); return; }
+  if(!any){ alert("Indique au moins une heure de sortie."); return; }
+  var m = new Date(); m.setDate(m.getDate() - wd(m) + 1); e.ref = key(m); e.refL = $("kEdtRef").value;
+  mutate(null, function(d){
+    d.edt = e;
+    for(var n = 1; n <= 5; n++){ if(e.A[n]) d.defaults[n] = e.A[n]; else delete d.defaults[n]; }   // pour les anciennes versions de l'appli
+  }, "", function(){ $("kEdtD").open = false; edtFill(); alert("Heures de sortie enregistrées pour tout le covoiturage."); });
+}
+function edtOff(){
+  if(!confirm("Supprimer l'emploi du temps ? Les heures redeviennent celles réglées jour par jour.")) return;
+  mutate(null, function(d){ delete d.edt; }, "", edtFill);
+}
+if(A && A.carpoolSettings){
+  $("kEdtSave").addEventListener("click", edtSave);
+  $("kEdtOff").addEventListener("click", edtOff);
+  $("kEdtD").addEventListener("toggle", function(){ if($("kEdtD").open) edtFill(); });
+}
 function widget(){
   if(!window.widgetData || !data) return;
   window.widgetData(function(w){
     var cov = {};
     schoolDays().forEach(function(day){
-      var x = data.days[day] || {}; if(x.off) return;
+      var x = data.days[day] || {}; if(x.off || holiday(data, day)) return;
       var h = hourOf(data, day); if(!h && !x.qui) return;
       cov[day] = x.qui ? nameOf(x.qui) : "?";
     });

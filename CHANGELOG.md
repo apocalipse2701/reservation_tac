@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.5.0 — 04/11/2026
+- Covoiturage : nouvel encadré « 🎒 Heures de sortie (emploi du temps) ». On y saisit l'heure de fin des cours de chaque jour, en semaine A et en semaine B. L'heure de sortie de chaque jour est alors calculée automatiquement, et partagée avec tout le covoiturage.
+- Vacances scolaires (zone B, 2026-2027) et jours fériés : affichés « 🏖️ … : pas d'école », sans covoiturage. Ces jours sont aussi ignorés par le widget et par l'indisponibilité automatique. On peut quand même ajouter un de ces jours en touchant son heure.
+- Une heure mise à la main sur un jour précis reste prioritaire.
+
 ## 2.4.0 — 04/11/2026
 - Accueil : la ligne Bus affiche les 3 prochains jours de classe, chacun avec son statut (✅ pris en compte, ⏳ en attente, ❌ refusé ou pas de demande) et l'horaire.
 
