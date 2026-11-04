@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.3.1 — 04/11/2026
+- Accueil : le mercredi, la ligne Cantine affiche « Pas de cantine Mercredi » au lieu de « Pas encore vu ».
+
 ## 2.3.0 — 04/11/2026
 - Covoiturage : quand le bus de Léa est validé (✅) pour un jour, ce jour passe en « 🚌 Léa prend le bus : personne à aller chercher » et on ne peut plus le prendre en covoiturage. C'est partagé avec tous les téléphones du covoiturage (ils sont prévenus).
 - Si le bus est ensuite refusé ou retiré, le jour redevient à prendre (« il faut aller chercher… »).

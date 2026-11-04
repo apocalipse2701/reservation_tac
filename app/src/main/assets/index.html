@@ -1145,7 +1145,7 @@ function renderToday(){
     return '<div class="tline" data-go="' + go + '" role="button" tabindex="0"><span class="dot ' + cls + '">' + ico + '</span>' +
       '<span class="what"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="st ' + stCls + '">' + esc(st) + '</span></div>';
   }
-  var c = (w.cantine || {})[k], cs = "Pas encore vu", cc = "no";
+  var c = (w.cantine || {})[k], cs = d.getDay() === 3 ? "Pas de cantine Mercredi" : "Pas encore vu", cc = "no";
   if(c){ var v = c[Object.keys(c)[0]]; cs = v === "ok" ? "Réservée" : v === "wait" ? "En attente" : v === "abs" ? "Absente" : "Non réservée"; cc = v === "ok" ? "ok" : v === "no" ? "warn" : "no"; }
   var cantKid = c ? Object.keys(c)[0] : "";
   lines += line("cantine", "c-cantine", "🍽️", "Cantine", cantKid, cs, cc);
