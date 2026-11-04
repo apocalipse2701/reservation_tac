@@ -183,6 +183,12 @@
   .kday .acts .btn{padding:9px 13px;font-size:13.5px;border-radius:12px}
   .kday .acts .btn-primary{background:var(--brand3);color:#fff}
   .kday .sub{font-size:12px;color:var(--muted);margin-top:7px}
+  .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;object-fit:cover;color:#fff;font-weight:700;flex:0 0 auto;box-shadow:0 0 0 2px var(--card)}
+  .whop{display:flex;align-items:center;gap:10px}
+  .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .nonp{display:inline-flex;align-items:center;gap:4px}
+  .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
+  .myph .av{box-shadow:none}
   .kday .pl{font-size:12.5px;color:var(--brand3);margin-top:5px;font-weight:600}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -342,6 +348,11 @@
 <div class="overlay" id="kSet"><div class="sheet">
   <h3>Réglages du covoiturage</h3>
   <label for="kNom">Ton prénom (vu par les autres)</label><input id="kNom" type="text" placeholder="ex. Papa, Sophie, Famille Martin">
+  <label>Ma photo (vue par les autres téléphones)</label>
+  <div class="myph"><span id="kPhoto"></span>
+    <div class="row" style="flex:1"><button class="btn btn-ghost btn-small" id="kCam" type="button">Prendre une photo</button>
+    <button class="btn btn-ghost btn-small" id="kGal" type="button">Choisir une image</button></div></div>
+  <p style="margin:6px 0 0"><a href="#" id="kNoPhoto" class="muted hidden">Retirer ma photo</a></p>
   <label for="kBadge">Initiales sur le widget (facultatif, 1 ou 2 caractères)</label><input id="kBadge" type="text" maxlength="4" placeholder="automatique">
   <label for="kAdr">Adresse du Synology</label><input id="kAdr" type="text" placeholder="monnas.synology.me">
   <label for="kId">Identifiant sur le Synology</label><input id="kId" type="text" autocomplete="off">
@@ -1546,6 +1557,15 @@ function empty(){ return {version: 1, members: {}, days: {}, defaults: {}}; }
 function norm(d){ d.members = d.members || {}; d.days = d.days || {}; d.defaults = d.defaults || {}; return d; }
 function hourOf(d, day){ var x = d.days[day] || {}; if(x.heure) return x.heure; var p = day.split("-"); return d.defaults[wd(new Date(+p[0], +p[1]-1, +p[2]))] || ""; }
 function nameOf(id){ return (data && data.members[id] && data.members[id].nom) || "?"; }
+// photo de profil (ou pastille avec l'initiale)
+var AV_COLORS = ["#3D6FD6", "#E8962E", "#0E8A6A", "#7B3FA0", "#D8465F", "#14A08C"];
+function avatar(id, size){
+  var m = (data && data.members[id]) || {}, n = m.nom || "?", sz = size || 34;
+  if(m.photo && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(m.photo))
+    return '<img class="av" alt="" src="' + m.photo + '" style="width:' + sz + 'px;height:' + sz + 'px">';
+  var h = 0; for(var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return '<span class="av" style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * .45) + 'px;background:' + AV_COLORS[h % AV_COLORS.length] + '">' + esc(n.charAt(0).toUpperCase()) + '</span>';
+}
 function schoolDays(){ var out = [], d = new Date(); d.setHours(12); while(out.length < NB_JOURS){ if(d.getDay() !== 0 && d.getDay() !== 6) out.push(key(d)); d.setDate(d.getDate() + 1); } return out; }
 
 /* --- lecture --- */
@@ -1575,7 +1595,7 @@ function mutate(day, fn, txt){
       if(!r.ok){ if(window.offerTrust(r, function(){ mutate(day, fn, txt); })) throw "__trust"; throw r.erreur; }
       var d = norm(r.status === 404 ? empty() : JSON.parse(r.data));
       fn(d);
-      d.members[me.id] = {nom: me.nom, badge: me.badge || ""};
+      var mm = d.members[me.id] || {}; mm.nom = me.nom; mm.badge = me.badge || ""; d.members[me.id] = mm;   // garde la photo
       if(day){ d.days[day] = d.days[day] || {}; d.days[day].maj = {by: me.id, at: Date.now(), txt: txt}; }
       // ménage : jours passés de plus de 30 jours
       var lim = new Date(); lim.setDate(lim.getDate() - 30); var limK = key(lim);
@@ -1704,14 +1724,15 @@ function render(){
         : '<button class="btn btn-ghost" data-a="cannot" data-d="' + day + '">Je ne peux pas</button>';
     } else if(x.qui === me.id){
       cls += " mine";
-      who = '<div class="who me">✅ C\'est toi</div>';
+      who = '<div class="who me whop">' + avatar(me.id, 40) + '<span>✅ C\'est toi</span></div>';
       acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
     } else {
-      who = '<div class="who">👤 ' + esc(nameOf(x.qui)) + '</div>';
+      who = '<div class="who whop">' + avatar(x.qui, 40) + '<b>' + esc(nameOf(x.qui)) + '</b></div>';
       acts = '<button class="btn btn-ghost" data-a="claim" data-d="' + day + '">Prendre le relais</button>';
     }
-    var non = (x.non || []).filter(function(i){ return i !== x.qui; }).map(function(i){ return nameOf(i) + ((x.nonAuto || []).indexOf(i) >= 0 ? " (planning)" : ""); });
-    var sub = non.length ? '<div class="sub">Ne peut pas : ' + esc(non.join(", ")) + '</div>' : "";
+    var nonIds = (x.non || []).filter(function(i){ return i !== x.qui; });
+    var sub = nonIds.length ? '<div class="sub nonl">Ne peut pas : ' + nonIds.map(function(i){
+      return '<span class="nonp">' + avatar(i, 20) + esc(nameOf(i) + ((x.nonAuto || []).indexOf(i) >= 0 ? " (planning)" : "")) + '</span>'; }).join(" ") + '</div>' : "";
     if(showPlan){ var pl = window.planningForDay(day); if(pl) sub += '<div class="pl">🗓️ Planning : ' + esc(pl) + '</div>'; }
     if(showPlan && x.qui === me.id && !x.off && hasPlan() && busyAt(day, h) === true) sub += '<div class="sub" style="color:var(--danger);font-weight:650">⚠️ Ton planning dit que tu travailles à cette heure-là.</div>';
     html += '<div class="' + cls + '"><div class="top"><span class="dt">' + esc(label(day)) + '</span>' +
@@ -1772,12 +1793,31 @@ function openSet(){
   $("kForget").classList.toggle("hidden", !st.actif);
   var hp = A.hasPlanningLink && A.hasPlanningLink();
   $("kAutoRow").classList.toggle("hidden", !hp);
+  if(window.showMyPhoto) window.showMyPhoto();
   $("kAuto").checked = autoOn();
   $("kSet").classList.add("show");
 }
 if(A && A.carpoolSettings){
   $("kSetupBtn").addEventListener("click", function(){ location.hash = "reglages"; });
   window.openCarpoolSet = openSet;
+  var showMyPhoto = window.showMyPhoto = function(){
+    var st = settings(), id = st.id || "moi";
+    if(data && st.id) $("kPhoto").innerHTML = avatar(st.id, 56);
+    else $("kPhoto").innerHTML = '<span class="av" style="width:56px;height:56px;background:#9aa4b0">?</span>';
+    var has = !!(data && st.id && data.members[st.id] && data.members[st.id].photo);
+    $("kNoPhoto").classList.toggle("hidden", !has);
+  };
+  function setPhoto(url){
+    var st = settings();
+    if(!st.actif){ alert("Enregistre d'abord les réglages du covoiturage, puis ajoute ta photo."); return; }
+    me = st;
+    mutate(null, function(d){ var mm = d.members[me.id] || {}; mm.nom = me.nom; mm.badge = me.badge || ""; if(url) mm.photo = url; else delete mm.photo; d.members[me.id] = mm; }, "");
+    setTimeout(showMyPhoto, 2500);
+  }
+  window.__photoDone = function(url){ if(!url){ alert("La photo n'a pas pu être lue."); return; } setPhoto(url); };
+  $("kCam").addEventListener("click", function(){ A.pickPhoto("camera"); });
+  $("kGal").addEventListener("click", function(){ A.pickPhoto("gallery"); });
+  $("kNoPhoto").addEventListener("click", function(ev){ ev.preventDefault(); if(confirm("Retirer ta photo du covoiturage ?")) setPhoto(""); });
   $("kRefresh").addEventListener("click", function(ev){ ev.preventDefault(); load(); });
   $("kClose").addEventListener("click", function(){ $("kSet").classList.remove("show"); });
   $("kGen").addEventListener("click", function(){

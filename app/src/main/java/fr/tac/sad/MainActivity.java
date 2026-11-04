@@ -119,6 +119,62 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_LOGIN) web.evaluateJavascript("window.onPortalLogin && window.onPortalLogin()", null);
+        if ((requestCode == REQ_PHOTO_CAM || requestCode == REQ_PHOTO_GAL) && resultCode == RESULT_OK && data != null) {
+            final Intent d = data;
+            final boolean cam = requestCode == REQ_PHOTO_CAM;
+            new Thread(() -> {
+                String url = "";
+                try {
+                    android.graphics.Bitmap bm = cam ? (android.graphics.Bitmap) d.getExtras().get("data") : loadImage(d.getData());
+                    if (bm != null) url = "data:image/jpeg;base64," + avatar(bm);
+                } catch (Throwable t) {
+                    CrashLog.save(getApplicationContext(), t);
+                }
+                final String js = "window.__photoDone && window.__photoDone(" + JSONObject.quote(url) + ")";
+                web.post(() -> web.evaluateJavascript(js, null));
+            }).start();
+        }
+    }
+
+    private static final int REQ_PHOTO_CAM = 51, REQ_PHOTO_GAL = 52;
+
+    /** Image de la galerie, réduite et remise à l'endroit (orientation EXIF). */
+    private android.graphics.Bitmap loadImage(android.net.Uri uri) throws Exception {
+        android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            android.graphics.BitmapFactory.decodeStream(in, null, o);
+        }
+        int s = 1;
+        while (Math.min(o.outWidth, o.outHeight) / (s * 2) >= 400) s *= 2;
+        o = new android.graphics.BitmapFactory.Options();
+        o.inSampleSize = s;
+        android.graphics.Bitmap bm;
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            bm = android.graphics.BitmapFactory.decodeStream(in, null, o);
+        }
+        int rot = 0;
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            int or = new android.media.ExifInterface(in).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, 1);
+            rot = or == 6 ? 90 : or == 3 ? 180 : or == 8 ? 270 : 0;
+        } catch (Exception ignored) {
+        }
+        if (bm != null && rot != 0) {
+            android.graphics.Matrix m = new android.graphics.Matrix();
+            m.postRotate(rot);
+            bm = android.graphics.Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+        }
+        return bm;
+    }
+
+    /** Carré centré de 192 px, JPEG, en base64 (quelques Ko). */
+    private static String avatar(android.graphics.Bitmap bm) {
+        int side = Math.min(bm.getWidth(), bm.getHeight());
+        android.graphics.Bitmap sq = android.graphics.Bitmap.createBitmap(bm, (bm.getWidth() - side) / 2, (bm.getHeight() - side) / 2, side, side);
+        android.graphics.Bitmap small = android.graphics.Bitmap.createScaledBitmap(sq, 192, 192, true);
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        small.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out);
+        return android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
     }
 
     @Override
@@ -285,6 +341,28 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String planningSettings() {
             return PlanningLink.settings(MainActivity.this);
+        }
+
+        /** Photo de profil : « camera » (appareil photo) ou « gallery » (images du téléphone). */
+        @JavascriptInterface
+        public void pickPhoto(final String source) {
+            runOnUiThread(() -> {
+                try {
+                    if ("camera".equals(source)) {
+                        Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                        i.putExtra("android.intent.extras.CAMERA_FACING", 1);          // caméra avant si possible
+                        i.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                        i.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                        startActivityForResult(i, REQ_PHOTO_CAM);
+                    } else {
+                        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                        i.setType("image/*");
+                        startActivityForResult(Intent.createChooser(i, "Choisir une photo"), REQ_PHOTO_GAL);
+                    }
+                } catch (Exception e) {
+                    android.widget.Toast.makeText(MainActivity.this, "Impossible d'ouvrir l'appareil photo ou la galerie", android.widget.Toast.LENGTH_LONG).show();
+                }
+            });
         }
 
         /** Copie un texte dans le presse-papiers du téléphone. */
