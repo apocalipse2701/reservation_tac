@@ -213,6 +213,11 @@
   .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .nonp{display:inline-flex;align-items:center;gap:4px}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
+  .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .prow:last-child{border-bottom:0}
+  .prow .pn{flex:1;font-weight:650}.prow .pn small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+  .prow .btn{width:auto;padding:8px 12px;font-size:13px}
+  button.prow{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;font:inherit;cursor:pointer}
   .myph .av{box-shadow:none}
   .kday .pl{font-size:12.5px;color:var(--brand3);margin-top:5px;font-weight:600}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -395,6 +400,14 @@
     <p class="kstate hidden" id="kState"></p>
     <div id="kDays"></div>
     <p class="muted" style="text-align:center"><span id="kInfo"></span> · <a href="#" id="kRefresh">Actualiser</a></p>
+    <section class="card" id="kPeople">
+      <details id="kPeopleD">
+        <summary style="cursor:pointer;font-weight:700">👥 Personnes du covoiturage</summary>
+        <p class="muted" style="margin:8px 0 4px">Ajoute quelqu'un qui n'a pas l'appli (grand-parent, voisin…) : tu pourras lui attribuer des jours.</p>
+        <div id="kPeopleList"></div>
+        <button class="btn btn-ghost" id="kAddP" type="button" style="margin-top:10px">➕ Ajouter une personne</button>
+      </details>
+    </section>
     <section class="card" id="kEdt">
       <details id="kEdtD">
         <summary style="cursor:pointer;font-weight:700">🎒 Heures de sortie (emploi du temps)</summary>
@@ -438,6 +451,25 @@
     <button class="btn btn-cancel btn-small" id="kReset" type="button">Repartir de zéro avec mon code</button>
   </div>
   <p style="text-align:center;margin:12px 0 0"><a href="#" id="kForget" class="muted">Quitter ce covoiturage sur ce téléphone</a></p>
+</div></div>
+
+<div class="overlay" id="kPers"><div class="sheet">
+  <div class="shead"><button class="sback" type="button" data-back="kPers">‹ Retour</button><h3 id="kPersT">Ajouter une personne</h3></div>
+  <p class="muted" style="margin:0">Pour quelqu'un qui n'a pas l'appli. Tous les téléphones du covoiturage la verront.</p>
+  <label for="kPNom">Prénom ou nom</label><input id="kPNom" type="text" placeholder="ex. Mamie, Thomas, Famille Durand">
+  <label for="kPBadge">Initiales sur le widget (facultatif)</label><input id="kPBadge" type="text" maxlength="4" placeholder="automatique">
+  <label>Photo (facultatif)</label>
+  <div class="myph"><span id="kPPhoto"></span>
+    <div class="row" style="flex:1"><button class="btn btn-ghost btn-small" id="kPCam" type="button">Prendre une photo</button>
+    <button class="btn btn-ghost btn-small" id="kPGal" type="button">Choisir une image</button></div></div>
+  <button class="btn btn-primary" id="kPSave" type="button" style="margin-top:16px">Enregistrer</button>
+</div></div>
+
+<div class="overlay" id="kPick"><div class="sheet">
+  <div class="shead"><button class="sback" type="button" data-back="kPick">‹ Retour</button><h3>Qui les récupère ?</h3></div>
+  <p class="muted" id="kPickDay" style="margin:0 0 8px"></p>
+  <div id="kPickList"></div>
+  <button class="btn btn-ghost" id="kPickNew" type="button" style="margin-top:10px">➕ Ajouter une personne</button>
 </div></div>
 
 <div class="overlay" id="codeBox"><div class="sheet">
@@ -1953,13 +1985,18 @@ function render(){
       acts = '<button class="btn btn-primary" style="width:auto" data-a="claim" data-d="' + day + '">Je les récupère</button>';
       acts += (x.non || []).indexOf(me.id) >= 0 ? '<button class="btn btn-ghost" data-a="undo" data-d="' + day + '">Finalement dispo</button>'
         : '<button class="btn btn-ghost" data-a="cannot" data-d="' + day + '">Je ne peux pas</button>';
+      acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Quelqu\'un d\'autre</button>';
     } else if(x.qui === me.id){
       cls += " mine";
       who = '<div class="who me">✅ C\'est toi</div>'; pic = avatar(me.id, 64);
       acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
+      acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Autre</button>';
     } else {
+      var man = data.members[x.qui] && data.members[x.qui].manuel;
       who = '<div class="who"><b>' + esc(nameOf(x.qui)) + '</b></div>'; pic = avatar(x.qui, 64);
       acts = '<button class="btn btn-ghost" data-a="claim" data-d="' + day + '">Prendre le relais</button>';
+      acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Autre</button>';
+      if(man) acts += '<button class="btn btn-ghost" data-a="unset" data-d="' + day + '">Retirer</button>';
     }
     var nonIds = (x.non || []).filter(function(i){ return i !== x.qui; });
     var sub = nonIds.length ? '<div class="sub nonl">Ne peut pas : ' + nonIds.map(function(i){
@@ -1999,8 +2036,90 @@ function render(){
       var d = b.getAttribute("data-d"), a = b.getAttribute("data-a");
       if(a === "claim") claim(d); else if(a === "cannot") cannot(d); else if(a === "release") release(d);
       else if(a === "undo") undoCannot(d); else if(a === "hour") editHour(d); else if(a === "react") reactivate(d);
+      else if(a === "other") pickFor(d); else if(a === "unset") unsetDay(d);
     });
   });
+  peopleRender();
+}
+/* --- personnes ajoutées à la main (sans l'appli) --- */
+function peopleRender(){
+  if(!data) return;
+  var ids = Object.keys(data.members).filter(function(i){ return data.members[i] && data.members[i].nom; });
+  ids.sort(function(a, b){ return (a === me.id ? -1 : b === me.id ? 1 : 0) || nameOf(a).localeCompare(nameOf(b)); });
+  $("kPeopleList").innerHTML = ids.map(function(i){
+    var m = data.members[i];
+    var tag = i === me.id ? "Toi" : m.manuel ? "Sans l'appli" + (m.par && data.members[m.par] ? " · ajout de " + nameOf(m.par) : "") : "Avec l'appli";
+    return '<div class="prow">' + avatar(i, 40) + '<span class="pn">' + esc(m.nom) + '<small>' + esc(tag) + '</small></span>' +
+      (m.manuel ? '<button class="btn btn-ghost" data-pe="' + i + '" type="button">Modifier</button><button class="btn btn-cancel" data-pr="' + i + '" type="button">Retirer</button>' : '') + '</div>';
+  }).join("");
+  $("kPeopleList").querySelectorAll("[data-pe]").forEach(function(b){ b.addEventListener("click", function(){ persOpen(b.getAttribute("data-pe"), null); }); });
+  $("kPeopleList").querySelectorAll("[data-pr]").forEach(function(b){ b.addEventListener("click", function(){ persRemove(b.getAttribute("data-pr")); }); });
+}
+var persEdit = null, persPhoto = null, persThen = null;
+function persOpen(id, then){
+  var m = (id && data.members[id]) || {};
+  persEdit = id; persThen = then; persPhoto = m.photo || "";
+  $("kPersT").textContent = id ? "Modifier " + (m.nom || "") : "Ajouter une personne";
+  $("kPNom").value = m.nom || ""; $("kPBadge").value = m.badge || "";
+  persShowPhoto();
+  $("kPick").classList.remove("show");
+  $("kPers").classList.add("show");
+  setTimeout(function(){ if(!id) $("kPNom").focus(); }, 80);
+}
+function persShowPhoto(){
+  $("kPPhoto").innerHTML = persPhoto ? '<span class="av" style="width:56px;height:56px;background:url(' + persPhoto + ') center/cover"></span>'
+    : '<span class="av" style="width:56px;height:56px;background:#9aa4b0">' + esc(($("kPNom").value.trim().charAt(0) || "?").toUpperCase()) + '</span>';
+}
+function persSave(){
+  var nom = $("kPNom").value.trim();
+  if(!nom){ alert("Indique le prénom ou le nom de la personne."); return; }
+  var id = persEdit;
+  if(!id) do { id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); } while(data.members[id]);
+  var badge = $("kPBadge").value.trim(), ph = persPhoto, then = persThen;
+  var neuf = !persEdit;
+  mutate(null, function(d){
+    var m = d.members[id] || {manuel: true, par: me.id};
+    m.nom = nom; m.badge = badge; m.manuel = true;
+    if(ph) m.photo = ph; else delete m.photo;
+    d.members[id] = m;
+    if(then){ var y = d.days[then] = d.days[then] || {}; y.qui = id; y.off = false;
+      y.maj = {by: me.id, at: Date.now(), txt: nom + " récupère " + window.kidsCov() + " " + label(then) + " (indiqué par " + me.nom + ")"}; }
+  }, "", function(){ $("kPers").classList.remove("show"); if(neuf && !then) alert(nom + " fait maintenant partie du covoiturage."); });
+}
+function persRemove(id){
+  var n = nameOf(id), nb = Object.keys(data.days).filter(function(k){ return data.days[k].qui === id && k >= key(new Date()); }).length;
+  if(!confirm("Retirer " + n + " du covoiturage ?" + (nb ? "\n" + nb + " jour" + (nb > 1 ? "s" : "") + " à venir redeviendr" + (nb > 1 ? "ont" : "a") + " libre" + (nb > 1 ? "s" : "") + "." : ""))) return;
+  mutate(null, function(d){
+    delete d.members[id];
+    Object.keys(d.days).forEach(function(k){ var y = d.days[k]; if(y.qui === id){ y.qui = null;
+      if(k >= key(new Date())) y.maj = {by: me.id, at: Date.now(), txt: n + " ne fait plus partie du covoiturage : il faut quelqu'un " + label(k)}; } });
+  }, "");
+}
+function pickFor(day){
+  $("kPickDay").textContent = label(day).charAt(0).toUpperCase() + label(day).slice(1);
+  var x = data.days[day] || {};
+  var ids = Object.keys(data.members).filter(function(i){ return i !== me.id && data.members[i] && data.members[i].nom; });
+  ids.sort(function(a, b){ return nameOf(a).localeCompare(nameOf(b)); });
+  $("kPickList").innerHTML = ids.length ? ids.map(function(i){
+    var m = data.members[i], no = (x.non || []).indexOf(i) >= 0;
+    return '<button class="prow" type="button" data-pk="' + i + '">' + avatar(i, 40) + '<span class="pn">' + esc(m.nom) +
+      '<small>' + (i === x.qui ? "✅ Prévu ce jour-là" : no ? "⚠️ A dit ne pas pouvoir" : m.manuel ? "Sans l'appli" : "Avec l'appli") + '</small></span></button>';
+  }).join("") : '<p class="muted">Personne d\'autre pour l\'instant : ajoute quelqu\'un ci-dessous.</p>';
+  $("kPickList").querySelectorAll("[data-pk]").forEach(function(b){ b.addEventListener("click", function(){ assign(day, b.getAttribute("data-pk")); }); });
+  $("kPickNew").onclick = function(){ persOpen(null, day); };
+  $("kPick").classList.add("show");
+}
+function assign(day, id){
+  $("kPick").classList.remove("show");
+  var n = nameOf(id);
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.qui = id; y.off = false; y.non = (y.non || []).filter(function(i){ return i !== id; }); },
+    n + " récupère " + window.kidsCov() + " " + label(day) + " (indiqué par " + me.nom + ")");
+}
+function unsetDay(day){
+  var n = nameOf((data.days[day] || {}).qui);
+  if(!confirm("Retirer " + n + " de ce jour ?")) return;
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.qui = null; },
+    n + " ne récupère plus " + window.kidsCov() + " " + label(day) + " : il faut quelqu'un");
 }
 function edtFill(){
   var e = (data && data.edt) || {};
@@ -2081,7 +2200,18 @@ if(A && A.carpoolSettings){
     mutate(null, function(d){ var mm = d.members[me.id] || {}; mm.nom = me.nom; mm.badge = me.badge || ""; if(url) mm.photo = url; else delete mm.photo; d.members[me.id] = mm; }, "");
     setTimeout(showMyPhoto, 2500);
   }
-  window.__photoDone = function(url){ if(!url){ alert("La photo n'a pas pu être lue."); return; } setPhoto(url); };
+  var photoFor = "me";
+  window.__photoDone = function(url){
+    if(!url){ alert("La photo n'a pas pu être lue."); return; }
+    if(photoFor === "pers"){ persPhoto = url; persShowPhoto(); } else setPhoto(url);
+  };
+  $("kCam").addEventListener("click", function(){ photoFor = "me"; });
+  $("kGal").addEventListener("click", function(){ photoFor = "me"; });
+  $("kPCam").addEventListener("click", function(){ photoFor = "pers"; A.pickPhoto("camera"); });
+  $("kPGal").addEventListener("click", function(){ photoFor = "pers"; A.pickPhoto("gallery"); });
+  $("kPNom").addEventListener("input", function(){ if(!persPhoto) persShowPhoto(); });
+  $("kPSave").addEventListener("click", persSave);
+  $("kAddP").addEventListener("click", function(){ persOpen(null, null); });
   $("kCam").addEventListener("click", function(){ A.pickPhoto("camera"); });
   $("kGal").addEventListener("click", function(){ A.pickPhoto("gallery"); });
   $("kNoPhoto").addEventListener("click", function(ev){ ev.preventDefault(); if(confirm("Retirer ta photo du covoiturage ?")) setPhoto(""); });

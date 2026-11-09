@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.0 — 09/11/2026
+- Covoiturage : nouvel encadré « 👥 Personnes du covoiturage ». On peut y ajouter quelqu'un qui n'a pas l'appli (grand-parent, voisin…), avec un nom, des initiales et une photo facultative, puis le modifier ou le retirer.
+- Sur chaque jour, le bouton « 👤 Quelqu'un d'autre » (ou « Autre ») permet de choisir qui récupère les enfants : une personne de la liste, ou une nouvelle personne à ajouter tout de suite.
+- Tous les téléphones sont prévenus (« Mamie récupère … (indiqué par Papa) »). Les initiales de ces personnes apparaissent aussi sur le widget.
+
 ## 2.5.3 — 04/11/2026
 - Messages de l'appli : petite fenêtre aux couleurs du thème, avec une icône (✓ réussi, ⚠️ problème), au lieu de « La page file:// indique ».
 - « Enregistré sur le téléphone. » après l'enregistrement des réglages.
