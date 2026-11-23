@@ -212,13 +212,20 @@
   .kday.mine .kright .av{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ok)}
   .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .nonp{display:inline-flex;align-items:center;gap:4px}
-  #busSetCard{border:2px solid var(--brand3);padding-top:0;overflow:hidden}
-  .bhead{display:flex;align-items:center;gap:12px;margin:0 -18px 12px;padding:14px 18px;background:var(--brand3);color:#fff}
+  /* couleur par catégorie dans les réglages (translucide, lisible en clair comme en sombre) */
+  .cat-vert{--cat:31,169,113} .cat-bleu{--cat:47,127,216} .cat-orange{--cat:232,144,46} .cat-rose{--cat:222,80,122}
+  .cat-violet{--cat:132,84,214} .cat-turquoise{--cat:21,158,158} .cat-gris{--cat:122,135,148}
+  .card.cat{background:linear-gradient(rgba(var(--cat),.13), rgba(var(--cat),.07)), var(--card);border:1.5px solid rgba(var(--cat),.38)}
+  .card.cat > h2{color:rgb(var(--cat))}
+  .card.cat .btn-ghost{background:rgba(var(--cat),.16);color:rgb(var(--cat))}
+  .card.cat input,.card.cat select{background:var(--card);border-color:rgba(var(--cat),.30)}
+  #busSetCard{border-width:2px;padding-top:0;overflow:hidden}
+  .bhead{display:flex;align-items:center;gap:12px;margin:0 -16px 12px;padding:14px 16px;background:rgba(var(--cat),.88);color:#fff}
   .bhead h2{margin:0;color:#fff}.bhead p{margin:2px 0 0;font-size:13px;opacity:.9}
   .bico{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
-  .subbox{background:var(--soft3);border-radius:16px;padding:12px 12px 14px;margin-top:10px}
+  .subbox{background:rgba(var(--cat),.12);border-radius:16px;padding:12px 12px 14px;margin-top:10px}
   .subbox input,.subbox select{background:var(--card)}
-  .sub3{font:700 14.5px var(--disp);margin:0 0 2px;color:var(--brand3)}
+  .sub3{font:700 14.5px var(--disp);margin:0 0 2px;color:rgb(var(--cat))}
   .sub3 small{font-weight:500;color:var(--muted);font-size:12px}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -309,11 +316,11 @@
 </main>
 
 <main id="reglages" class="hidden">
-  <section class="card">
+  <section class="card cat cat-violet">
     <h2>🎨 Couleurs de l'appli</h2>
     <div class="swatches" id="swatches"></div>
   </section>
-  <section class="card" id="busSetCard">
+  <section class="card cat cat-vert" id="busSetCard">
     <div class="bhead"><span class="bico">🚌</span><div><h2>Bus</h2><p>Tous les réglages des demandes de bus</p></div></div>
     <div class="subbox">
     <h3 class="sub3">1 · Enfant et trajet</h3>
@@ -347,7 +354,7 @@
     <p class="muted" style="margin:10px 0 0;font-size:12px">Lecture seule : l'appli lit uniquement les mails de cet expéditeur, sans les marquer comme lus ni les déplacer.</p>
     </div>
   </section>
-  <section class="card">
+  <section class="card cat cat-bleu">
     <h2>🍽️ Portail cantine</h2>
     <p class="muted" id="rgPortal" style="margin:0 0 4px"></p>
     <label for="psPortal">Adresse du portail famille</label>
@@ -359,13 +366,13 @@
     <button class="btn btn-ghost btn-small" id="rgLogin" type="button">Se connecter</button></div>
     <p style="margin:10px 0 0"><a href="#" id="rgForget" class="muted hidden">Oublier mes identifiants</a></p>
   </section>
-  <section class="card hidden" id="rgPlanCard">
+  <section class="card cat cat-orange hidden" id="rgPlanCard">
     <h2>🗓️ Lien avec mon planning</h2>
     <p class="muted" id="rgPlan" style="margin:0 0 10px"></p>
     <div class="row"><button class="btn btn-ghost btn-small" id="rgPlanBtn" type="button">Modifier</button>
     <button class="btn btn-ghost btn-small" id="rgPlanCode" type="button">Afficher le code</button></div>
   </section>
-  <section class="card">
+  <section class="card cat cat-rose">
     <h2>🚗 Covoiturage</h2>
     <p class="muted" id="rgCov" style="margin:0 0 10px"></p>
     <label for="psCovKids" style="margin-top:0">Enfants du covoiturage</label>
@@ -373,12 +380,12 @@
     <div class="row"><button class="btn btn-ghost btn-small" id="rgCovBtn" type="button">Modifier</button>
     <button class="btn btn-ghost btn-small" id="rgCovCode" type="button">Afficher le code</button></div>
   </section>
-  <section class="card">
+  <section class="card cat cat-turquoise">
     <h2>🧩 Widget</h2>
     <p class="muted" id="rgWid" style="margin:0 0 10px"></p>
     <div id="rgWidBtns"></div>
   </section>
-  <section class="card">
+  <section class="card cat cat-gris">
     <h2>📱 Application</h2>
     <p class="muted" style="margin:0 0 10px"><span id="appVer">Version ?</span></p>
     <div class="row"><button class="btn btn-ghost btn-small" id="checkUpd" type="button">Rechercher une mise à jour</button>
