@@ -242,6 +242,22 @@
     box.querySelector(".popm").textContent = m;
     box.classList.add("show");
   }
+  // saisie d'un texte (asynchrone) : askText("Nom du favori :", "défaut", function(v){ ... })
+  window.askText = function(q, def, cb){
+    var o = document.createElement("div"); o.className = "overlay pop show";
+    o.innerHTML = '<div class="popc" role="dialog" aria-modal="true"><p class="popm" style="margin-bottom:10px"></p><input type="text" style="margin-bottom:14px">' +
+      '<div class="row"><button class="btn btn-ghost" type="button">Annuler</button><button class="btn btn-primary" type="button">Enregistrer</button></div></div>';
+    o.querySelector(".popm").textContent = q;
+    var inp = o.querySelector("input"); inp.value = def || "";
+    var bs = o.querySelectorAll("button");
+    function close(v){ o.remove(); if(v !== null) cb(v); }
+    bs[0].addEventListener("click", function(){ close(null); });
+    bs[1].addEventListener("click", function(){ var v = inp.value.trim(); if(v) close(v); else inp.focus(); });
+    inp.addEventListener("keydown", function(ev){ if(ev.key === "Enter") bs[1].click(); });
+    new MutationObserver(function(){ if(!o.classList.contains("show")) o.remove(); }).observe(o, {attributes: true, attributeFilter: ["class"]});
+    document.body.appendChild(o);
+    setTimeout(function(){ inp.focus(); inp.select(); }, 60);
+  };
   window.alert = function(m){
     queue.push(String(m == null ? "" : m));
     if(document.body) show(); else document.addEventListener("DOMContentLoaded", show);
@@ -884,10 +900,12 @@ function renderFavs(){
 $("saveFav").addEventListener("click", function(){
   if(!route || !aller.depart.stopTime || !aller.destination.stopTime){ showErr("Remplis d'abord la ligne, les arrêts et les horaires de l'aller."); return; }
   var def = aller.depart.stopTime.name + " → " + aller.destination.stopTime.name + " " + hm(aller.depart.stopTime.departureTime);
-  var label = prompt("Nom du favori :", def);
-  if(!label) return;
-  favs.push({label: label, routeId: route.routeId, directionId: route.directionId, aller: snapTrip(aller), retour: retourOn ? snapTrip(ret) : null});
-  save("favs", favs); renderFavs(); showErr("");
+  var fav = {routeId: route.routeId, directionId: route.directionId, aller: snapTrip(aller), retour: retourOn ? snapTrip(ret) : null};
+  window.askText("Nom de ce trajet favori :", def, function(label){
+    fav.label = label; favs.push(fav);
+    save("favs", favs); renderFavs(); showErr("");
+    alert("Trajet « " + label + " » enregistré. Touche-le dans « Mes trajets favoris » pour remplir le formulaire.");
+  });
 });
 function applyTrip(R, ee, s){
   R.depart.stopId = s.dep;
@@ -1152,26 +1170,40 @@ function persoFill(){
   var P = window.perso();
   $("psBusKid").value = P.busKid || ""; $("psCovKids").value = P.covKids || ""; $("psPortal").value = P.portal || "";
   $("psRouteNow").textContent = P.route.label ? "Actuel : " + P.route.label : "Aucun : la demande de bus propose toutes les lignes.";
-  if(psRoutes.length) return;
+  if(psRoutes.length){ psShowSaved(); return; }
   http("GET", "/tad/routes/" + nextSchoolDay()).then(function(data){
     psRoutes = data || [];
     var h = '<option value="">Choisir la ligne…</option>';
     psRoutes.forEach(function(r, i){ h += '<option value="' + i + '">' + esc(r.name + " vers " + r.headsign) + '</option>'; });
     $("psLine").innerHTML = h;
+    psShowSaved();
   }).catch(function(){ $("psRouteNow").textContent += " (liste des lignes indisponible : pas de connexion ?)"; });
 }
-$("psLine").addEventListener("change", function(){
-  var r = psRoutes[+this.value]; psStops = [];
+// remet dans les listes le trajet déjà enregistré (ligne + arrêts)
+function psShowSaved(){
+  var R = window.perso().route, idx = -1;
+  if(!R.routeId) return;
+  psRoutes.forEach(function(r, i){ if(idx < 0 && r.routeId === R.routeId && r.headsign === R.headsign) idx = i; });
+  if(idx < 0) psRoutes.forEach(function(r, i){ if(idx < 0 && r.routeId === R.routeId) idx = i; });
+  if(idx < 0) return;
+  $("psLine").value = String(idx);
+  psLoadStops(psRoutes[idx]).then(function(){
+    psStops.forEach(function(x, i){ if(x.id === R.dep) $("psDep").value = String(i); if(x.id === R.dst) $("psDst").value = String(i); });
+  });
+}
+$("psLine").addEventListener("change", function(){ psLoadStops(psRoutes[+this.value]); });
+function psLoadStops(r){
+  psStops = [];
   $("psDep").innerHTML = '<option value="">Arrêt de départ</option>'; $("psDst").innerHTML = '<option value="">Arrêt d\'arrivée</option>';
-  if(!r) return;
-  http("GET", "/tad/stoptimes/" + encodeURIComponent(r.routeId) + "/" + nextSchoolDay()).then(function(st){
+  if(!r) return Promise.resolve();
+  return http("GET", "/tad/stoptimes/" + encodeURIComponent(r.routeId) + "/" + nextSchoolDay()).then(function(st){
     var seq = {};
     (st || []).forEach(function(z){ if(z.directionId === r.directionId){ var q = parseInt(z.stopSequence); if(!(z.stopId in seq) || q < seq[z.stopId].q) seq[z.stopId] = {q: q, name: z.name, id: z.stopId}; } });
     psStops = Object.keys(seq).map(function(k){ return seq[k]; }).sort(function(a, b){ return a.q - b.q; });
     var h = ""; psStops.forEach(function(x, i){ h += '<option value="' + i + '">' + esc(x.name) + '</option>'; });
     $("psDep").innerHTML = '<option value="">Arrêt de départ</option>' + h; $("psDst").innerHTML = '<option value="">Arrêt d\'arrivée</option>' + h;
-  });
-});
+  }).catch(function(){});
+}
 $("psSave").addEventListener("click", function(){
   var P = window.perso();
   P.busKid = $("psBusKid").value.trim(); P.covKids = $("psCovKids").value.trim();

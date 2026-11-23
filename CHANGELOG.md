@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.2 — 23/11/2026
+- Réglages › Trajet de bus habituel : la ligne et les arrêts enregistrés sont de nouveau affichés dans les listes quand on revient dans les réglages (avant, elles revenaient à « Choisir la ligne… »).
+- Bus › « ★ Enregistrer ce trajet » : le nom du favori se saisit dans une fenêtre aux couleurs du thème, et un message confirme l'enregistrement.
+
 ## 2.6.1 — 23/11/2026
 - Cantine : correction de l'erreur « Impossible de joindre le portail » alors qu'internet fonctionne. Un texte du portail contenant certains caractères (par exemple une apostrophe écrite « \' ») bloquait la lecture de toute la page. Chaque valeur est maintenant lue séparément.
 - Si la page du portail ne peut pas être lue, le message le dit clairement, avec le détail, au lieu de parler de connexion internet.
