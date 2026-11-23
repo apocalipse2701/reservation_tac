@@ -212,6 +212,9 @@
   .kday.mine .kright .av{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ok)}
   .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .nonp{display:inline-flex;align-items:center;gap:4px}
+  .sub3{font:700 15px var(--disp);margin:20px 0 2px;padding-top:14px;border-top:1px solid var(--line);color:var(--brand)}
+  .sub3:first-of-type{border-top:0;padding-top:0;margin-top:6px}
+  .sub3 small{font-weight:500;color:var(--muted);font-size:12px}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
   .prow:last-child{border-bottom:0}
@@ -305,23 +308,17 @@
     <h2>🎨 Couleurs de l'appli</h2>
     <div class="swatches" id="swatches"></div>
   </section>
-  <section class="card" id="persoCard">
-    <h2>👧 Mes enfants et trajets</h2>
-    <p class="muted" style="margin:0">Gardé uniquement sur ce téléphone.</p>
+  <section class="card" id="busSetCard">
+    <h2>🚌 Bus</h2>
+    <h3 class="sub3">Enfant et trajet</h3>
     <label for="psBusKid">Prénom de l'enfant qui prend le bus</label><input id="psBusKid" type="text" placeholder="ex. Lucie">
-    <label for="psCovKids">Enfants du covoiturage</label><input id="psCovKids" type="text" placeholder="ex. Lucie &amp; Emma">
-    <label for="psPortal">Adresse du portail famille (cantine)</label>
-    <input id="psPortal" type="text" autocomplete="off" autocapitalize="off" placeholder="https://portail.berger-levrault.fr/SIPSDeTournes08090/">
-    <p class="muted" style="margin:4px 0 0;font-size:12px">Laisse vide pour garder le portail par défaut.</p>
     <label>Trajet de bus habituel</label>
     <p class="muted" id="psRouteNow" style="margin:0 0 6px"></p>
     <select id="psLine"><option value="">Choisir la ligne…</option></select>
     <div class="row" style="margin-top:8px"><select id="psDep"><option value="">Arrêt de départ</option></select><select id="psDst"><option value="">Arrêt d'arrivée</option></select></div>
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="psSave" type="button">Enregistrer</button>
     <button class="btn btn-ghost btn-small" id="psNoRoute" type="button">Toutes les lignes</button></div>
-  </section>
-  <section class="card">
-    <h2>🚌 Mon identité <small>pour les demandes de bus</small></h2>
+    <h3 class="sub3">Mon identité <small>pour les demandes</small></h3>
     <div class="row">
       <div><label for="nom">Nom</label><input id="nom" type="text" autocomplete="family-name"></div>
       <div><label for="prenom">Prénom</label><input id="prenom" type="text" autocomplete="given-name"></div>
@@ -329,9 +326,7 @@
     <label for="tel">Téléphone</label><input id="tel" type="tel" autocomplete="tel">
     <label for="email">Email</label><input id="email" type="email" autocomplete="email">
     <p class="muted" style="margin:8px 0 0">Enregistré automatiquement sur ce téléphone.</p>
-  </section>
-  <section class="card">
-    <h2>📬 Réponses de la compagnie de bus</h2>
+    <h3 class="sub3">📬 Réponses de la compagnie</h3>
     <p class="muted" id="mlState" style="margin:0"></p>
     <label for="mlAdr">Adresse mail (celle qui reçoit leurs réponses)</label><input id="mlAdr" type="email" autocomplete="off" autocapitalize="off">
     <label for="mlPwd">Mot de passe de la boîte (ou mot de passe d'application)</label><input id="mlPwd" type="password" autocomplete="off">
@@ -344,6 +339,9 @@
   <section class="card">
     <h2>🍽️ Portail cantine</h2>
     <p class="muted" id="rgPortal" style="margin:0 0 4px"></p>
+    <label for="psPortal">Adresse du portail famille</label>
+    <input id="psPortal" type="text" autocomplete="off" autocapitalize="off" placeholder="https://portail.berger-levrault.fr/SIPSDeTournes08090/">
+    <p class="muted" style="margin:4px 0 0;font-size:12px">Laisse vide pour garder le portail par défaut.</p>
     <label for="rgUser">Identifiant du portail famille</label><input id="rgUser" type="text" autocomplete="off" autocapitalize="off">
     <label for="rgPass">Mot de passe</label><input id="rgPass" type="password" autocomplete="off">
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="rgSaveLogin" type="button">Enregistrer</button>
@@ -359,6 +357,8 @@
   <section class="card">
     <h2>🚗 Covoiturage</h2>
     <p class="muted" id="rgCov" style="margin:0 0 10px"></p>
+    <label for="psCovKids" style="margin-top:0">Enfants du covoiturage</label>
+    <div class="row" style="align-items:center"><input id="psCovKids" type="text" placeholder="ex. Lucie &amp; Emma"><button class="btn btn-ghost btn-small narrow" id="psCovSave" type="button" style="flex:0 0 auto">Enregistrer</button></div>
     <div class="row"><button class="btn btn-ghost btn-small" id="rgCovBtn" type="button">Modifier</button>
     <button class="btn btn-ghost btn-small" id="rgCovCode" type="button">Afficher le code</button></div>
   </section>
@@ -1204,13 +1204,19 @@ function psLoadStops(r){
     $("psDep").innerHTML = '<option value="">Arrêt de départ</option>' + h; $("psDst").innerHTML = '<option value="">Arrêt d\'arrivée</option>' + h;
   }).catch(function(){});
 }
+$("psCovSave").addEventListener("click", function(){
+  var P = window.perso(); P.covKids = $("psCovKids").value.trim(); savePerso(P); persoTiles(); alert("Enregistré sur le téléphone.");
+});
+// adresse du portail : null si invalide (message déjà affiché)
+function portalUrl(){
+  var url = $("psPortal").value.trim();
+  if(url && !/^https:\/\//i.test(url)){ alert("L'adresse du portail doit commencer par https://"); return null; }
+  if(url){ url = url.replace(/[?#].*$/, ""); var m = url.match(/^(https:\/\/[^\/]+\/[^\/]+\/)/); if(m) url = m[1]; }
+  return url;
+}
 $("psSave").addEventListener("click", function(){
   var P = window.perso();
-  P.busKid = $("psBusKid").value.trim(); P.covKids = $("psCovKids").value.trim();
-  var url = $("psPortal").value.trim();
-  if(url && !/^https:\/\//i.test(url)){ alert("L'adresse du portail doit commencer par https://"); return; }
-  if(url){ url = url.replace(/[?#].*$/, ""); var m = url.match(/^(https:\/\/[^\/]+\/[^\/]+\/)/); if(m) url = m[1]; }
-  P.portal = url;
+  P.busKid = $("psBusKid").value.trim();
   var r = psRoutes[+$("psLine").value], dep = psStops[+$("psDep").value], dst = psStops[+$("psDst").value];
   if($("psLine").value !== "" ){
     if($("psDep").value === "" || $("psDst").value === "" || !dep || !dst){ alert("Choisis aussi l'arrêt de départ et l'arrêt d'arrivée."); return; }
@@ -1309,7 +1315,11 @@ function renderToday(){
 }
 $("rgLogin").addEventListener("click", function(){ if(window.Android && window.Android.portalLogin) window.Android.portalLogin(); });
 $("rgSaveLogin").addEventListener("click", function(){
+  var url = portalUrl(); if(url === null) return;
+  var P = window.perso(), urlChanged = (P.portal || "") !== url;
+  if(urlChanged){ P.portal = url; savePerso(P); $("psPortal").value = url; }
   var u = $("rgUser").value.trim(), pw = $("rgPass").value;
+  if(!u && urlChanged){ alert("Adresse du portail enregistrée sur le téléphone."); return; }
   if(!u || (!pw && !(window.Android.hasSavedLogin && window.Android.hasSavedLogin()))){ alert("Indique ton identifiant et ton mot de passe du portail famille."); return; }
   var ok = window.Android.saveLogin(u, pw);
   alert(ok ? "Identifiants enregistrés. Ils sont chiffrés et gardés uniquement sur ce téléphone." : "Enregistrement impossible.");

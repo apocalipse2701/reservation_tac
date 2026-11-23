@@ -10,6 +10,12 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.3 — 23/11/2026
+- Réglages réorganisés :
+  - une seule partie « 🚌 Bus » regroupe l'enfant et le trajet habituel, mon identité pour les demandes, et les réponses de la compagnie (mail) ;
+  - l'adresse du portail famille est maintenant dans « 🍽️ Portail cantine » ;
+  - les prénoms des enfants du covoiturage sont dans « 🚗 Covoiturage ».
+
 ## 2.6.2 — 23/11/2026
 - Réglages › Trajet de bus habituel : la ligne et les arrêts enregistrés sont de nouveau affichés dans les listes quand on revient dans les réglages (avant, elles revenaient à « Choisir la ligne… »).
 - Bus › « ★ Enregistrer ce trajet » : le nom du favori se saisit dans une fenêtre aux couleurs du thème, et un message confirme l'enregistrement.
