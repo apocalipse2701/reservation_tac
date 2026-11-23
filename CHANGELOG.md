@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.6 — 23/11/2026
+- Accueil : mêmes couleurs translucides que dans les réglages. Cantine en bleu, Bus en vert et Covoiturage en rose, sur les lignes du résumé du jour comme sur les grandes tuiles.
+
 ## 2.6.5 — 23/11/2026
 - Réglages : chaque catégorie a sa couleur, en translucide (lisible en thème clair comme en Ardoise) : Bus vert, Portail cantine bleu, Planning orange, Covoiturage rose, Widget turquoise, Couleurs violet, Application gris.
 

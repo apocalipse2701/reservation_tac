@@ -116,14 +116,21 @@
   .today{background:var(--card);border-radius:28px;padding:18px 18px 8px;margin:-4px 0 18px;box-shadow:var(--shadow)}
   .today .when{font:750 30px/1.05 var(--disp);font-stretch:85%;letter-spacing:-.015em;margin:0}
   .today .when::first-letter,.kday .dt::first-letter,.calhead b::first-letter{text-transform:uppercase}
-  .today .rel{color:var(--muted);font-size:13px;margin:4px 0 10px}
+  .today .rel{color:var(--muted);font-size:13px;margin:4px 0 12px}
+  .today{padding-bottom:10px}
   .tline{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1.5px solid var(--line)}
   .tline .dot{flex:0 0 38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px}
   .tline .what{flex:1;min-width:0}
   .tline .what b{display:block;font-size:15px}
   .tline .what span{font-size:13px;color:var(--muted)}
   .tline .st{font-weight:700;font-size:14px;white-space:nowrap}
-  .c-cantine{background:var(--soft2);color:var(--brand2)} .c-bus{background:var(--soft);color:var(--brand)} .c-covoit{background:var(--soft3);color:var(--brand3)}
+  /* mêmes couleurs que les catégories des réglages : cantine bleu, bus vert, covoiturage rose */
+  .c-cantine{--cat:47,127,216} .c-bus{--cat:31,169,113} .c-covoit{--cat:222,80,122}
+  .dot.c-cantine,.dot.c-bus,.dot.c-covoit,.ico.c-cantine,.ico.c-bus,.ico.c-covoit{background:rgba(var(--cat),.20);color:rgb(var(--cat))}
+  .tline.c-cantine,.tline.c-bus,.tline.c-covoit{background:rgba(var(--cat),.09);border:1.5px solid rgba(var(--cat),.28);border-radius:16px;padding:10px 12px;margin:0 0 8px}
+  .tline.c-cantine .what b,.tline.c-bus .what b,.tline.c-covoit .what b{color:rgb(var(--cat))}
+  .tile.c-cantine,.tile.c-bus,.tile.c-covoit{background:linear-gradient(rgba(var(--cat),.15), rgba(var(--cat),.07)), var(--card);border:1.5px solid rgba(var(--cat),.38)}
+  .tile.c-cantine b,.tile.c-bus b,.tile.c-covoit b{color:rgb(var(--cat))}
   .bdays{margin-top:6px;display:flex;flex-direction:column;gap:3px}
   .bdays div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
   .bdays .j{color:var(--muted)} .bdays .st{font-size:13px}
@@ -300,15 +307,15 @@
 <main id="home">
   <section class="today" id="today" aria-live="polite"></section>
   <div class="tiles">
-    <button class="tile" type="button" data-go="cantine">
+    <button class="tile c-cantine" type="button" data-go="cantine">
       <span class="ico c-cantine">🍽️</span>
       <span><b>Cantine</b><small id="tileCantine">Réserver les repas</small></span>
     </button>
-    <button class="tile" type="button" data-go="bus">
+    <button class="tile c-bus" type="button" data-go="bus">
       <span class="ico c-bus">🚌</span>
       <span><b>Bus</b><small id="tileBus">Demande de transport</small></span>
     </button>
-    <button class="tile wide" type="button" data-go="covoit">
+    <button class="tile wide c-covoit" type="button" data-go="covoit">
       <span class="ico c-covoit">🚗</span>
       <span><b id="tileCov">Covoiturage</b><small>Qui va les chercher ?</small></span>
     </button>
@@ -1301,7 +1308,7 @@ function renderToday(){
   while(d.getDay() === 0 || d.getDay() === 6){ d.setDate(d.getDate() + 1); rel = "prochain jour de classe"; }
   var k = ymd(d), lines = "";
   function line(go, cls, ico, title, sub, st, stCls){
-    return '<div class="tline" data-go="' + go + '" role="button" tabindex="0"><span class="dot ' + cls + '">' + ico + '</span>' +
+    return '<div class="tline ' + cls + '" data-go="' + go + '" role="button" tabindex="0"><span class="dot ' + cls + '">' + ico + '</span>' +
       '<span class="what"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="st ' + stCls + '">' + esc(st) + '</span></div>';
   }
   var c = (w.cantine || {})[k], cs = d.getDay() === 3 ? "Pas de cantine Mercredi" : "Pas encore vu", cc = "no";
@@ -1319,7 +1326,7 @@ function renderToday(){
     rows += '<div><span class="j">' + esc(jl.charAt(0).toUpperCase() + jl.slice(1)) + '</span><span class="st ' + bc + '">' + esc(bs) + '</span></div>';
     bd.setDate(bd.getDate() + 1);
   }
-  lines += '<div class="tline" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
+  lines += '<div class="tline c-bus" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
     '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · ")) + '</span>' +
     '<span class="bdays">' + rows + '</span></span></div>';
   var cv = (w.covoit || {})[k], cvs = "—", cvc = "no";
