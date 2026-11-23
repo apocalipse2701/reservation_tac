@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.1 — 23/11/2026
+- Cantine : correction de l'erreur « Impossible de joindre le portail » alors qu'internet fonctionne. Un texte du portail contenant certains caractères (par exemple une apostrophe écrite « \' ») bloquait la lecture de toute la page. Chaque valeur est maintenant lue séparément.
+- Si la page du portail ne peut pas être lue, le message le dit clairement, avec le détail, au lieu de parler de connexion internet.
+
 ## 2.6.0 — 09/11/2026
 - Covoiturage : nouvel encadré « 👥 Personnes du covoiturage ». On peut y ajouter quelqu'un qui n'a pas l'appli (grand-parent, voisin…), avec un nom, des initiales et une photo facultative, puis le modifier ou le retirer.
 - Sur chaque jour, le bouton « 👤 Quelqu'un d'autre » (ou « Autre ») permet de choisir qui récupère les enfants : une personne de la liste, ou une nouvelle personne à ajouter tout de suite.

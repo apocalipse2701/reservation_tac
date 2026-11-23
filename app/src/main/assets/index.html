@@ -1352,15 +1352,23 @@ function parseEvents(html){
     var block = parts[i].split(/\};/)[0], ev = {}, m;
     var re = /(\w+)\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|-?\d+(?:\.\d+)?|true|false|null)\s*,/g;
     while((m = re.exec(block))){
-      var v = m[2];
-      if(v[0] === '"') v = JSON.parse(v);
-      else if(v[0] === "'") v = v.slice(1, -1);
-      else v = JSON.parse(v);
-      ev[m[1]] = v;
+      ev[m[1]] = jsValue(m[2]);   // une valeur illisible ne doit pas tout bloquer
     }
     if(ev.start && ev.title) out.push(ev);
   }
   return out;
+}
+// valeur écrite en JavaScript par le site : "texte", 'texte', nombre, true/false/null
+function jsValue(v){
+  if(v === "true") return true; if(v === "false") return false; if(v === "null") return null;
+  if(v[0] === '"' || v[0] === "'"){
+    var body = v.slice(1, -1);
+    try{ return JSON.parse('"' + body.replace(/\\'/g, "'").replace(/(^|[^\\])"/g, '$1\\"') + '"'); }catch(e){}
+    return body.replace(/\\(u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|.)/g, function(_, c, u, x){
+      return u ? String.fromCharCode(parseInt(u, 16)) : x ? String.fromCharCode(parseInt(x, 16)) : c === "n" ? "\n" : c === "t" ? "\t" : c === "r" ? "" : c;
+    });
+  }
+  var n = parseFloat(v); return isNaN(n) ? v : n;
 }
 function csrfOf(html){ var m = html.match(/name="_csrf"\s+value="([^"]+)"/); return m ? m[1] : null; }
 
@@ -1403,6 +1411,7 @@ function needLogin(){
 }
 function loadFrom(mon){
   var go = csrf ? Promise.resolve() : portal("GET", "activites/planning").then(function(r){
+    if(!r.status) throw "net";
     if(r.status !== 200 || r.body.indexOf("getEventsList") < 0) throw "login";
     csrf = csrfOf(r.body); store(r.body, null);
   });
@@ -1410,6 +1419,7 @@ function loadFrom(mon){
     var body = "_csrf=" + encodeURIComponent(csrf) + "&defaultView=fiveDayGrid&defaultDate=" + encodeURIComponent(frDate(mon));
     return portal("POST", "activites/planning", body, "application/x-www-form-urlencoded");
   }).then(function(r){
+    if(!r.status) throw "net";
     if(r.status !== 200 || r.body.indexOf("getEventsList") < 0){ csrf = null; throw "login"; }
     csrf = csrfOf(r.body) || csrf; store(r.body, mon);
   });
@@ -1454,7 +1464,9 @@ function show(force){
     autoTried = false;
     $("cLogin").classList.add("hidden"); $("cMain").classList.remove("hidden"); render();
   }).catch(function(e){
-    if(e === "login") needLogin(); else err("Impossible de joindre le portail. Vérifie ta connexion internet.");
+    if(e === "login") needLogin();
+    else if(e === "net") err("Impossible de joindre le portail. Vérifie ta connexion internet.");
+    else err("Le portail a répondu, mais sa page n'a pas pu être lue (" + ((e && e.message) || e) + "). Touche « Actualiser » ; si ça continue, envoie-moi ce message.");
   }).then(function(){ spin(false); });
 }
 function byDay(){ var m = {}; Object.keys(events).forEach(function(k){ var e = events[k]; var d = key(new Date(Date.parse(e.start))); (m[d] = m[d] || []).push(e); }); return m; }
