@@ -212,8 +212,13 @@
   .kday.mine .kright .av{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ok)}
   .nonl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .nonp{display:inline-flex;align-items:center;gap:4px}
-  .sub3{font:700 15px var(--disp);margin:20px 0 2px;padding-top:14px;border-top:1px solid var(--line);color:var(--brand)}
-  .sub3:first-of-type{border-top:0;padding-top:0;margin-top:6px}
+  #busSetCard{border:2px solid var(--brand3);padding-top:0;overflow:hidden}
+  .bhead{display:flex;align-items:center;gap:12px;margin:0 -18px 12px;padding:14px 18px;background:var(--brand3);color:#fff}
+  .bhead h2{margin:0;color:#fff}.bhead p{margin:2px 0 0;font-size:13px;opacity:.9}
+  .bico{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+  .subbox{background:var(--soft3);border-radius:16px;padding:12px 12px 14px;margin-top:10px}
+  .subbox input,.subbox select{background:var(--card)}
+  .sub3{font:700 14.5px var(--disp);margin:0 0 2px;color:var(--brand3)}
   .sub3 small{font-weight:500;color:var(--muted);font-size:12px}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -309,8 +314,9 @@
     <div class="swatches" id="swatches"></div>
   </section>
   <section class="card" id="busSetCard">
-    <h2>🚌 Bus</h2>
-    <h3 class="sub3">Enfant et trajet</h3>
+    <div class="bhead"><span class="bico">🚌</span><div><h2>Bus</h2><p>Tous les réglages des demandes de bus</p></div></div>
+    <div class="subbox">
+    <h3 class="sub3">1 · Enfant et trajet</h3>
     <label for="psBusKid">Prénom de l'enfant qui prend le bus</label><input id="psBusKid" type="text" placeholder="ex. Lucie">
     <label>Trajet de bus habituel</label>
     <p class="muted" id="psRouteNow" style="margin:0 0 6px"></p>
@@ -318,7 +324,9 @@
     <div class="row" style="margin-top:8px"><select id="psDep"><option value="">Arrêt de départ</option></select><select id="psDst"><option value="">Arrêt d'arrivée</option></select></div>
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="psSave" type="button">Enregistrer</button>
     <button class="btn btn-ghost btn-small" id="psNoRoute" type="button">Toutes les lignes</button></div>
-    <h3 class="sub3">Mon identité <small>pour les demandes</small></h3>
+    </div>
+    <div class="subbox">
+    <h3 class="sub3">2 · Mon identité <small>pour les demandes</small></h3>
     <div class="row">
       <div><label for="nom">Nom</label><input id="nom" type="text" autocomplete="family-name"></div>
       <div><label for="prenom">Prénom</label><input id="prenom" type="text" autocomplete="given-name"></div>
@@ -326,7 +334,9 @@
     <label for="tel">Téléphone</label><input id="tel" type="tel" autocomplete="tel">
     <label for="email">Email</label><input id="email" type="email" autocomplete="email">
     <p class="muted" style="margin:8px 0 0">Enregistré automatiquement sur ce téléphone.</p>
-    <h3 class="sub3">📬 Réponses de la compagnie</h3>
+    </div>
+    <div class="subbox">
+    <h3 class="sub3">3 · Réponses de la compagnie <small>par mail</small></h3>
     <p class="muted" id="mlState" style="margin:0"></p>
     <label for="mlAdr">Adresse mail (celle qui reçoit leurs réponses)</label><input id="mlAdr" type="email" autocomplete="off" autocapitalize="off">
     <label for="mlPwd">Mot de passe de la boîte (ou mot de passe d'application)</label><input id="mlPwd" type="password" autocomplete="off">
@@ -335,6 +345,7 @@
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="mlSave" type="button">Enregistrer</button>
     <button class="btn btn-ghost btn-small" id="mlCheck" type="button">Vérifier maintenant</button></div>
     <p class="muted" style="margin:10px 0 0;font-size:12px">Lecture seule : l'appli lit uniquement les mails de cet expéditeur, sans les marquer comme lus ni les déplacer.</p>
+    </div>
   </section>
   <section class="card">
     <h2>🍽️ Portail cantine</h2>

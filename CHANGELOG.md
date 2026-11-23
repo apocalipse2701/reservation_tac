@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.4 — 23/11/2026
+- Réglages › Bus : un seul bloc bien visible (bandeau bleu, cadre), avec ses trois parties numérotées à l'intérieur : 1 · Enfant et trajet, 2 · Mon identité, 3 · Réponses de la compagnie.
+
 ## 2.6.3 — 23/11/2026
 - Réglages réorganisés :
   - une seule partie « 🚌 Bus » regroupe l'enfant et le trajet habituel, mon identité pour les demandes, et les réponses de la compagnie (mail) ;
