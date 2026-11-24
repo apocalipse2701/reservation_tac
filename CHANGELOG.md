@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.8.0 — 24/11/2026
+- Nouvelle page « ❓ Aide », accessible en haut des Réglages :
+  - « ✅ Ta configuration » montre ce qui est déjà réglé et ce qu'il reste à faire ; une touche sur une ligne ouvre le bon réglage ;
+  - un guide pas à pas, en parties dépliables : démarrage, demande de bus, réponses par mail, cantine, covoiturage, lien avec le planning, widget, mises à jour, problèmes fréquents.
+
 ## 2.7.3 — 24/11/2026
 - Accueil : le résumé du jour est uniquement informatif, plus rien n'y est cliquable.
 - Ligne Bus du résumé : seuls les jours où le bus est confirmé (✅) sont affichés, parmi les 3 prochains jours de classe. Sinon : « Aucun bus confirmé ces 3 prochains jours ».

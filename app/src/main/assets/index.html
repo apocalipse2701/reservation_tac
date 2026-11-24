@@ -240,6 +240,26 @@
   .subbox input,.subbox select{background:var(--card)}
   .sub3{font:700 14.5px var(--disp);margin:0 0 2px;color:rgb(var(--cat))}
   .sub3 small{font-weight:500;color:var(--muted);font-size:12px}
+  .helpcta{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 14px;padding:14px 16px;border-radius:20px;border:1.5px solid rgba(132,84,214,.38);background:linear-gradient(rgba(132,84,214,.15),rgba(132,84,214,.07)),var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .helpcta > span:first-child{font-size:24px}
+  .helpcta > span:nth-child(2){flex:1}.helpcta b{display:block;color:rgb(132,84,214);font-size:16px}.helpcta small{color:var(--muted);font-size:13px}
+  .helpcta > span:last-child{font-size:22px;color:var(--muted)}
+  .hck{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid rgba(var(--cat),.25);padding:10px 0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+  .hck:last-child{border-bottom:0}
+  .hst{flex:0 0 26px;height:26px;border-radius:50%;border:2px solid rgba(var(--cat),.5);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  .hst.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .hn{flex:1;font-weight:650;font-size:14.5px}.hn small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+  .hgo{color:var(--muted);font-size:20px}
+  .hlp{border-top:1px solid var(--line);padding:4px 0}
+  .hlp:first-of-type{border-top:0}
+  .hlp summary{cursor:pointer;font-weight:700;font-size:15.5px;padding:12px 0;list-style:none}
+  .hlp summary::-webkit-details-marker{display:none}
+  .hlp summary::after{content:"＋";float:right;color:var(--brand)}
+  .hlp[open] summary::after{content:"－"}
+  .hlp ol,.hlp ul{margin:0 0 10px;padding-left:20px;line-height:1.5;font-size:14.5px}
+  .hlp li{margin-bottom:6px}
+  .hlp p{font-size:14.5px;line-height:1.5;margin:0 0 10px}
+
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
   .prow:last-child{border-bottom:0}
@@ -329,6 +349,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
 </main>
 
 <main id="reglages" class="hidden">
+  <button class="helpcta" type="button" data-go="aide"><span>❓</span><span><b>Aide</b><small>Comment tout régler, étape par étape</small></span><span>›</span></button>
   <section class="card cat cat-violet">
     <h2>🎨 Couleurs de l'appli</h2>
     <div class="swatches" id="swatches"></div>
@@ -559,6 +580,96 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <button class="btn btn-primary" id="cConfYes" type="button" style="padding:12px">Confirmer</button>
   </div>
 </div></div>
+
+<main id="aide" class="hidden">
+  <section class="card cat cat-violet">
+    <h2>✅ Ta configuration</h2>
+    <p class="muted" style="margin:0 0 8px">Ce qui est déjà réglé, et ce qu'il reste à faire. Touche une ligne pour aller directement au bon réglage.</p>
+    <div id="helpCheck"></div>
+  </section>
+
+  <section class="card">
+    <h2>📖 Guide pas à pas</h2>
+    <details class="hlp"><summary>🚀 Pour bien démarrer</summary>
+      <ol>
+        <li>Ouvre <b>⚙️ Réglages</b> (la roue en haut à droite de l'accueil).</li>
+        <li>Remplis la partie <b>🚌 Bus</b> : prénom de l'enfant, trajet habituel, ton identité.</li>
+        <li>Remplis <b>🍽️ Portail cantine</b> avec tes identifiants du portail famille.</li>
+        <li>Si tu fais du covoiturage, règle <b>🚗 Covoiturage</b>.</li>
+        <li>Ajoute le <b>widget</b> sur l'écran d'accueil du téléphone.</li>
+      </ol>
+      <p>Tout reste sur ton téléphone, et les mots de passe sont chiffrés. Seul le fichier du covoiturage est partagé, chiffré lui aussi, sur ton Synology.</p>
+    </details>
+    <details class="hlp"><summary>🚌 Bus : faire une demande</summary>
+      <ol>
+        <li><b>Réglages › Bus › 1 · Enfant et trajet</b> : choisis la ligne, l'arrêt de départ et l'arrêt d'arrivée, puis <b>Enregistrer</b>. Le formulaire ne proposera plus que ce trajet.</li>
+        <li><b>2 · Mon identité</b> : nom, prénom, téléphone et email, repris dans chaque demande. Ils s'enregistrent tout seuls.</li>
+        <li>Dans <b>Bus</b>, choisis la <b>date</b> : la ligne et les arrêts se remplissent seuls. Choisis l'<b>horaire</b>, puis touche <b>Vérifier et envoyer</b>.</li>
+        <li>Astuce : quand un trajet complet est rempli, l'appli propose de l'<b>enregistrer en favori</b>. La fois suivante, une touche sur le favori remplit tout, horaire compris.</li>
+      </ol>
+    </details>
+    <details class="hlp"><summary>📬 Bus : savoir si la demande est acceptée</summary>
+      <p>La compagnie répond par mail. L'appli peut lire ces mails toute seule, en lecture seule : rien n'est modifié dans ta boîte.</p>
+      <ol>
+        <li><b>Réglages › Bus › 3 · Réponses de la compagnie</b> : ton adresse mail et son mot de passe. Pour Gmail, Free, Orange… il faut souvent un <b>mot de passe d'application</b>, à créer dans les réglages de sécurité de ta boîte mail.</li>
+        <li>Le serveur se remplit tout seul selon l'adresse. L'expéditeur est celui de la compagnie de bus.</li>
+        <li>Touche <b>Vérifier maintenant</b> pour tester. Ensuite, l'appli vérifie environ toutes les 30 minutes.</li>
+      </ol>
+      <p>Statuts : ⏳ en attente, ✅ confirmé, ❌ refusé. Si un mail n'a pas été reconnu, ou pour une réservation faite par téléphone, va dans <b>Bus › Suivi des réservations › Forcer un jour</b>.</p>
+    </details>
+    <details class="hlp"><summary>🍽️ Cantine</summary>
+      <ol>
+        <li><b>Réglages › Portail cantine</b> : l'adresse du portail famille est déjà connue ; laisse le champ vide pour la garder. Saisis ton identifiant et ton mot de passe, puis <b>Enregistrer</b>.</li>
+        <li>Ouvre <b>Cantine</b> : le mois s'affiche. Touche un jour pour réserver, ou un jour vert pour annuler.</li>
+        <li>L'appli vérifie régulièrement les réponses du portail et te prévient avec la fenêtre « 📬 Nouvelles ».</li>
+      </ol>
+      <p>Si le portail demande de se reconnecter, l'appli ouvre sa page de connexion et remplit tes identifiants toute seule.</p>
+    </details>
+    <details class="hlp"><summary>🚗 Covoiturage</summary>
+      <p>Le covoiturage est partagé entre plusieurs téléphones grâce à un fichier chiffré sur ton Synology (WebDAV en HTTPS).</p>
+      <ol>
+        <li><b>Réglages › Covoiturage › Régler le covoiturage</b> : ton prénom (vu par les autres) et, si tu veux, une photo.</li>
+        <li>L'adresse du Synology, l'identifiant, le mot de passe et le dossier partagé (par exemple « Covoiturage »). Ce compte doit avoir le droit d'<b>écrire</b> dans le dossier.</li>
+        <li>Le <b>code du covoiturage</b> doit être le même sur tous les téléphones. Le premier téléphone le crée, et les autres le recopient grâce au bouton « Afficher mon code ».</li>
+        <li>Dans <b>Covoiturage</b>, touche « Je les récupère », « Je ne peux pas », « 👤 Quelqu'un d'autre » ou « 🏫 Pas d'école ». Tout le monde est prévenu.</li>
+        <li><b>🎒 Heures de sortie</b> (en bas de la page Covoiturage) : saisis une seule fois les heures de fin des cours, semaine A et semaine B. Les vacances et les jours fériés sont reconnus tout seuls.</li>
+        <li><b>👥 Personnes du covoiturage</b> : ajoute quelqu'un qui n'a pas l'appli (grand-parent, voisin…).</li>
+      </ol>
+      <p>Quand le bus est confirmé pour un jour, ce jour passe automatiquement en « 🚌 prend le bus ».</p>
+    </details>
+    <details class="hlp"><summary>🗓️ Lien avec mon planning</summary>
+      <p>Seulement dans la version « avec planning ». L'appli lit ton planning de Planning Commandes, sans jamais le modifier, pour :</p>
+      <ul><li>te <b>conseiller</b> de réserver ou d'annuler la cantine (c'est toi qui valides) ;</li><li>te déclarer « ne peut pas » au covoiturage quand tu travailles à l'heure de sortie, si tu coches cette option.</li></ul>
+      <ol>
+        <li>Dans Planning Commandes › Réglages › Partage du planning, note l'adresse, l'identifiant, le dossier et le <b>code de partage</b>.</li>
+        <li>Recopie-les dans <b>Réglages › Lien avec mon planning</b>.</li>
+      </ol>
+    </details>
+    <details class="hlp"><summary>🧩 Widget sur l'écran d'accueil</summary>
+      <ol>
+        <li>Appui long sur un espace vide de l'écran d'accueil du téléphone, puis <b>Widgets</b>.</li>
+        <li>Cherche <b>Gestion administrative enfants</b> et pose le widget.</li>
+        <li>Choisis la taille, l'opacité et le nombre de jours. Pour le modifier plus tard : <b>Réglages › Widget › Personnaliser le widget</b>.</li>
+      </ol>
+      <p>Il montre la cantine, le bus confirmé et qui fait le covoiturage (initiales à côté de 🚗).</p>
+    </details>
+    <details class="hlp"><summary>🔄 Mises à jour</summary>
+      <p>Au démarrage, l'appli cherche toute seule une nouvelle version et propose de l'installer. La première fois, Android demande d'autoriser l'installation depuis cette appli. Tes réglages sont conservés.</p>
+      <p>Tu peux aussi toucher <b>Réglages › Application › Rechercher une mise à jour</b>, et voir les <b>Nouveautés</b>.</p>
+    </details>
+    <details class="hlp"><summary>🛟 Problèmes fréquents</summary>
+      <ul>
+        <li><b>Cantine : identifiants refusés.</b> Vérifie l'identifiant et le mot de passe dans Réglages › Portail cantine. Essaie d'abord de te connecter sur le site du portail pour être sûr.</li>
+        <li><b>Covoiturage : « certificat » ou « connexion bloquée ».</b> Le Synology a peut-être bloqué ton adresse après des essais ratés (Panneau de configuration › Sécurité › Protection). Vérifie aussi l'adresse et le mot de passe.</li>
+        <li><b>Covoiturage : « code incorrect ».</b> Tous les téléphones doivent avoir exactement le même code (bouton « Afficher mon code »).</li>
+        <li><b>Le Synology refuse l'enregistrement.</b> Le compte n'a pas le droit d'écrire dans le dossier partagé.</li>
+        <li><b>Les mails du bus ne sont pas lus.</b> Utilise un mot de passe d'application et vérifie l'adresse de l'expéditeur.</li>
+        <li><b>L'appli a planté.</b> Au démarrage suivant, un message permet de copier le rapport pour l'envoyer.</li>
+      </ul>
+    </details>
+  </section>
+  <button class="btn btn-primary" type="button" data-go="reglages" style="margin:4px 0 18px">⚙️ Ouvrir les réglages</button>
+</main>
 
 <main id="form" class="hidden">
   <!-- Favoris -->
@@ -1073,12 +1184,13 @@ var VIEWS = {
   "bus": {title: "Bus", sub: "Demande de transport", show: ["form", "footer"]},
   "cantine": {title: "Cantine", sub: "Réservations des repas", show: ["cantine"]},
   "covoit": {title: "Covoiturage", sub: "Qui va les chercher ?", show: ["covoit"]},
-  "reglages": {title: "Réglages", sub: "Tous les réglages de l'appli", show: ["reglages"]}
+  "reglages": {title: "Réglages", sub: "Tous les réglages de l'appli", show: ["reglages"]},
+  "aide": {title: "Aide", sub: "Comment régler l'appli", show: ["aide"]}
 };
 function route_(){
   var key = location.hash.replace("#", "");
   var v = VIEWS[key] || VIEWS[""];
-  ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
+  ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages", "aide"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
   var sub = v.sub, P = window.perso();
   if(key === "bus" && P.route.label) sub = window.prettyLine(P.route.label);
   if(key === "covoit" && P.covKids) sub = "Récupérer " + P.covKids;
@@ -1089,11 +1201,44 @@ function route_(){
   if(key === "bus"){ idSummary(); busPendRender(); }
   if(key === "reglages"){ refreshSettings(); persoFill(); mailFill(); }
   if(key === "") renderToday();
+  if(key === "aide") helpRender();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-go]").forEach(function(b){
   b.addEventListener("click", function(){ location.hash = b.getAttribute("data-go"); });
 });
+/* Aide : état de la configuration */
+function helpRender(){
+  var A = window.Android || {}, P = window.perso();
+  function j(name){ try{ return JSON.parse((A[name] && A[name]()) || "{}"); }catch(e){ return {}; } }
+  var cov = j("carpoolSettings"), mail = j("mailSettings");
+  var ident = !!($("nom").value || $("prenom").value);
+  var hasPlan = !!(A.hasPlanningLink && A.hasPlanningLink());
+  var items = [
+    [!!P.busKid && !!(P.route && P.route.routeId), "Bus : enfant et trajet habituel", "Réglages › Bus › 1", "busSetCard"],
+    [ident, "Bus : ton identité pour les demandes", "Réglages › Bus › 2", "busSetCard"],
+    [!!mail.actif, "Bus : réponses de la compagnie par mail (facultatif)", "Réglages › Bus › 3", "busSetCard"],
+    [!!(A.hasSavedLogin && A.hasSavedLogin()), "Cantine : identifiants du portail famille", "Réglages › Portail cantine", "psPortal"],
+    [!!cov.actif, "Covoiturage partagé (facultatif)", "Réglages › Covoiturage", "rgCov"],
+    [!!(A.widgetCount && A.widgetCount() > 0), "Widget sur l'écran d'accueil (facultatif)", "Appui long sur l'écran d'accueil › Widgets", null]
+  ];
+  var pc = $("rgPlanCard");
+  if(hasPlan || (pc && !pc.classList.contains("hidden")))
+    items.push([hasPlan, "Lien avec mon planning (facultatif)", "Réglages › Lien avec mon planning", "rgPlanCard"]);
+  $("helpCheck").innerHTML = items.map(function(it, i){
+    return '<button class="hck" type="button" data-hi="' + i + '"><span class="hst' + (it[0] ? " ok" : "") + '">' + (it[0] ? "✓" : "") + '</span>' +
+      '<span class="hn">' + esc(it[1]) + '<small>' + (it[0] ? "Réglé" : esc(it[2])) + '</small></span><span class="hgo">›</span></button>';
+  }).join("");
+  $("helpCheck").querySelectorAll("[data-hi]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var it = items[+b.getAttribute("data-hi")];
+      if(!it[3]){ alert("Pour ajouter le widget : appui long sur un espace vide de l'écran d'accueil du téléphone, puis Widgets › Gestion administrative enfants."); return; }
+      location.hash = "reglages";
+      setTimeout(function(){ var el = $(it[3]); if(el){ (el.closest("section") || el).scrollIntoView({behavior: "smooth", block: "start"}); } }, 250);
+    });
+  });
+}
+
 // retour : page précédente, ou l'accueil si l'appli a été ouverte directement sur cette page
 // sous-pages (feuilles) : « ‹ Retour » et touche retour du téléphone
 document.querySelectorAll("[data-back]").forEach(function(b){
