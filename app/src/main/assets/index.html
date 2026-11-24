@@ -135,7 +135,8 @@
   .tile.c-cantine b,.tile.c-bus b,.tile.c-covoit b{color:rgb(var(--cat))}
   .tile{position:relative;overflow:hidden}
   .tile > *{position:relative;z-index:1}
-  .tile[data-bg]::after{content:attr(data-bg);position:absolute;right:-14px;bottom:-22px;font-size:120px;line-height:1;opacity:.22;transform:rotate(-12deg);pointer-events:none;z-index:0}
+  .tile[data-bg]{justify-content:flex-end}
+  .tile[data-bg]::after{content:attr(data-bg);position:absolute;right:10px;top:12px;font-size:78px;line-height:1;opacity:.30;pointer-events:none;z-index:0}
   .bdays{margin-top:6px;display:flex;flex-direction:column;gap:3px}
   .bdays div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
   .bdays .j{color:var(--muted)} .bdays .st{font-size:13px}
@@ -315,11 +316,9 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
   <section class="today" id="today" aria-live="polite"></section>
   <div class="tiles">
     <button class="tile c-cantine" type="button" data-go="cantine" data-bg="🍽️">
-      <span class="ico c-cantine">🍽️</span>
       <span><b>Cantine</b><small id="tileCantine">Réserver les repas</small></span>
     </button>
     <button class="tile c-bus" type="button" data-go="bus" data-bg="🚌">
-      <span class="ico c-bus">🚌</span>
       <span><b>Bus</b><small id="tileBus">Demande de transport</small></span>
     </button>
     <button class="tile wide c-covoit" type="button" data-go="covoit">

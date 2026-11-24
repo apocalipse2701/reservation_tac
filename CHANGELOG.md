@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.7.2 — 24/11/2026
+- Accueil : tuiles Cantine et Bus sans la petite icône. La grande icône de fond est entière et adaptée à la taille de la tuile, et le texte est placé en bas.
+
 ## 2.7.1 — 24/11/2026
 - Accueil : les tuiles Cantine et Bus affichent leur icône en grand, en fond.
 - Le nom de la ligne s'écrit « Ligne 14 » au lieu de « LIGNE14 » (tuile Bus, résumé, en-tête, listes). La tuile Bus affiche seulement la ligne.
