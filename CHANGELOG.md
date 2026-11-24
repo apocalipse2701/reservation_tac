@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 3.1.0 — 24/11/2026
+- Nouveau : « 🎒 Emploi du temps » de l'enfant (tuile sur l'accueil). Les cours s'affichent jour par jour, avec semaines A et B, récréations, pause déjeuner et heure de sortie. Il se saisit en texte, une ligne par cours.
+- Résumé du jour de l'accueil : ligne « 🎒 Cours » avec l'heure de début et de fin des cours.
+- Aide : partie « Emploi du temps ».
+
 ## 3.0.0 — 24/11/2026
 - Vacances scolaires mises à jour automatiquement chaque semaine depuis l'open data de l'Éducation nationale (zone B, académie de Reims), avec repli sur les dates intégrées. Les jours fériés (Pâques, Ascension, Pentecôte…) sont calculés pour toutes les années.
 - Cantine : « 📅 Réserver ou annuler en lot » sélectionne d'un coup les jours de la semaine cochés du mois affiché, puis on valide.

@@ -127,7 +127,23 @@
   .tline .what span{font-size:13px;color:var(--muted)}
   .tline .st{font-weight:700;font-size:14px;white-space:nowrap}
   /* mêmes couleurs que les catégories des réglages : cantine bleu, bus vert, covoiturage rose */
-  .c-cantine{--cat:47,127,216} .c-bus{--cat:31,169,113} .c-covoit{--cat:222,80,122}
+  .c-cantine{--cat:47,127,216} .c-bus{--cat:31,169,113} .c-covoit{--cat:222,80,122} .c-edt{--cat:132,84,214}
+  .ico.c-edt,.dot.c-edt{background:rgba(var(--cat),.20);color:rgb(var(--cat))}
+  .tile.c-edt{background:linear-gradient(rgba(var(--cat),.15), rgba(var(--cat),.07)), var(--card);border:1.5px solid rgba(var(--cat),.38)}
+  .tile.c-edt b,.tline.c-edt .what b{color:rgb(var(--cat))}
+  .tline.c-edt{background:rgba(var(--cat),.09);border:1.5px solid rgba(var(--cat),.28);border-radius:16px;padding:10px 12px;margin:0 0 8px}
+  .etabs{display:flex;gap:6px;margin:0 0 10px}
+  .etabs button,.eab button{flex:1;border:0;border-radius:12px;padding:10px 0;background:rgba(var(--cat),.14);color:rgb(var(--cat));font:700 14px var(--body, inherit);cursor:pointer}
+  .etabs button.on,.eab button.on{background:rgb(var(--cat));color:#fff}
+  .eab{display:flex;gap:6px;margin:0 0 12px}.eab button{padding:7px 0;font-size:13px}
+  .ecours{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:0 0 8px;border-radius:14px;background:hsla(var(--h),70%,55%,.14);border-left:5px solid hsl(var(--h),60%,48%)}
+  .ecours .eh{font-weight:800;font-size:15px;min-width:52px}.ecours .eh small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+  .ecours .et{flex:1}.ecours .et b{display:block;font-size:15px}.ecours .et small{color:var(--muted);font-size:13px}
+  .ecours .ew{font-size:11px;font-weight:800;padding:3px 7px;border-radius:8px;background:rgba(var(--cat),.18);color:rgb(var(--cat))}
+  .egap{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px}
+  .eend{font-weight:700;text-align:center;margin:6px 0 2px;color:rgb(var(--cat))}
+  .eex{font-size:12px;background:var(--soft);border-radius:10px;padding:8px 10px;margin:0 0 8px;white-space:pre-wrap}
+  #edtTxt{width:100%;font:13px/1.45 ui-monospace,monospace;border-radius:12px;padding:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
   .dot.c-cantine,.dot.c-bus,.dot.c-covoit,.ico.c-cantine,.ico.c-bus,.ico.c-covoit{background:rgba(var(--cat),.20);color:rgb(var(--cat))}
   .tline.c-cantine,.tline.c-bus,.tline.c-covoit{background:rgba(var(--cat),.09);border:1.5px solid rgba(var(--cat),.28);border-radius:16px;padding:10px 12px;margin:0 0 8px}
   .tline.c-cantine .what b,.tline.c-bus .what b,.tline.c-covoit .what b{color:rgb(var(--cat))}
@@ -368,6 +384,10 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <button class="tile wide c-covoit" type="button" data-go="covoit">
       <span class="ico c-covoit">🚗</span>
       <span><b id="tileCov">Covoiturage</b><small>Qui va les chercher ?</small></span>
+    </button>
+    <button class="tile wide c-edt" type="button" data-go="edt">
+      <span class="ico c-edt">🎒</span>
+      <span><b>Emploi du temps</b><small id="tileEdt">Les cours de la semaine</small></span>
     </button>
   </div>
 </main>
@@ -611,6 +631,21 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
   <button class="btn btn-ghost" id="kPickNew" type="button" style="margin-top:10px">➕ Ajouter une personne</button>
 </div></div>
 
+<div class="overlay" id="edtEdit"><div class="sheet">
+  <div class="shead"><button class="sback" type="button" data-back="edtEdit">‹ Retour</button><h3>Emploi du temps</h3></div>
+  <p class="muted" style="margin:0 0 6px">Une ligne par cours, sous le nom du jour. Ajoute <b>[A]</b> ou <b>[B]</b> pour un cours d'une seule semaine.</p>
+  <pre class="eex">Lundi
+08h00-08h55 Mathématiques · Salle 15B [A]
+08h55-09h50 Français · Salle 26
+Mardi
+…</pre>
+  <textarea id="edtTxt" rows="14" spellcheck="false"></textarea>
+  <label for="edtRef">Cette semaine est une semaine</label>
+  <select id="edtRef"><option value="A">A</option><option value="B">B</option></select>
+  <button class="btn btn-primary" id="edtSave" type="button" style="margin-top:14px">Enregistrer</button>
+  <p class="muted" style="margin:10px 0 0;font-size:12px">Gardé uniquement sur ce téléphone (et dans ta sauvegarde des réglages).</p>
+</div></div>
+
 <div class="overlay" id="codeBox"><div class="sheet">
   <div class="shead"><button class="sback" type="button" data-back="codeBox">‹ Retour</button><h3 id="codeTitle"></h3></div>
   <p id="codeValue" style="font:700 26px/1.2 var(--disp);letter-spacing:.06em;text-align:center;margin:18px 0;user-select:all"></p>
@@ -651,6 +686,24 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <button class="btn btn-primary" id="cConfYes" type="button" style="padding:12px">Confirmer</button>
   </div>
 </div></div>
+
+<main id="edt" class="hidden">
+  <section class="card cat cat-violet" id="edtEmpty">
+    <h2>🎒 Pas encore d'emploi du temps</h2>
+    <p class="muted" style="margin:0 0 10px">Recopie l'emploi du temps une fois : il s'affichera jour par jour, avec les semaines A et B.</p>
+    <button class="btn btn-primary" id="edtEmptyBtn" type="button">Saisir l'emploi du temps</button>
+  </section>
+  <section id="edtView" class="hidden">
+    <div class="card cat cat-violet">
+      <h2 id="edtTitle" style="margin-bottom:4px"></h2>
+      <p class="muted" id="edtWeekTxt" style="margin:0 0 10px"></p>
+      <div class="etabs" id="edtTabs"></div>
+      <div class="eab" id="edtAB"><button type="button" data-w="A">Semaine A</button><button type="button" data-w="B">Semaine B</button></div>
+      <div id="edtList"></div>
+    </div>
+    <button class="btn btn-ghost" id="edtEditBtn" type="button" style="margin-bottom:18px">✏️ Modifier l'emploi du temps</button>
+  </section>
+</main>
 
 <main id="aide" class="hidden">
   <section class="card cat cat-violet">
@@ -745,6 +798,14 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <li>Choisis la taille, l'opacité et le nombre de jours. Pour le modifier plus tard : <b>Réglages › Widget › Personnaliser le widget</b>.</li>
       </ol>
       <p>Il montre la cantine, le bus confirmé et qui fait le covoiturage (initiales à côté de 🚗).</p>
+    </details>
+    <details class="hlp"><summary>🎒 Emploi du temps</summary>
+      <ol>
+        <li>Sur l'accueil, touche <b>🎒 Emploi du temps</b>, puis <b>Saisir l'emploi du temps</b>.</li>
+        <li>Écris le nom du jour, puis une ligne par cours : <i>08h00-08h55 Mathématiques · Salle 15B</i>. Ajoute <b>[A]</b> ou <b>[B]</b> pour un cours d'une seule semaine.</li>
+        <li>Indique si la semaine en cours est A ou B, puis <b>Enregistrer</b>.</li>
+      </ol>
+      <p>L'appli affiche les cours jour par jour (récréations, pause déjeuner, heure de sortie) et ajoute une ligne « 🎒 Cours » dans le résumé du jour de l'accueil. Il reste uniquement sur ce téléphone.</p>
     </details>
     <details class="hlp"><summary>🔒 Verrouillage et sauvegarde</summary>
       <p><b>Verrouillage par empreinte</b> : Réglages › Sécurité et sauvegarde › « Activer le verrouillage ». L'appli demande alors ton empreinte, ton visage ou le code du téléphone à l'ouverture, et après une minute en arrière-plan. Il faut qu'un verrouillage soit déjà réglé sur le téléphone.</p>
@@ -1284,12 +1345,13 @@ var VIEWS = {
   "cantine": {title: "Cantine", sub: "Réservations des repas", show: ["cantine"]},
   "covoit": {title: "Covoiturage", sub: "Qui va les chercher ?", show: ["covoit"]},
   "reglages": {title: "Réglages", sub: "Tous les réglages de l'appli", show: ["reglages"]},
-  "aide": {title: "Aide", sub: "Comment régler l'appli", show: ["aide"]}
+  "aide": {title: "Aide", sub: "Comment régler l'appli", show: ["aide"]},
+  "edt": {title: "Emploi du temps", sub: "Les cours, jour par jour", show: ["edt"]}
 };
 function route_(){
   var key = location.hash.replace("#", "");
   var v = VIEWS[key] || VIEWS[""];
-  ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages", "aide"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
+  ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages", "aide", "edt"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
   var sub = v.sub, P = window.perso();
   if(key === "bus" && P.route.label) sub = window.prettyLine(P.route.label);
   if(key === "covoit" && P.covKids) sub = "Récupérer " + P.covKids;
@@ -1399,6 +1461,97 @@ $("bkSynR").addEventListener("click", function(){ bkGo("syn", "load"); });
 $("bkFileR").addEventListener("click", function(){ bkGo("file", "load"); });
 window.addEventListener("hashchange", function(){ if(location.hash === "#reglages") secRender(); });
 if(location.hash === "#reglages") secRender();
+/* --- Emploi du temps de l'enfant (gardé sur ce téléphone) --- */
+var EDT_DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+function edtGet(){ try{ var v = window.Android && window.Android.getPref("edt_lea"); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function edtPut(o){ try{ window.Android.setPref("edt_lea", JSON.stringify(o)); }catch(e){} }
+// « Lun 08:00-08:55 Mathématiques · Salle 15B [A] » → {d:1, s:"08:00", e:"08:55", t:"Mathématiques · Salle 15B", w:"A"}
+function edtParse(text){
+  var out = [], bad = [], cur = 0;
+  text.split(/\r?\n/).forEach(function(raw){
+    var l = raw.trim(); if(!l || l.charAt(0) === "#") return;
+    var dm = l.match(/^(lun|mar|mer|jeu|ven)[a-z]*\.?\s*:?\s*/i);
+    if(dm){ cur = ["lun", "mar", "mer", "jeu", "ven"].indexOf(dm[1].toLowerCase()) + 1; l = l.slice(dm[0].length); if(!l) return; }
+    var m = l.match(/^(\d{1,2})\s*[h:.]\s*(\d{2})?\s*(?:-|–|à|a)\s*(\d{1,2})\s*[h:.]\s*(\d{2})?\s+(.+?)\s*(?:\[\s*(A|B)\s*\])?$/i);
+    if(!m || !cur){ bad.push(raw.trim()); return; }
+    var p = function(h, mn){ return ("0" + h).slice(-2) + ":" + (mn || "00"); };
+    out.push({d: cur, s: p(m[1], m[2]), e: p(m[3], m[4]), t: m[5], w: (m[6] || "").toUpperCase()});
+  });
+  out.sort(function(a, b){ return a.d - b.d || a.s.localeCompare(b.s); });
+  return {list: out, bad: bad};
+}
+function edtText(list){
+  var t = "", last = 0;
+  list.forEach(function(c){
+    if(c.d !== last){ t += (t ? "\n" : "") + EDT_DAYS[c.d - 1] + "\n"; last = c.d; }
+    t += c.s.replace(":", "h") + "-" + c.e.replace(":", "h") + " " + c.t + (c.w ? " [" + c.w + "]" : "") + "\n";
+  });
+  return t;
+}
+function edtWeek(o, date){   // "A" ou "B"
+  if(!o || !o.ref) return "";
+  var t = new Date(date); t.setHours(12, 0, 0, 0); t.setDate(t.getDate() - ((t.getDay() + 6) % 7));
+  var p = o.ref.split("-"), r = new Date(+p[0], +p[1] - 1, +p[2], 12);
+  var w = Math.round((t - r) / 864e5 / 7);
+  return (w % 2 === 0) === (o.refL !== "B") ? "A" : "B";
+}
+function edtDay(o, date, L){   // cours d'un jour (semaine L)
+  var d = date.getDay(); if(d === 0 || d === 6 || !o) return [];
+  return (o.list || []).filter(function(c){ return c.d === d && (!c.w || !L || c.w === L); });
+}
+function edtColor(t){ var h = 0, s = t.split(/[·,(]/)[0].trim().toLowerCase(); for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+var edtSel = null, edtL = "";
+function edtRender(){
+  var o = edtGet(), kid = window.kidBus() || "l'enfant";
+  $("edtTitle").textContent = "Emploi du temps de " + kid;
+  $("edtEmpty").classList.toggle("hidden", !!(o && o.list && o.list.length));
+  $("edtView").classList.toggle("hidden", !(o && o.list && o.list.length));
+  if(!o || !o.list || !o.list.length) return;
+  var now = new Date();
+  if(edtSel === null){ var t = new Date(now); if(t.getHours() >= 17) t.setDate(t.getDate() + 1); while(t.getDay() === 0 || t.getDay() === 6) t.setDate(t.getDate() + 1); edtSel = t.getDay(); edtL = edtWeek(o, t); }
+  var hasAB = o.list.some(function(c){ return c.w; });
+  $("edtAB").classList.toggle("hidden", !hasAB);
+  $("edtAB").querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.w === edtL); });
+  $("edtTabs").innerHTML = EDT_DAYS.map(function(n, i){ return '<button type="button" class="' + (edtSel === i + 1 ? "on" : "") + '" data-d="' + (i + 1) + '">' + n.slice(0, 3) + '</button>'; }).join("");
+  $("edtTabs").querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ edtSel = +b.dataset.d; edtRender(); }); });
+  var cours = (o.list || []).filter(function(c){ return c.d === edtSel && (!c.w || !hasAB || c.w === edtL); });
+  var html = "";
+  if(!cours.length) html = '<p class="muted" style="text-align:center">Pas de cours ce jour-là.</p>';
+  cours.forEach(function(c, i){
+    var prev = cours[i - 1];
+    if(prev && prev.e < c.s){
+      var gap = (+c.s.slice(0, 2) * 60 + +c.s.slice(3)) - (+prev.e.slice(0, 2) * 60 + +prev.e.slice(3));
+      html += '<div class="egap">' + (gap >= 45 ? "🍽️ Pause déjeuner" : "Récréation") + ' · ' + prev.e.replace(":", "h") + ' → ' + c.s.replace(":", "h") + '</div>';
+    }
+    var parts = c.t.split("·"), subj = parts[0].trim(), more = parts.slice(1).join("·").trim();
+    html += '<div class="ecours" style="--h:' + edtColor(c.t) + '"><span class="eh">' + c.s.replace(":", "h") + '<small>' + c.e.replace(":", "h") + '</small></span>' +
+      '<span class="et"><b>' + esc(subj) + '</b>' + (more ? '<small>' + esc(more) + '</small>' : '') + '</span>' + (c.w ? '<span class="ew">' + c.w + '</span>' : '') + '</div>';
+  });
+  if(cours.length) html += '<div class="eend">🏁 Sortie à ' + cours[cours.length - 1].e.replace(":", "h") + '</div>';
+  $("edtList").innerHTML = html;
+  $("edtWeekTxt").textContent = hasAB && o.ref ? "Cette semaine est une semaine " + edtWeek(o, now) + "." : "";
+}
+function edtEditOpen(){
+  var o = edtGet() || {};
+  $("edtTxt").value = o.list && o.list.length ? edtText(o.list) : "";
+  $("edtRef").value = o.ref ? edtWeek(o, new Date()) : "A";
+  $("edtEdit").classList.add("show");
+}
+function edtSaveTxt(){
+  var r = edtParse($("edtTxt").value);
+  if(r.bad.length){ alert("Ligne" + (r.bad.length > 1 ? "s" : "") + " non comprise" + (r.bad.length > 1 ? "s" : "") + " :\n" + r.bad.slice(0, 4).join("\n") + "\n\nExemple : 08h00-08h55 Mathématiques · Salle 15B [A]"); return; }
+  if(!r.list.length && !confirm("Supprimer l'emploi du temps ?")) return;
+  var m = new Date(); m.setHours(12, 0, 0, 0); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+  edtPut({list: r.list, ref: m.getFullYear() + "-" + ("0" + (m.getMonth() + 1)).slice(-2) + "-" + ("0" + m.getDate()).slice(-2), refL: $("edtRef").value});
+  $("edtEdit").classList.remove("show"); edtSel = null; edtRender(); renderToday();
+  alert(r.list.length ? "Emploi du temps enregistré (" + r.list.length + " cours)." : "Emploi du temps supprimé.");
+}
+$("edtEditBtn").addEventListener("click", edtEditOpen);
+$("edtEmptyBtn").addEventListener("click", edtEditOpen);
+$("edtSave").addEventListener("click", edtSaveTxt);
+$("edtAB").querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ edtL = b.dataset.w; edtRender(); }); });
+window.addEventListener("hashchange", function(){ if(location.hash === "#edt"){ edtSel = null; edtRender(); } });
+if(location.hash === "#edt") edtRender();
 /* Aide : état de la configuration */
 function helpRender(){
   var A = window.Android || {}, P = window.perso();
@@ -1712,6 +1865,12 @@ function renderToday(){
   var cv = (w.covoit || {})[k], cvs = (w.covoitSans || {})[k] || "—", cvc = "no";
   if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
   lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);
+  var eo = edtGet();
+  if(eo && eo.list && eo.list.length){
+    var ec = edtDay(eo, d, edtWeek(eo, d));
+    lines += line("edt", "c-edt", "🎒", "Cours", (window.kidBus() || "") + (edtWeek(eo, d) ? " · semaine " + edtWeek(eo, d) : ""),
+      ec.length ? ec[0].s.replace(":", "h") + " → " + ec[ec.length - 1].e.replace(":", "h") : "Pas de cours", ec.length ? "ok" : "no");
+  }
   $("today").innerHTML = '<p class="when">' + esc(d.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"})) + '</p>' +
     '<p class="rel">' + rel.charAt(0).toUpperCase() + rel.slice(1) + '</p>' + lines;
   $("today").querySelectorAll("[data-go]").forEach(function(el){   // (plus rien de cliquable dans le résumé)
