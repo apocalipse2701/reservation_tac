@@ -227,7 +227,7 @@
   .nonp{display:inline-flex;align-items:center;gap:4px}
   /* couleur par catégorie dans les réglages (translucide, lisible en clair comme en sombre) */
   .cat-vert{--cat:31,169,113} .cat-bleu{--cat:47,127,216} .cat-orange{--cat:232,144,46} .cat-rose{--cat:222,80,122}
-  .cat-violet{--cat:132,84,214} .cat-turquoise{--cat:21,158,158} .cat-gris{--cat:122,135,148}
+  .cat-violet{--cat:132,84,214} .cat-turquoise{--cat:21,158,158} .cat-gris{--cat:122,135,148} .cat-ambre{--cat:196,132,18}
   .card.cat{background:linear-gradient(rgba(var(--cat),.13), rgba(var(--cat),.07)), var(--card);border:1.5px solid rgba(var(--cat),.38)}
   .card.cat > h2{color:rgb(var(--cat))}
   .card.cat .btn-ghost{background:rgba(var(--cat),.16);color:rgb(var(--cat))}
@@ -277,7 +277,13 @@
   .htab th{color:var(--muted);font-weight:650;font-size:12px}
   .htab td:first-child{font-weight:700;white-space:nowrap}
 
+  .wdays{display:flex;gap:6px;flex-wrap:wrap}
+  .wdays label{display:flex;align-items:center;gap:4px;padding:8px 10px;border-radius:12px;background:var(--soft);font-weight:600;font-size:14px;margin:0;cursor:pointer}
+  .wdays input{width:auto;margin:0}
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
+  .swap{border-radius:18px;padding:14px;margin:0 0 12px;background:rgba(222,80,122,.12);border:1.5px solid rgba(222,80,122,.35)}
+  .swap p{margin:0 0 10px;font-size:14.5px;line-height:1.45}
+  .swap .row .btn{padding:9px 12px;font-size:14px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
   .prow:last-child{border-bottom:0}
   .prow .pn{flex:1;font-weight:650}.prow .pn small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
@@ -440,6 +446,28 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <p class="muted" id="rgWid" style="margin:0 0 10px"></p>
     <div id="rgWidBtns"></div>
   </section>
+  <section class="card cat cat-ambre" id="secCard">
+    <h2>🔒 Sécurité et sauvegarde</h2>
+    <div class="subbox">
+      <h3 class="sub3">Verrouillage par empreinte</h3>
+      <p class="muted" id="lkState" style="margin:0 0 10px"></p>
+      <button class="btn btn-ghost btn-small" id="lkBtn" type="button"></button>
+    </div>
+    <div class="subbox">
+      <h3 class="sub3">Sauvegarde des réglages <small>chiffrée</small></h3>
+      <p class="muted" style="margin:0 0 6px">Garde une copie de tous tes réglages (identifiants compris, chiffrés) pour les remettre sur un nouveau téléphone.</p>
+      <p class="muted" id="bkState" style="margin:0 0 6px;font-size:13px"></p>
+      <label for="bkPwd">Mot de passe de la sauvegarde (6 caractères minimum)</label>
+      <input id="bkPwd" type="password" autocomplete="new-password">
+      <p class="muted" style="margin:4px 0 0;font-size:12px">Retiens-le bien : sans lui, personne ne peut relire la sauvegarde.</p>
+      <div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-small" id="bkSyn" type="button">💾 Sur le Synology</button>
+      <button class="btn btn-ghost btn-small" id="bkFile" type="button">📁 Dans un fichier</button></div>
+      <h3 class="sub3" style="margin-top:14px">Restaurer</h3>
+      <div class="row" style="margin-top:6px"><button class="btn btn-ghost btn-small" id="bkSynR" type="button">♻️ Depuis le Synology</button>
+      <button class="btn btn-ghost btn-small" id="bkFileR" type="button">📂 Depuis un fichier</button></div>
+      <p class="muted" style="margin:8px 0 0;font-size:12px">Sur le Synology, la sauvegarde est rangée dans le dossier du covoiturage : règle d'abord le covoiturage sur le nouveau téléphone.</p>
+    </div>
+  </section>
   <section class="card cat cat-gris">
     <h2>📱 Application</h2>
     <p class="muted" style="margin:0 0 10px"><span id="appVer">Version ?</span></p>
@@ -470,6 +498,20 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
       </div>
       <p class="muted" id="cHint" style="text-align:center;margin:8px 0 0">Touche un jour gris pour le réserver, un jour vert pour l'annuler.</p>
     </div>
+    <details class="card" id="cBatch">
+      <summary style="cursor:pointer;font-weight:700">📅 Réserver ou annuler en lot</summary>
+      <p class="muted" style="margin:8px 0 6px">Pour le mois affiché, sur les jours de la semaine cochés. Rien n'est envoyé tant que tu n'as pas touché « Valider ».</p>
+      <div class="wdays" id="cbDays">
+        <label><input type="checkbox" value="1" checked> Lun</label><label><input type="checkbox" value="2" checked> Mar</label>
+        <label><input type="checkbox" value="3"> Mer</label><label><input type="checkbox" value="4" checked> Jeu</label><label><input type="checkbox" value="5" checked> Ven</label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-ghost btn-small" id="cbBook" type="button">✅ Tout réserver</button>
+        <button class="btn btn-cancel btn-small" id="cbCancel" type="button">❌ Tout annuler</button>
+      </div>
+      <button class="btn btn-ghost btn-small" id="cbClear" type="button" style="margin-top:8px">Effacer la sélection</button>
+    </details>
+    <button class="btn btn-ghost hidden" id="cMenu" type="button" style="margin-bottom:10px">🍴 Voir les menus de la cantine</button>
     <p class="muted" style="text-align:center"><span id="cCount"></span> · <a href="#" id="cRefresh">Actualiser</a></p>
   </section>
   <div id="cErr" class="alert alert-err hidden"></div>
@@ -487,6 +529,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
   </section>
   <section id="kMain" class="hidden">
     <p class="kstate hidden" id="kState"></p>
+    <div id="kSwaps"></div>
     <div id="kDays"></div>
     <p class="muted" style="text-align:center"><span id="kInfo"></span> · <a href="#" id="kRefresh">Actualiser</a></p>
     <section class="card" id="kPeople">
@@ -509,6 +552,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <label for="kEdtRef">Cette semaine est une semaine</label>
         <select id="kEdtRef"><option value="A">A</option><option value="B">B</option></select>
         <label class="chk" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="kEdtVac" checked style="width:auto"> Pas de covoiturage pendant les vacances scolaires (zone B) et les jours fériés</label>
+        <p class="muted" id="kVacInfo" style="margin:4px 0 0;font-size:12px"></p>
         <div class="row" style="margin-top:12px"><button class="btn btn-primary" id="kEdtSave" type="button">Enregistrer</button><button class="btn btn-ghost narrow" id="kEdtOff" type="button" style="flex:0 0 auto">Supprimer</button></div>
       </details>
     </section>
@@ -552,6 +596,12 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <div class="row" style="flex:1"><button class="btn btn-ghost btn-small" id="kPCam" type="button">Prendre une photo</button>
     <button class="btn btn-ghost btn-small" id="kPGal" type="button">Choisir une image</button></div></div>
   <button class="btn btn-primary" id="kPSave" type="button" style="margin-top:16px">Enregistrer</button>
+</div></div>
+
+<div class="overlay" id="kSwapPick"><div class="sheet">
+  <div class="shead"><button class="sback" type="button" data-back="kSwapPick">‹ Retour</button><h3>Échanger ce jour</h3></div>
+  <p class="muted" id="kSwapDay" style="margin:0 0 8px"></p>
+  <div id="kSwapList"></div>
 </div></div>
 
 <div class="overlay" id="kPick"><div class="sheet">
@@ -617,6 +667,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <li>Remplis la partie <b>🚌 Bus</b> : prénom de l'enfant, trajet habituel, ton identité.</li>
         <li>Remplis <b>🍽️ Portail cantine</b> avec tes identifiants du portail famille.</li>
         <li>Si tu fais du covoiturage, règle <b>🚗 Covoiturage</b>.</li>
+        <li>Fais une <b>💾 sauvegarde</b> de tes réglages (Sécurité et sauvegarde).</li>
         <li>Ajoute le <b>widget</b> sur l'écran d'accueil du téléphone.</li>
       </ol>
       <p>Tout reste sur ton téléphone, et les mots de passe sont chiffrés. Seul le fichier du covoiturage est partagé, chiffré lui aussi, sur ton Synology.</p>
@@ -659,7 +710,9 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <details class="hlp"><summary>🍽️ Cantine</summary>
       <ol>
         <li><b>Réglages › Portail cantine</b> : l'adresse du portail famille est déjà remplie, rien à changer. Saisis ton identifiant et ton mot de passe, puis <b>Enregistrer</b>.</li>
-        <li>Ouvre <b>Cantine</b> : le mois s'affiche. Touche un jour pour réserver, ou un jour vert pour annuler.</li>
+        <li>Ouvre <b>Cantine</b> : le mois s'affiche. Touche un jour pour réserver, ou un jour vert pour annuler, puis <b>Valider</b>.</li>
+        <li><b>En lot</b> : « 📅 Réserver ou annuler en lot », sous le calendrier, sélectionne d'un coup tous les jours cochés (par exemple lundi, mardi, jeudi, vendredi) du mois affiché. Vérifie, puis touche <b>Valider</b>. Change de mois avec les flèches pour continuer.</li>
+        <li><b>Menus</b> : si le portail publie les menus, le bouton « 🍴 Voir les menus de la cantine » apparaît sous le calendrier.</li>
         <li>L'appli vérifie régulièrement les réponses du portail et te prévient avec la fenêtre « 📬 Nouvelles ».</li>
       </ol>
       <p>Si le portail demande de se reconnecter, l'appli ouvre sa page de connexion et remplit tes identifiants toute seule.</p>
@@ -671,8 +724,9 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <li>L'adresse du Synology, l'identifiant, le mot de passe et le dossier partagé (par exemple « Covoiturage »). Ce compte doit avoir le droit d'<b>écrire</b> dans le dossier.</li>
         <li>Le <b>code du covoiturage</b> doit être le même sur tous les téléphones. Le premier téléphone le crée, et les autres le recopient grâce au bouton « Afficher mon code ».</li>
         <li>Dans <b>Covoiturage</b>, touche « Je les récupère », « Je ne peux pas », « 👤 Quelqu'un d'autre » ou « 🏫 Pas d'école ». Tout le monde est prévenu.</li>
-        <li><b>🎒 Heures de sortie</b> (en bas de la page Covoiturage) : saisis une seule fois les heures de fin des cours, semaine A et semaine B. Les vacances et les jours fériés sont reconnus tout seuls.</li>
+        <li><b>🎒 Heures de sortie</b> (en bas de la page Covoiturage) : saisis une seule fois les heures de fin des cours, semaine A et semaine B. Les vacances et les jours fériés sont reconnus tout seuls : les dates des vacances (zone B) sont mises à jour automatiquement chaque semaine depuis le site officiel de l'Éducation nationale.</li>
         <li><b>👥 Personnes du covoiturage</b> : ajoute quelqu'un qui n'a pas l'appli (grand-parent, voisin…).</li>
+        <li><b>🔁 Échanger</b> : sur un de tes jours, propose de l'échanger contre le jour d'une autre personne. Elle voit la proposition en haut de sa page Covoiturage et accepte ou refuse d'une touche ; tout le monde est prévenu.</li>
       </ol>
       <p>Quand le bus est confirmé pour un jour, ce jour passe automatiquement en « 🚌 prend le bus ».</p>
     </details>
@@ -692,6 +746,11 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
       </ol>
       <p>Il montre la cantine, le bus confirmé et qui fait le covoiturage (initiales à côté de 🚗).</p>
     </details>
+    <details class="hlp"><summary>🔒 Verrouillage et sauvegarde</summary>
+      <p><b>Verrouillage par empreinte</b> : Réglages › Sécurité et sauvegarde › « Activer le verrouillage ». L'appli demande alors ton empreinte, ton visage ou le code du téléphone à l'ouverture, et après une minute en arrière-plan. Il faut qu'un verrouillage soit déjà réglé sur le téléphone.</p>
+      <p><b>Sauvegarde des réglages</b> : choisis un mot de passe de sauvegarde, puis « 💾 Sur le Synology » (dans le dossier du covoiturage) ou « 📁 Dans un fichier ». Tout est chiffré avec ce mot de passe : ne l'oublie pas.</p>
+      <p><b>Nouveau téléphone</b> : installe l'appli, puis Réglages › Sécurité et sauvegarde › « ♻️ Depuis le Synology » (après avoir réglé le covoiturage) ou « 📂 Depuis un fichier », avec le même mot de passe. Tous les réglages reviennent : trajet, identité, portail, mail, covoiturage, planning, thème.</p>
+    </details>
     <details class="hlp"><summary>🔄 Mises à jour</summary>
       <p>Au démarrage, l'appli cherche toute seule une nouvelle version et propose de l'installer. La première fois, Android demande d'autoriser l'installation depuis cette appli. Tes réglages sont conservés.</p>
       <p>Tu peux aussi toucher <b>Réglages › Application › Rechercher une mise à jour</b>, et voir les <b>Nouveautés</b>.</p>
@@ -703,6 +762,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <li><b>Covoiturage : « code incorrect ».</b> Tous les téléphones doivent avoir exactement le même code (bouton « Afficher mon code »).</li>
         <li><b>Le Synology refuse l'enregistrement.</b> Le compte n'a pas le droit d'écrire dans le dossier partagé.</li>
         <li><b>Les mails du bus ne sont pas lus.</b> Utilise un mot de passe d'application et vérifie l'adresse de l'expéditeur.</li>
+        <li><b>Restauration : « mot de passe incorrect » ou « aucune sauvegarde trouvée ».</b> Il faut exactement le mot de passe utilisé pour la sauvegarde.</li>
         <li><b>L'appli a planté.</b> Au démarrage suivant, un message permet de copier le rapport pour l'envoyer.</li>
       </ul>
     </details>
@@ -1249,7 +1309,8 @@ document.querySelectorAll("[data-go]").forEach(function(b){
 /* Réglages : chaque catégorie s'ouvre d'une touche (une seule ouverte à la fois) */
 (function(){
   var DESC = {"Couleurs": "Thème de l'appli", "Bus": "Enfant, trajet, identité, réponses par mail", "Portail": "Adresse et identifiants du portail famille",
-    "Lien": "Conseils cantine et covoiturage", "Covoiturage": "Synology, enfants, code", "Widget": "Écran d'accueil du téléphone", "Application": "Version, mises à jour, nouveautés"};
+    "Lien": "Conseils cantine et covoiturage", "Covoiturage": "Synology, enfants, code", "Widget": "Écran d'accueil du téléphone", "Application": "Version, mises à jour, nouveautés",
+    "Sécurité": "Empreinte, sauvegarde et restauration"};
   var cards = document.querySelectorAll("#reglages > section.card.cat");
   cards.forEach(function(card){
     var h2 = card.querySelector(":scope > h2"); if(!h2) return;
@@ -1293,24 +1354,72 @@ document.querySelectorAll("[data-go]").forEach(function(b){
   // revenir aux réglages = tout replié
   window.addEventListener("hashchange", function(){ if(location.hash !== "#reglages") cards.forEach(function(c){ c.classList.remove("open"); }); });
 })();
+/* Sécurité : verrouillage et sauvegarde */
+function secRender(){
+  var A = window.Android || {}, st = {};
+  try{ st = JSON.parse(A.lockState ? A.lockState() : "{}"); }catch(e){}
+  $("lkState").textContent = !st.possible ? "Ton téléphone n'a pas de verrouillage (code, schéma ou empreinte) : active-le d'abord dans les réglages d'Android."
+    : st.on ? "Activé : l'appli demande ton empreinte (ou le code du téléphone) à l'ouverture, et après 1 minute en arrière-plan."
+    : "Désactivé. Protège l'appli, qui contient tes identifiants (portail, mail, Synology).";
+  $("lkBtn").textContent = st.on ? "Désactiver le verrouillage" : "🔒 Activer le verrouillage";
+  $("lkBtn").disabled = !st.possible;
+  $("lkBtn").dataset.on = st.on ? "1" : "";
+  var at = A.backupAt ? A.backupAt() : 0;
+  $("bkState").textContent = at ? "Dernière sauvegarde : " + new Date(at).toLocaleString("fr-FR", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"}) : "Aucune sauvegarde pour l'instant.";
+}
+var lkWant = false;
+$("lkBtn").addEventListener("click", function(){ lkWant = !$("lkBtn").dataset.on; window.Android.lockSet(lkWant); });
+window.__lockDone = function(ok){ secRender(); alert(!ok ? "Vérification annulée : rien n'a changé." : lkWant ? "Verrouillage activé." : "Verrouillage désactivé."); };
+function bkPwd(){ var p = $("bkPwd").value; if(p.length < 6){ alert("Choisis un mot de passe de sauvegarde d'au moins 6 caractères."); return null; } return p; }
+var bkMode = "";
+function bkGo(where, mode){
+  var p = bkPwd(); if(p === null) return;
+  var A = window.Android;
+  if(where === "syn"){
+    var cov = {}; try{ cov = JSON.parse(A.carpoolSettings()); }catch(e){}
+    if(!cov.actif){ alert("Le Synology se règle dans Réglages › Covoiturage. Sinon, utilise un fichier."); return; }
+  }
+  if(mode === "load" && !confirm("Remplacer les réglages de ce téléphone par ceux de la sauvegarde ?")) return;
+  bkMode = mode;
+  if(where === "syn"){ busyMsg(true); A.backupSynology(mode, p); } else A.backupFile(mode, p);
+}
+function busyMsg(on){ ["bkSyn", "bkFile", "bkSynR", "bkFileR"].forEach(function(i){ $(i).disabled = on; }); }
+window.__backupDone = function(json){
+  busyMsg(false);
+  var r = {}; try{ r = JSON.parse(json); }catch(e){}
+  if(r.annule) return;
+  if(!r.ok){ alert("Sauvegarde : " + (r.erreur || "échec")); return; }
+  $("bkPwd").value = "";
+  if(r.n !== undefined){ alert("Réglages restaurés (" + r.n + " éléments). L'appli va se recharger."); setTimeout(function(){ window.Android.reloadApp(); }, 400); return; }
+  secRender(); alert(r.fichier ? "Sauvegarde enregistrée dans le fichier choisi." : "Sauvegarde enregistrée sur le Synology.");
+};
+$("bkSyn").addEventListener("click", function(){ bkGo("syn", "save"); });
+$("bkFile").addEventListener("click", function(){ bkGo("file", "save"); });
+$("bkSynR").addEventListener("click", function(){ bkGo("syn", "load"); });
+$("bkFileR").addEventListener("click", function(){ bkGo("file", "load"); });
+window.addEventListener("hashchange", function(){ if(location.hash === "#reglages") secRender(); });
+if(location.hash === "#reglages") secRender();
 /* Aide : état de la configuration */
 function helpRender(){
   var A = window.Android || {}, P = window.perso();
   function j(name){ try{ return JSON.parse((A[name] && A[name]()) || "{}"); }catch(e){ return {}; } }
   var cov = j("carpoolSettings"), mail = j("mailSettings");
   var ident = !!($("nom").value || $("prenom").value);
-  var hasPlan = !!(A.hasPlanningLink && A.hasPlanningLink());
+  var hasPlan = !!(A.hasPlanningLink && A.hasPlanningLink());   // version avec planning
+  var planOk = hasPlan && !!j("planningSettings").actif;           // lien réellement réglé
   var items = [
     [!!P.busKid && !!(P.route && P.route.routeId), "Bus : enfant et trajet habituel", "Réglages › Bus › 1", "busSetCard"],
     [ident, "Bus : ton identité pour les demandes", "Réglages › Bus › 2", "busSetCard"],
     [!!mail.actif, "Bus : réponses de la compagnie par mail (facultatif)", "Réglages › Bus › 3", "busSetCard"],
     [!!(A.hasSavedLogin && A.hasSavedLogin()), "Cantine : identifiants du portail famille", "Réglages › Portail cantine", "psPortal"],
     [!!cov.actif, "Covoiturage partagé (facultatif)", "Réglages › Covoiturage", "rgCov"],
-    [!!(A.widgetCount && A.widgetCount() > 0), "Widget sur l'écran d'accueil (facultatif)", "Appui long sur l'écran d'accueil › Widgets", null]
+    [!!(A.widgetCount && A.widgetCount() > 0), "Widget sur l'écran d'accueil (facultatif)", "Appui long sur l'écran d'accueil › Widgets", null],
+    [!!(A.backupAt && A.backupAt() > 0), "Sauvegarde des réglages (conseillé)", "Réglages › Sécurité et sauvegarde", "bkPwd"],
+    [!!j("lockState").on, "Verrouillage par empreinte (facultatif)", "Réglages › Sécurité et sauvegarde", "lkBtn"]
   ];
   var pc = $("rgPlanCard");
   if(hasPlan || (pc && !pc.classList.contains("hidden")))
-    items.push([hasPlan, "Lien avec mon planning (facultatif)", "Réglages › Lien avec mon planning", "rgPlanCard"]);
+    items.push([planOk, "Lien avec mon planning (facultatif)", "Réglages › Lien avec mon planning", "rgPlanCard"]);
   $("helpCheck").innerHTML = items.map(function(it, i){
     return '<button class="hck" type="button" data-hi="' + i + '"><span class="hst' + (it[0] ? " ok" : "") + '">' + (it[0] ? "✓" : "") + '</span>' +
       '<span class="hn">' + esc(it[1]) + '<small>' + (it[0] ? "Réglé" : esc(it[2])) + '</small></span><span class="hgo">›</span></button>';
@@ -1670,6 +1779,28 @@ var inPortal = /^https:\/\/portail\./.test(location.origin);
 /* --- Réseau vers le portail (cookies de connexion gérés par l'appli Android) --- */
 var pend = {}, n = 0;
 window.__portalDone = function(id, status, url, body){ var f = pend[id]; delete pend[id]; if(f) f({status: status, url: url, body: body}); };
+/* --- menus de la cantine : lien trouvé dans les pages du portail (s'il en publie) --- */
+function prefGet(k){ try{ var v = window.Android && window.Android.getPref(k); return v ? JSON.parse(v) : ""; }catch(e){ return ""; } }
+function prefSet(k, v){ try{ window.Android && window.Android.setPref(k, JSON.stringify(v)); }catch(e){} }
+var menuUrl = prefGet("menu_url"), menuTried = false;
+function scanMenu(html, base){
+  try{
+    var re = /<a\b[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi, m, best = "";
+    while((m = re.exec(html))){
+      var href = m[1], txt = m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      if(/javascript:|logout|deconnex/i.test(href)) continue;
+      if(/menu|repas du jour|restauration/i.test(txt) && /menu/i.test(txt + " " + href)){ best = href; break; }
+      if(!best && /\/menus?\b|menu/i.test(href) && !/menu-?(principal|nav|toggle)/i.test(href)) best = href;
+    }
+    if(best){
+      var abs = new URL(best, base || (window.perso().portal || DEFAULT_PORTAL)).href;
+      if(abs !== menuUrl){ menuUrl = abs; prefSet("menu_url", abs); }
+    }
+    showMenuLink();
+    if(!menuUrl && !menuTried){ menuTried = true; portal("GET", "").then(function(r){ if(r.status === 200) scanMenu(r.body, r.url); }).catch(function(){}); }
+  }catch(e){}
+}
+function showMenuLink(){ $("cMenu").classList.toggle("hidden", !menuUrl); }
 function portal(method, path, body, ctype, csrf){
   return new Promise(function(resolve){
     if(window.Android && window.Android.portal){
@@ -1752,6 +1883,7 @@ function loadFrom(mon){
   var go = csrf ? Promise.resolve() : portal("GET", "activites/planning").then(function(r){
     if(!r.status) throw "net";
     if(r.status !== 200 || r.body.indexOf("getEventsList") < 0) throw "login";
+    scanMenu(r.body, r.url);
     csrf = csrfOf(r.body); store(r.body, null);
   });
   return go.then(function(){
@@ -1760,6 +1892,7 @@ function loadFrom(mon){
   }).then(function(r){
     if(!r.status) throw "net";
     if(r.status !== 200 || r.body.indexOf("getEventsList") < 0){ csrf = null; throw "login"; }
+    scanMenu(r.body, r.url);
     csrf = csrfOf(r.body) || csrf; store(r.body, mon);
   });
 }
@@ -1848,6 +1981,29 @@ function render(){
   $("cHint").classList.toggle("hidden", n > 0);
   if(typeof renderPlan === "function") renderPlan();
 }
+/* --- en lot : tout le mois affiché, jours de la semaine choisis --- */
+function batch(kind){
+  var wd = [].slice.call(document.querySelectorAll("#cbDays input:checked")).map(function(i){ return +i.value; });
+  if(!wd.length){ alert("Coche au moins un jour de la semaine."); return; }
+  var today = key(new Date()), n = 0;
+  Object.keys(events).forEach(function(id){
+    var e = events[id], d = new Date(Date.parse(e.start)), k = key(d);
+    if(d.getMonth() !== month.getMonth() || d.getFullYear() !== month.getFullYear() || k < today) return;
+    if(wd.indexOf(d.getDay()) < 0) return;
+    if(kind === "book" && canBook(e)){ changes[id] = "book"; n++; }
+    else if(kind === "cancel" && canCancel(e)){ changes[id] = "cancel"; n++; }
+  });
+  render();
+  alert(n ? n + " jour" + (n > 1 ? "s" : "") + " sélectionné" + (n > 1 ? "s" : "") + ". Vérifie le calendrier, puis touche « Valider » en bas pour envoyer."
+          : (kind === "book" ? "Aucun jour à réserver pour ces jours-là ce mois-ci (déjà réservés, passés ou fermés)." : "Aucun repas à annuler pour ces jours-là ce mois-ci."));
+}
+$("cMenu").addEventListener("click", function(){
+  if(window.Android && window.Android.openPortalPage) window.Android.openPortalPage(menuUrl);
+});
+showMenuLink();
+$("cbBook").addEventListener("click", function(){ batch("book"); });
+$("cbCancel").addEventListener("click", function(){ batch("cancel"); });
+$("cbClear").addEventListener("click", function(){ changes = {}; render(); });
 function toggle(id){
   var e = events[id]; if(!e) return;
   if(changes[id]) delete changes[id];
@@ -2093,15 +2249,26 @@ function busy(on){ $("loading").classList.toggle("show", !!on); }
 
 var data = null, me = {}, loaded = false;
 function empty(){ return {version: 1, members: {}, days: {}, defaults: {}}; }
-function norm(d){ d.members = d.members || {}; d.days = d.days || {}; d.defaults = d.defaults || {}; return d; }
+function norm(d){ d.members = d.members || {}; d.days = d.days || {}; d.defaults = d.defaults || {}; d.swaps = d.swaps || []; return d; }
 /* vacances scolaires zone B (après la fin des cours → veille de la reprise) et jours fériés en semaine */
+/* vacances : liste à jour téléchargée par l'appli (open data Éducation nationale), sinon liste intégrée */
 var VACANCES = [["2026-10-17", "2026-11-01", "Vacances de la Toussaint"], ["2026-12-19", "2027-01-03", "Vacances de Noël"],
   ["2027-02-20", "2027-03-07", "Vacances d'hiver"], ["2027-04-17", "2027-05-02", "Vacances de printemps"],
   ["2027-05-06", "2027-05-09", "Pont de l'Ascension"], ["2027-07-03", "2027-08-31", "Vacances d'été"]];
-var FERIES = {"2026-11-11": "Armistice", "2027-03-29": "Lundi de Pâques", "2027-05-17": "Lundi de Pentecôte"};
+try{ var hv = JSON.parse(A.holidays()); if(hv.list && hv.list.length) VACANCES = hv.list; }catch(e){}
+function ferie(day){
+  var F = {"01-01": "Jour de l'an", "05-01": "Fête du travail", "05-08": "Victoire 1945", "07-14": "Fête nationale", "08-15": "Assomption", "11-01": "Toussaint", "11-11": "Armistice", "12-25": "Noël"};
+  if(F[day.slice(5)]) return F[day.slice(5)];
+  var y = +day.slice(0, 4), a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  var h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  var mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1, p = new Date(y, mo - 1, da);
+  var off = {1: "Lundi de Pâques", 39: "Ascension", 50: "Lundi de Pentecôte"};
+  for(var n in off){ var t = new Date(p); t.setDate(t.getDate() + (+n)); if(key(t) === day) return off[n]; }
+  return "";
+}
 function noSchool(d, day){
   if(!d.edt || d.edt.vac === false) return "";
-  if(FERIES[day]) return FERIES[day];
+  var fe = ferie(day); if(fe) return fe;
   for(var i = 0; i < VACANCES.length; i++) if(day >= VACANCES[i][0] && day <= VACANCES[i][1]) return VACANCES[i][2];
   return "";
 }
@@ -2351,6 +2518,7 @@ function render(){
       cls += " mine";
       who = '<div class="who me">✅ C\'est toi</div>'; pic = avatar(me.id, 64);
       acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
+      acts += '<button class="btn btn-ghost" data-a="swap" data-d="' + day + '">🔁 Échanger</button>';
       acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Autre</button>';
       acts += '<button class="btn btn-ghost" data-a="noschool" data-d="' + day + '">🏫 Pas d\'école</button>';
     } else {
@@ -2399,10 +2567,85 @@ function render(){
       var d = b.getAttribute("data-d"), a = b.getAttribute("data-a");
       if(a === "claim") claim(d); else if(a === "cannot") cannot(d); else if(a === "release") release(d);
       else if(a === "undo") undoCannot(d); else if(a === "hour") editHour(d); else if(a === "react") reactivate(d);
-      else if(a === "other") pickFor(d); else if(a === "unset") unsetDay(d); else if(a === "noschool") noSchoolDay(d);
+      else if(a === "other") pickFor(d); else if(a === "unset") unsetDay(d); else if(a === "noschool") noSchoolDay(d); else if(a === "swap") swapPick(d);
     });
   });
   peopleRender();
+  swapsRender();
+}
+/* --- échanges de jours : « je prends ton jour si tu prends le mien » --- */
+function swapPick(day){
+  var today = key(new Date());
+  var mine = label(day);
+  var opts = schoolDays().filter(function(k){
+    var x = data.days[k] || {}, m = x.qui && data.members[x.qui];
+    return k >= today && k !== day && !x.off && x.qui && x.qui !== me.id && m && !m.manuel;
+  });
+  $("kSwapDay").textContent = "Tu as " + mine + ". Choisis le jour de quelqu'un d'autre : tu le prendras, et cette personne prendra le tien (si elle accepte).";
+  $("kSwapList").innerHTML = opts.length ? opts.map(function(k){
+    var x = data.days[k];
+    return '<button class="prow" type="button" data-sw="' + k + '">' + avatar(x.qui, 40) + '<span class="pn">' + esc(label(k).charAt(0).toUpperCase() + label(k).slice(1)) +
+      '<small>' + esc(nameOf(x.qui)) + (hourOf(data, k) ? " · " + esc(hourOf(data, k)) : "") + '</small></span></button>';
+  }).join("") : '<p class="muted">Aucun jour pris par une autre personne (avec l\'appli) dans les prochains jours.</p>';
+  $("kSwapList").querySelectorAll("[data-sw]").forEach(function(b){ b.addEventListener("click", function(){ swapPropose(day, b.getAttribute("data-sw")); }); });
+  $("kSwapPick").classList.add("show");
+}
+function swapPropose(mine, theirs){
+  var who = data.days[theirs].qui, n = nameOf(who);
+  if(!confirm("Proposer à " + n + " :\n• " + n + " prend " + label(mine) + "\n• tu prends " + label(theirs) + " ?")) return;
+  $("kSwapPick").classList.remove("show");
+  var sw = {id: "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), by: me.id, a: who, mine: mine, theirs: theirs, at: Date.now(), st: "wait"};
+  mutate(null, function(d){
+    var old = Date.now() - 30 * 864e5;
+    d.swaps = (d.swaps || []).filter(function(s){ return s.at > old && !(s.st === "wait" && s.by === me.id && s.mine === mine); });
+    d.swaps.push(sw);
+    var y = d.days[theirs] = d.days[theirs] || {};
+    y.maj = {by: me.id, at: Date.now(), txt: "🔁 " + me.nom + " propose un échange à " + n + " : " + n + " prendrait " + label(mine) + ", " + me.nom + " prendrait " + label(theirs) + ". Réponds dans Covoiturage."};
+  }, "", function(){ alert("Proposition envoyée à " + n + ". Le jour reste à toi tant que l'échange n'est pas accepté."); });
+}
+function swapAnswer(id, ok){
+  var s0 = (data.swaps || []).filter(function(s){ return s.id === id; })[0]; if(!s0) return;
+  var other = nameOf(s0.by);
+  if(ok && !confirm("Accepter ? Tu prendras " + label(s0.mine) + " et " + other + " prendra " + label(s0.theirs) + ".")) return;
+  var res = "";
+  mutate(null, function(d){
+    var s = (d.swaps || []).filter(function(x){ return x.id === id; })[0]; if(!s || s.st !== "wait") { res = "gone"; return; }
+    var A1 = d.days[s.mine] = d.days[s.mine] || {}, B1 = d.days[s.theirs] = d.days[s.theirs] || {};
+    if(ok && (A1.qui !== s.by || B1.qui !== s.a)){ s.st = "no"; res = "stale"; return; }
+    s.st = ok ? "ok" : "no"; s.rep = Date.now();
+    if(ok){
+      A1.qui = s.a; B1.qui = s.by;
+      A1.maj = {by: me.id, at: Date.now(), txt: "🔁 Échange accepté : " + me.nom + " prend " + label(s.mine) + ", " + other + " prend " + label(s.theirs)};
+      B1.maj = {by: me.id, at: Date.now() + 1, txt: "🔁 Échange accepté : " + other + " prend " + label(s.theirs)};
+    } else {
+      B1.maj = {by: me.id, at: Date.now(), txt: "🔁 " + me.nom + " a refusé l'échange (" + label(s.mine) + " contre " + label(s.theirs) + ")"};
+    }
+  }, "", function(){
+    if(res === "stale") alert("L'échange n'est plus possible : un des deux jours a changé entre-temps.");
+    else if(res === "gone") alert("Cette proposition n'existe plus.");
+  });
+}
+function swapCancel(id){
+  if(!confirm("Annuler ta proposition d'échange ?")) return;
+  mutate(null, function(d){ d.swaps = (d.swaps || []).filter(function(s){ return s.id !== id; }); }, "");
+}
+function swapsRender(){
+  var today = key(new Date()), html = "";
+  (data.swaps || []).forEach(function(s){
+    if(s.st !== "wait" || s.mine < today || s.theirs < today) return;
+    if(s.a === me.id){
+      html += '<div class="swap"><p>🔁 <b>' + esc(nameOf(s.by)) + '</b> te propose un échange : tu prendrais <b>' + esc(label(s.mine)) + '</b>, et ' +
+        esc(nameOf(s.by)) + ' prendrait ton <b>' + esc(label(s.theirs)) + '</b>.</p><div class="row">' +
+        '<button class="btn btn-primary" data-swa="' + s.id + '" type="button">Accepter</button><button class="btn btn-ghost" data-swr="' + s.id + '" type="button">Refuser</button></div></div>';
+    } else if(s.by === me.id){
+      html += '<div class="swap"><p>🔁 Échange proposé à <b>' + esc(nameOf(s.a)) + '</b> : ' + esc(label(s.mine)) + ' contre ' + esc(label(s.theirs)) +
+        '. En attente de sa réponse.</p><button class="btn btn-ghost btn-small" data-swc="' + s.id + '" type="button">Annuler la proposition</button></div>';
+    }
+  });
+  $("kSwaps").innerHTML = html;
+  $("kSwaps").querySelectorAll("[data-swa]").forEach(function(b){ b.addEventListener("click", function(){ swapAnswer(b.getAttribute("data-swa"), true); }); });
+  $("kSwaps").querySelectorAll("[data-swr]").forEach(function(b){ b.addEventListener("click", function(){ swapAnswer(b.getAttribute("data-swr"), false); }); });
+  $("kSwaps").querySelectorAll("[data-swc]").forEach(function(b){ b.addEventListener("click", function(){ swapCancel(b.getAttribute("data-swc")); }); });
 }
 /* --- personnes ajoutées à la main (sans l'appli) --- */
 function peopleRender(){
@@ -2484,7 +2727,14 @@ function unsetDay(day){
   mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.qui = null; },
     n + " ne récupère plus " + window.kidsCov() + " " + label(day) + " : il faut quelqu'un");
 }
+function vacInfo(){
+  var at = 0; try{ at = JSON.parse(A.holidays()).at || 0; }catch(e){}
+  var nx = VACANCES.filter(function(v){ return v[1] >= key(new Date()); })[0];
+  $("kVacInfo").textContent = (at ? "Dates des vacances mises à jour le " + new Date(at).toLocaleDateString("fr-FR") + " (Éducation nationale)." : "Dates des vacances intégrées à l'appli (mise à jour automatique dès que possible).")
+    + (nx ? " Prochaines : " + nx[2] + "." : "");
+}
 function edtFill(){
+  vacInfo();
   var e = (data && data.edt) || {};
   document.querySelectorAll("#kEdt [data-e]").forEach(function(i){ var k = i.getAttribute("data-e"); i.value = ((e[k.charAt(0)] || {})[k.charAt(1)]) || ""; });
   $("kEdtRef").value = e.ref ? weekOf(data, key(new Date())) : "A";

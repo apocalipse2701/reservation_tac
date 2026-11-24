@@ -2,6 +2,7 @@ package fr.tac.sad;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -29,7 +30,112 @@ public class MainActivity extends Activity {
 
     private static final String API_PREFIX = "https://ardenne-metropole-tad.nuamouv.com/api/";
     private WebView web;
+    private android.widget.FrameLayout root;
     private SharedPreferences prefs;
+
+    // ------------------------------------------------------------------ verrouillage (empreinte / code du téléphone)
+    private boolean unlocked = false, prompting = false;
+    private long pausedAt = 0;
+    private android.view.View lockView;
+    private static final int REQ_UNLOCK = 61, REQ_BACKUP_SAVE = 62, REQ_BACKUP_OPEN = 63;
+    private String pendingBackupPassword;
+
+    boolean lockOn() {
+        return "true".equals(prefs.getString("lock_on", null));
+    }
+
+    static boolean deviceSecure(Context c) {
+        android.app.KeyguardManager km = (android.app.KeyguardManager) c.getSystemService(KEYGUARD_SERVICE);
+        return km != null && km.isDeviceSecure();
+    }
+
+    private void showLockScreen(boolean show) {
+        if (show) {
+            if (lockView == null) {
+                android.widget.LinearLayout l = new android.widget.LinearLayout(this);
+                l.setOrientation(android.widget.LinearLayout.VERTICAL);
+                l.setGravity(android.view.Gravity.CENTER);
+                l.setBackgroundColor(android.graphics.Color.parseColor("#0A6E4F"));
+                android.widget.TextView t = new android.widget.TextView(this);
+                t.setText("🔒\n\nGestion administrative enfants\nest verrouillée");
+                t.setTextColor(android.graphics.Color.WHITE);
+                t.setTextSize(20);
+                t.setGravity(android.view.Gravity.CENTER);
+                l.addView(t);
+                android.widget.Button b = new android.widget.Button(this);
+                b.setText("Déverrouiller");
+                b.setOnClickListener(v -> askUnlock(null));
+                android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(-2, -2);
+                lp.topMargin = (int) (32 * getResources().getDisplayMetrics().density);
+                l.addView(b, lp);
+                l.setClickable(true);
+                lockView = l;
+                root.addView(lockView, new android.widget.FrameLayout.LayoutParams(-1, -1));
+            }
+            lockView.setVisibility(android.view.View.VISIBLE);
+            web.setVisibility(android.view.View.INVISIBLE);
+        } else {
+            if (lockView != null) lockView.setVisibility(android.view.View.GONE);
+            web.setVisibility(android.view.View.VISIBLE);
+        }
+    }
+
+    /** Demande l'empreinte (ou le code du téléphone). then : appelé avec true/false (null = déverrouillage de l'appli). */
+    private void askUnlock(final java.util.function.Consumer<Boolean> then) {
+        if (prompting) return;
+        if (!deviceSecure(this)) {   // plus de verrouillage sur le téléphone : on ne bloque pas l'appli
+            done(then, true);
+            return;
+        }
+        prompting = true;
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            android.hardware.biometrics.BiometricPrompt.Builder b = new android.hardware.biometrics.BiometricPrompt.Builder(this)
+                    .setTitle("Déverrouiller l'appli")
+                    .setSubtitle("Empreinte, visage ou code du téléphone");
+            if (android.os.Build.VERSION.SDK_INT >= 30)
+                b.setAllowedAuthenticators(android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK
+                        | android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+            else b.setDeviceCredentialAllowed(true);
+            b.build().authenticate(new android.os.CancellationSignal(), getMainExecutor(),
+                    new android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+                        @Override
+                        public void onAuthenticationSucceeded(android.hardware.biometrics.BiometricPrompt.AuthenticationResult r) {
+                            prompting = false;
+                            done(then, true);
+                        }
+
+                        @Override
+                        public void onAuthenticationError(int code, CharSequence msg) {
+                            prompting = false;
+                            done(then, false);
+                        }
+                    });
+        } else {
+            android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            Intent i = km.createConfirmDeviceCredentialIntent("Déverrouiller l'appli", "Code ou empreinte du téléphone");
+            if (i == null) {
+                prompting = false;
+                done(then, true);
+                return;
+            }
+            unlockThen = then;
+            startActivityForResult(i, REQ_UNLOCK);
+        }
+    }
+
+    private java.util.function.Consumer<Boolean> unlockThen;
+
+    private void done(java.util.function.Consumer<Boolean> then, boolean ok) {
+        if (then != null) {
+            then.accept(ok);
+            return;
+        }
+        if (ok) {
+            unlocked = true;
+            pausedAt = 0;
+            showLockScreen(false);
+        } else showLockScreen(true);
+    }
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
@@ -40,7 +146,9 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences("tac_sad", MODE_PRIVATE);
 
         web = new WebView(this);
-        setContentView(web);
+        root = new android.widget.FrameLayout(this);
+        root.addView(web);
+        setContentView(root);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -103,6 +211,7 @@ public class MainActivity extends Activity {
             if (Vault.has(this)) CantineWatch.schedule(this);
             if (Vault.getSecret(this, "carpool") != null) Carpool.schedule(this);  // vérifications du covoiturage
             Updater.check(this, true); // recherche discrète d'une nouvelle version
+            Holidays.refreshAsync(this, false); // dates des vacances scolaires (une fois par semaine)
             CrashLog.showIfAny(this);  // plantage précédent : on l'affiche pour pouvoir l'envoyer
         }
     }
@@ -122,6 +231,11 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         foreground = this;
+        if (lockOn() && !prompting && (!unlocked || (pausedAt > 0 && System.currentTimeMillis() - pausedAt > 60_000))) {
+            unlocked = false;
+            showLockScreen(true);
+            askUnlock(null);
+        }
         if (web != null) web.evaluateJavascript("window.checkNews && window.checkNews()", null);
         // une demande de bus attend sa réponse : coup d'œil à la boîte mail
         if (BusMail.pending(this).length() > 0 && Vault.getSecret(this, BusMail.SECRET) != null) {
@@ -133,6 +247,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         foreground = null;
+        if (!prompting) pausedAt = System.currentTimeMillis();
         super.onPause();
     }
 
@@ -154,6 +269,48 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_LOGIN) web.evaluateJavascript("window.onPortalLogin && window.onPortalLogin()", null);
+        if (requestCode == REQ_UNLOCK) {
+            prompting = false;
+            java.util.function.Consumer<Boolean> t = unlockThen;
+            unlockThen = null;
+            done(t, resultCode == RESULT_OK);
+        }
+        if ((requestCode == REQ_BACKUP_SAVE || requestCode == REQ_BACKUP_OPEN)) {
+            final String pwd = pendingBackupPassword;
+            pendingBackupPassword = null;
+            if (resultCode != RESULT_OK || data == null || data.getData() == null || pwd == null) {
+                backupDone("{\"ok\":false,\"annule\":true}");
+                return;
+            }
+            final Uri uri = data.getData();
+            final boolean save = requestCode == REQ_BACKUP_SAVE;
+            final Context app = getApplicationContext();
+            new Thread(() -> {
+                JSONObject r = new JSONObject();
+                try {
+                    if (save) {
+                        byte[] b = Backup.build(app, pwd);
+                        try (OutputStream o = getContentResolver().openOutputStream(uri, "wt")) {
+                            o.write(b);
+                        }
+                        prefs.edit().putLong("backup_at", System.currentTimeMillis()).apply();
+                        r.put("ok", true).put("fichier", true);
+                    } else {
+                        byte[] b;
+                        try (InputStream in = getContentResolver().openInputStream(uri)) {
+                            b = Backup.readAll(in);
+                        }
+                        r.put("ok", true).put("n", Backup.restore(app, b, pwd)).put("restaure", true);
+                    }
+                } catch (Exception e) {
+                    try {
+                        r.put("ok", false).put("erreur", e.getMessage() == null ? "erreur" : e.getMessage());
+                    } catch (Exception ignored) {
+                    }
+                }
+                backupDone(r.toString());
+            }).start();
+        }
         if ((requestCode == REQ_PHOTO_CAM || requestCode == REQ_PHOTO_GAL) && resultCode == RESULT_OK && data != null) {
             final Intent d = data;
             final boolean cam = requestCode == REQ_PHOTO_CAM;
@@ -172,6 +329,11 @@ public class MainActivity extends Activity {
     }
 
     private static final int REQ_PHOTO_CAM = 51, REQ_PHOTO_GAL = 52;
+
+    private void backupDone(String json) {
+        final String js = "window.__backupDone && window.__backupDone(" + JSONObject.quote(json) + ")";
+        web.post(() -> web.evaluateJavascript(js, null));
+    }
 
     /** Image de la galerie, réduite et remise à l'endroit (orientation EXIF). */
     private android.graphics.Bitmap loadImage(android.net.Uri uri) throws Exception {
@@ -396,6 +558,88 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean hasPlanningLink() {
             return BuildConfig.PLANNING;
+        }
+
+        // ---- verrouillage
+        @JavascriptInterface
+        public String lockState() {
+            try {
+                return new JSONObject().put("on", lockOn()).put("possible", deviceSecure(MainActivity.this)).toString();
+            } catch (Exception e) {
+                return "{}";
+            }
+        }
+
+        /** Active / désactive : demande d'abord l'empreinte pour vérifier que ça marche. */
+        @JavascriptInterface
+        public void lockSet(final boolean on) {
+            runOnUiThread(() -> askUnlock(ok -> {
+                if (ok) {
+                    prefs.edit().putString("lock_on", on ? "true" : "false").apply();
+                    unlocked = true;
+                }
+                web.evaluateJavascript("window.__lockDone && window.__lockDone(" + ok + ")", null);
+            }));
+        }
+
+        // ---- sauvegarde des réglages
+        @JavascriptInterface
+        public void backupSynology(final String mode, final String password) {
+            new Thread(() -> backupDone("save".equals(mode) ? Backup.toSynology(MainActivity.this, password) : Backup.fromSynology(MainActivity.this, password))).start();
+        }
+
+        @JavascriptInterface
+        public void backupFile(final String mode, final String password) {
+            runOnUiThread(() -> {
+                pendingBackupPassword = password;
+                Intent i;
+                if ("save".equals(mode)) {
+                    i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/octet-stream")
+                            .putExtra(Intent.EXTRA_TITLE, "sauvegarde-gestion-enfants.bin");
+                    startActivityForResult(i, REQ_BACKUP_SAVE);
+                } else {
+                    i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+                    startActivityForResult(i, REQ_BACKUP_OPEN);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public long backupAt() {
+            return prefs.getLong("backup_at", 0);
+        }
+
+        @JavascriptInterface
+        public void reloadApp() {
+            runOnUiThread(() -> web.loadUrl("file:///android_asset/index.html#reglages"));
+        }
+
+        /** Ouvre une page du portail famille (ex. menus) dans l'appli, avec la session en cours. */
+        @JavascriptInterface
+        public void openPortalPage(final String url) {
+            if (!PortalPageActivity.allowed(url)) return;
+            runOnUiThread(() -> startActivity(new Intent(MainActivity.this, PortalPageActivity.class)
+                    .putExtra("url", url).putExtra("title", "Menus de la cantine")));
+        }
+
+        /** Vacances scolaires à jour : [[du, au, nom], …] et date de la dernière mise à jour. */
+        @JavascriptInterface
+        public String holidays() {
+            try {
+                return new JSONObject().put("list", new org.json.JSONArray(Holidays.list(MainActivity.this)))
+                        .put("at", prefs.getLong(Holidays.PREF_AT, 0)).toString();
+            } catch (Exception e) {
+                return "{}";
+            }
+        }
+
+        @JavascriptInterface
+        public void holidaysRefresh(final String id) {
+            new Thread(() -> {
+                boolean ok = Holidays.refresh(MainActivity.this);
+                final String js = "window.__holidaysDone && window.__holidaysDone(" + ok + ")";
+                web.post(() -> web.evaluateJavascript(js, null));
+            }).start();
         }
 
         @JavascriptInterface

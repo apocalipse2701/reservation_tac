@@ -24,6 +24,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".PortalPageActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden"

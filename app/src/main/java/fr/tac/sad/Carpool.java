@@ -371,7 +371,7 @@ public class Carpool extends JobService {
                 String qui = day != null ? day.optString("qui", "") : "";
                 JSONObject edt = d.optJSONObject("edt");
                 if (h.isEmpty() && edt != null) {
-                    if (edt.optBoolean("vac", true) && noSchool(k)) { if (qui.isEmpty()) continue; }
+                    if (edt.optBoolean("vac", true) && Holidays.noSchool(c, k)) { if (qui.isEmpty()) continue; }
                     else h = edtHour(edt, cal, dow - 1);
                 } else if (h.isEmpty() && defs != null) h = defs.optString(String.valueOf(dow == Calendar.SUNDAY ? 7 : dow - 1), "");
                 String nom = "?";
@@ -391,17 +391,6 @@ public class Carpool extends JobService {
             CalendarWidget.refreshAll(c);
         } catch (Exception ignored) {
         }
-    }
-
-    /** Vacances scolaires zone B et jours fériés en semaine (mêmes dates que l'écran Covoiturage). */
-    private static final String[][] VACANCES = {{"2026-10-17", "2026-11-01"}, {"2026-12-19", "2027-01-03"}, {"2027-02-20", "2027-03-07"},
-            {"2027-04-17", "2027-05-02"}, {"2027-05-06", "2027-05-09"}, {"2027-07-03", "2027-08-31"}};
-    private static final String FERIES = "2026-11-11 2027-03-29 2027-05-17";
-
-    static boolean noSchool(String k) {
-        if (FERIES.contains(k)) return true;
-        for (String[] v : VACANCES) if (k.compareTo(v[0]) >= 0 && k.compareTo(v[1]) <= 0) return true;
-        return false;
     }
 
     /** Heure de sortie d'après l'emploi du temps (semaines A/B alternées). */
@@ -473,6 +462,7 @@ public class Carpool extends JobService {
     }
 
     private static void check(Context c) throws Exception {
+        Holidays.refreshAsync(c, false);
         JSONObject r = new JSONObject(fetch(c));
         if (!r.optBoolean("ok") || r.optInt("status") != 200) return;
         String json = r.optString("data");

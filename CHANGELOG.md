@@ -10,6 +10,16 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 3.0.0 — 24/11/2026
+- Vacances scolaires mises à jour automatiquement chaque semaine depuis l'open data de l'Éducation nationale (zone B, académie de Reims), avec repli sur les dates intégrées. Les jours fériés (Pâques, Ascension, Pentecôte…) sont calculés pour toutes les années.
+- Cantine : « 📅 Réserver ou annuler en lot » sélectionne d'un coup les jours de la semaine cochés du mois affiché, puis on valide.
+- Cantine : bouton « 🍴 Voir les menus de la cantine » quand le portail publie une page de menus. Elle s'ouvre dans l'appli, déjà connectée.
+- Covoiturage : « 🔁 Échanger » propose d'échanger un de ses jours contre celui d'une autre personne, qui accepte ou refuse d'une touche. Tout le monde est prévenu.
+- Nouvelle catégorie « 🔒 Sécurité et sauvegarde » dans les Réglages :
+  - verrouillage de l'appli par empreinte, visage ou code du téléphone ;
+  - sauvegarde chiffrée de tous les réglages, sur le Synology ou dans un fichier, et restauration sur un nouveau téléphone.
+- Aide mise à jour pour toutes ces nouveautés. La ligne « Lien avec mon planning » n'apparaît plus comme réglée à tort.
+
 ## 2.9.0 — 24/11/2026
 - Réglages réorganisés : chaque catégorie (Couleurs, Bus, Portail cantine, Planning, Covoiturage, Widget, Application) apparaît sur une seule ligne, avec son icône et un court résumé. Son contenu s'ouvre d'une touche, et une seule catégorie est ouverte à la fois.
 - Bus : les trois sous-parties (Enfant et trajet, Mon identité, Réponses de la compagnie) s'ouvrent elles aussi d'une touche.
