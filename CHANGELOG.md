@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.8.2 — 24/11/2026
+- Dès la première installation, l'adresse du portail famille et l'expéditeur des réponses de bus (tad-charleville@pretapartir.fr) sont déjà remplis dans les Réglages. Il n'y a rien à saisir.
+
 ## 2.8.1 — 24/11/2026
 - Aide : nouvelle partie « 📧 Boîtes mail compatibles », avec un tableau des fournisseurs reconnus (Free, Orange, SFR, Bouygues, La Poste, Gmail, Yahoo, iCloud, GMX, Infomaniak) et le type de mot de passe à utiliser. Elle explique aussi comment faire avec un autre fournisseur, et indique que les boîtes Microsoft ne sont pas compatibles.
 - Réglages › Bus › Réponses de la compagnie : lien « Quelles boîtes mail sont compatibles ? ». Une alerte s'affiche si on saisit une adresse Outlook, Hotmail, Live ou MSN.

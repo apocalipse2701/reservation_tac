@@ -276,6 +276,7 @@
 </style>
 <script>
 /* « LIGNE14 » → « Ligne 14 » (affichage seulement) */
+var DEFAULT_PORTAL = "https://portail.berger-levrault.fr/SIPSDeTournes08090/", DEFAULT_SENDER = "tad-charleville@pretapartir.fr";
 window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)/gi, function(_, n){ return "Ligne " + n; }); };
 /* Messages : petite fenêtre aux couleurs du thème (au lieu de « La page file:// indique ») */
 (function(){
@@ -389,6 +390,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <label for="mlPwd">Mot de passe de la boîte (ou mot de passe d'application)</label><input id="mlPwd" type="password" autocomplete="off">
     <label for="mlSrv">Serveur de messagerie (IMAP)</label><input id="mlSrv" type="text" autocomplete="off" autocapitalize="off" placeholder="rempli selon ton adresse">
     <label for="mlFrom">Expéditeur des réponses</label><input id="mlFrom" type="email" autocomplete="off" autocapitalize="off">
+    <p class="muted" style="margin:4px 0 0;font-size:12px">Déjà rempli avec l'adresse de la compagnie de bus : rien à changer.</p>
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="mlSave" type="button">Enregistrer</button>
     <button class="btn btn-ghost btn-small" id="mlCheck" type="button">Vérifier maintenant</button></div>
     <p class="muted" style="margin:10px 0 0;font-size:12px">Lecture seule : l'appli lit uniquement les mails de cet expéditeur, sans les marquer comme lus ni les déplacer.</p>
@@ -399,7 +401,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <p class="muted" id="rgPortal" style="margin:0 0 4px"></p>
     <label for="psPortal">Adresse du portail famille</label>
     <input id="psPortal" type="text" autocomplete="off" autocapitalize="off" placeholder="https://portail.berger-levrault.fr/SIPSDeTournes08090/">
-    <p class="muted" style="margin:4px 0 0;font-size:12px">Laisse vide pour garder le portail par défaut.</p>
+    <p class="muted" style="margin:4px 0 0;font-size:12px">Déjà rempli avec le portail de l'école : rien à changer.</p>
     <label for="rgUser">Identifiant du portail famille</label><input id="rgUser" type="text" autocomplete="off" autocapitalize="off">
     <label for="rgPass">Mot de passe</label><input id="rgPass" type="password" autocomplete="off">
     <div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-small" id="rgSaveLogin" type="button">Enregistrer</button>
@@ -618,7 +620,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
       <p>La compagnie répond par mail. L'appli peut lire ces mails toute seule, en lecture seule : rien n'est modifié dans ta boîte.</p>
       <ol>
         <li><b>Réglages › Bus › 3 · Réponses de la compagnie</b> : ton adresse mail et son mot de passe. Pour Gmail, Free, Orange… il faut souvent un <b>mot de passe d'application</b>, à créer dans les réglages de sécurité de ta boîte mail.</li>
-        <li>Le serveur se remplit tout seul selon l'adresse. L'expéditeur est celui de la compagnie de bus.</li>
+        <li>Le serveur se remplit tout seul selon l'adresse. L'expéditeur (l'adresse de la compagnie de bus) est déjà rempli.</li>
         <li>Touche <b>Vérifier maintenant</b> pour tester. Ensuite, l'appli vérifie environ toutes les 30 minutes.</li>
       </ol>
       <p>Statuts : ⏳ en attente, ✅ confirmé, ❌ refusé. Si un mail n'a pas été reconnu, ou pour une réservation faite par téléphone, va dans <b>Bus › Suivi des réservations › Forcer un jour</b>.</p>
@@ -643,7 +645,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     </details>
     <details class="hlp"><summary>🍽️ Cantine</summary>
       <ol>
-        <li><b>Réglages › Portail cantine</b> : l'adresse du portail famille est déjà connue ; laisse le champ vide pour la garder. Saisis ton identifiant et ton mot de passe, puis <b>Enregistrer</b>.</li>
+        <li><b>Réglages › Portail cantine</b> : l'adresse du portail famille est déjà remplie, rien à changer. Saisis ton identifiant et ton mot de passe, puis <b>Enregistrer</b>.</li>
         <li>Ouvre <b>Cantine</b> : le mois s'affiche. Touche un jour pour réserver, ou un jour vert pour annuler.</li>
         <li>L'appli vérifie régulièrement les réponses du portail et te prévient avec la fenêtre « 📬 Nouvelles ».</li>
       </ol>
@@ -1365,7 +1367,7 @@ window.__mailDone = function(id, res){ var f = mlPend[id]; delete mlPend[id]; if
 function mailFill(){
   var A = window.Android; if(!A || !A.mailSettings) return;
   var m = {}; try{ m = JSON.parse(A.mailSettings()); }catch(e){}
-  $("mlAdr").value = m.adresse || ""; $("mlSrv").value = m.serveur || ""; $("mlFrom").value = m.expediteur || "";
+  $("mlAdr").value = m.adresse || ""; $("mlSrv").value = m.serveur || ""; $("mlFrom").value = m.expediteur || DEFAULT_SENDER;
   if(typeof mlMsCheck === "function") mlMsCheck();
   $("mlPwd").value = ""; $("mlPwd").placeholder = m.motDePasse ? "enregistré (laisser vide pour le garder)" : "";
   $("mlState").textContent = !m.actif ? "Pas encore réglé : l'appli ne peut pas savoir si tes demandes de bus sont prises en compte."
@@ -1401,7 +1403,7 @@ function savePerso(o){ var t = JSON.stringify(o); try{ if(window.Android) window
 function nextSchoolDay(){ var d = new Date(); d.setDate(d.getDate() + 1); while(d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); return ymd(d); }
 function persoFill(){
   var P = window.perso();
-  $("psBusKid").value = P.busKid || ""; $("psCovKids").value = P.covKids || ""; $("psPortal").value = P.portal || "";
+  $("psBusKid").value = P.busKid || ""; $("psCovKids").value = P.covKids || ""; $("psPortal").value = P.portal || DEFAULT_PORTAL;
   $("psRouteNow").textContent = P.route.label ? "Actuel : " + window.prettyLine(P.route.label) : "Aucun : la demande de bus propose toutes les lignes.";
   if(psRoutes.length){ psShowSaved(); return; }
   http("GET", "/tad/routes/" + nextSchoolDay()).then(function(data){
@@ -1550,8 +1552,9 @@ function renderToday(){
 $("rgLogin").addEventListener("click", function(){ if(window.Android && window.Android.portalLogin) window.Android.portalLogin(); });
 $("rgSaveLogin").addEventListener("click", function(){
   var url = portalUrl(); if(url === null) return;
+  if(url === DEFAULT_PORTAL) url = "";
   var P = window.perso(), urlChanged = (P.portal || "") !== url;
-  if(urlChanged){ P.portal = url; savePerso(P); $("psPortal").value = url; }
+  if(urlChanged){ P.portal = url; savePerso(P); $("psPortal").value = url || DEFAULT_PORTAL; }
   var u = $("rgUser").value.trim(), pw = $("rgPass").value;
   if(!u && urlChanged){ alert("Adresse du portail enregistrée sur le téléphone."); return; }
   if(!u || (!pw && !(window.Android.hasSavedLogin && window.Android.hasSavedLogin()))){ alert("Indique ton identifiant et ton mot de passe du portail famille."); return; }
