@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.7.1 — 24/11/2026
+- Accueil : les tuiles Cantine et Bus affichent leur icône en grand, en fond.
+- Le nom de la ligne s'écrit « Ligne 14 » au lieu de « LIGNE14 » (tuile Bus, résumé, en-tête, listes). La tuile Bus affiche seulement la ligne.
+
 ## 2.7.0 — 24/11/2026
 - Covoiturage : nouveau bouton « 🏫 Pas d'école » sur chaque jour (grève, journée pédagogique, sortie…). Le jour s'affiche alors « 🏫 Pas d'école : personne à aller chercher », sans covoiturage, et tous les téléphones sont prévenus. « Il y a école finalement » annule.
 - Accueil, ligne Retour : affiche la raison quand personne n'a à aller chercher les enfants (🏫 Pas d'école, 🚌 Bus…), au lieu de « — ».

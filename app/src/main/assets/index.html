@@ -133,6 +133,9 @@
   .tline.c-cantine .what b,.tline.c-bus .what b,.tline.c-covoit .what b{color:rgb(var(--cat))}
   .tile.c-cantine,.tile.c-bus,.tile.c-covoit{background:linear-gradient(rgba(var(--cat),.15), rgba(var(--cat),.07)), var(--card);border:1.5px solid rgba(var(--cat),.38)}
   .tile.c-cantine b,.tile.c-bus b,.tile.c-covoit b{color:rgb(var(--cat))}
+  .tile{position:relative;overflow:hidden}
+  .tile > *{position:relative;z-index:1}
+  .tile[data-bg]::after{content:attr(data-bg);position:absolute;right:-14px;bottom:-22px;font-size:120px;line-height:1;opacity:.22;transform:rotate(-12deg);pointer-events:none;z-index:0}
   .bdays{margin-top:6px;display:flex;flex-direction:column;gap:3px}
   .bdays div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
   .bdays .j{color:var(--muted)} .bdays .st{font-size:13px}
@@ -247,6 +250,8 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <script>
+/* « LIGNE14 » → « Ligne 14 » (affichage seulement) */
+window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)/gi, function(_, n){ return "Ligne " + n; }); };
 /* Messages : petite fenêtre aux couleurs du thème (au lieu de « La page file:// indique ») */
 (function(){
   var queue = [], box = null;
@@ -309,11 +314,11 @@
 <main id="home">
   <section class="today" id="today" aria-live="polite"></section>
   <div class="tiles">
-    <button class="tile c-cantine" type="button" data-go="cantine">
+    <button class="tile c-cantine" type="button" data-go="cantine" data-bg="🍽️">
       <span class="ico c-cantine">🍽️</span>
       <span><b>Cantine</b><small id="tileCantine">Réserver les repas</small></span>
     </button>
-    <button class="tile c-bus" type="button" data-go="bus">
+    <button class="tile c-bus" type="button" data-go="bus" data-bg="🚌">
       <span class="ico c-bus">🚌</span>
       <span><b>Bus</b><small id="tileBus">Demande de transport</small></span>
     </button>
@@ -849,7 +854,7 @@ function loadRoutes(){
   return http("GET", "/tad/routes/" + d).then(function(data){
     routes = (data || []).filter(function(r){ return !FIXED.routeId || (r.routeId === FIXED.routeId && r.headsign === FIXED.headsign); });
     route = FIXED.routeId ? (routes[0] || null) : null;
-    fill($("ligne"), routes, function(r){ return r.name + " vers " + r.headsign; }, function(r){ return r === route; },
+    fill($("ligne"), routes, function(r){ return window.prettyLine(r.name) + " vers " + r.headsign; }, function(r){ return r === route; },
       routes.length ? "Choisir la ligne" : "La ligne ne circule pas ce jour-là");
     if(!routes.length) showErr("Ta ligne ne circule pas le " + dateFr(d) + ". Choisis un autre jour.");
     render();
@@ -1027,7 +1032,7 @@ $("send").addEventListener("click", function(){
   var pers = [$("prenom").value.trim() + " " + $("nom").value.trim()].concat(extras.map(function(x){ return x.prenom + " " + x.nom; }));
   $("sum").innerHTML =
     "<dt>Date</dt><dd>" + esc(dateFr($("date").value)) + "</dd>" +
-    "<dt>Ligne</dt><dd>" + esc(route.name + " vers " + route.headsign) + "</dd>" +
+    "<dt>Ligne</dt><dd>" + esc(window.prettyLine(route.name) + " vers " + route.headsign) + "</dd>" +
     "<dt>Aller</dt><dd>" + esc(tripText(aller)) + "</dd>" +
     (retourOn ? "<dt>Retour</dt><dd>" + esc(tripText(ret)) + "</dd>" : "") +
     "<dt>Voyageur(s)</dt><dd>" + esc(pers.join(", ")) + "</dd>" +
@@ -1076,7 +1081,7 @@ function route_(){
   var v = VIEWS[key] || VIEWS[""];
   ["home", "form", "footer", "doneView", "cantine", "covoit", "reglages"].forEach(function(id){ $(id).classList.toggle("hidden", v.show.indexOf(id) < 0); });
   var sub = v.sub, P = window.perso();
-  if(key === "bus" && P.route.label) sub = P.route.label;
+  if(key === "bus" && P.route.label) sub = window.prettyLine(P.route.label);
   if(key === "covoit" && P.covKids) sub = "Récupérer " + P.covKids;
   $("title").textContent = v.title; $("subtitle").textContent = sub;
   $("back").classList.toggle("hidden", !VIEWS[key] || key === "");
@@ -1224,12 +1229,12 @@ function nextSchoolDay(){ var d = new Date(); d.setDate(d.getDate() + 1); while(
 function persoFill(){
   var P = window.perso();
   $("psBusKid").value = P.busKid || ""; $("psCovKids").value = P.covKids || ""; $("psPortal").value = P.portal || "";
-  $("psRouteNow").textContent = P.route.label ? "Actuel : " + P.route.label : "Aucun : la demande de bus propose toutes les lignes.";
+  $("psRouteNow").textContent = P.route.label ? "Actuel : " + window.prettyLine(P.route.label) : "Aucun : la demande de bus propose toutes les lignes.";
   if(psRoutes.length){ psShowSaved(); return; }
   http("GET", "/tad/routes/" + nextSchoolDay()).then(function(data){
     psRoutes = data || [];
     var h = '<option value="">Choisir la ligne…</option>';
-    psRoutes.forEach(function(r, i){ h += '<option value="' + i + '">' + esc(r.name + " vers " + r.headsign) + '</option>'; });
+    psRoutes.forEach(function(r, i){ h += '<option value="' + i + '">' + esc(window.prettyLine(r.name) + " vers " + r.headsign) + '</option>'; });
     $("psLine").innerHTML = h;
     psShowSaved();
   }).catch(function(){ $("psRouteNow").textContent += " (liste des lignes indisponible : pas de connexion ?)"; });
@@ -1287,7 +1292,7 @@ $("psNoRoute").addEventListener("click", function(){
 });
 function persoTiles(){
   var P = window.perso();
-  $("tileBus").textContent = P.route.label ? P.route.name + (P.busKid ? " pour " + P.busKid : "") : (P.busKid ? "Pour " + P.busKid : "Demande de transport");
+  $("tileBus").textContent = P.route.label ? window.prettyLine(P.route.name) : (P.busKid ? "Pour " + P.busKid : "Demande de transport");
   $("tileCov").textContent = P.covKids ? "Covoiturage pour " + P.covKids : "Covoiturage";
 }
 persoTiles();
@@ -1357,7 +1362,7 @@ function renderToday(){
     bd.setDate(bd.getDate() + 1);
   }
   lines += '<div class="tline c-bus" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
-    '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · ")) + '</span>' +
+    '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.prettyLine(window.perso().route.name || "")].filter(Boolean).join(" · ")) + '</span>' +
     '<span class="bdays">' + rows + '</span></span></div>';
   var cv = (w.covoit || {})[k], cvs = (w.covoitSans || {})[k] || "—", cvc = "no";
   if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
