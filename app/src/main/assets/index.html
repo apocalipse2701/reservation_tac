@@ -259,6 +259,10 @@
   .hlp ol,.hlp ul{margin:0 0 10px;padding-left:20px;line-height:1.5;font-size:14.5px}
   .hlp li{margin-bottom:6px}
   .hlp p{font-size:14.5px;line-height:1.5;margin:0 0 10px}
+  .htab{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 12px}
+  .htab th,.htab td{text-align:left;vertical-align:top;padding:7px 6px;border-bottom:1px solid var(--line)}
+  .htab th{color:var(--muted);font-weight:650;font-size:12px}
+  .htab td:first-child{font-weight:700;white-space:nowrap}
 
   .myph{display:flex;align-items:center;gap:12px;margin-top:6px}
   .prow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -380,6 +384,8 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <h3 class="sub3">3 · Réponses de la compagnie <small>par mail</small></h3>
     <p class="muted" id="mlState" style="margin:0"></p>
     <label for="mlAdr">Adresse mail (celle qui reçoit leurs réponses)</label><input id="mlAdr" type="email" autocomplete="off" autocapitalize="off">
+    <p class="muted" style="margin:4px 0 0;font-size:12px"><a href="#" id="mlHelp">Quelles boîtes mail sont compatibles ?</a></p>
+    <p class="hidden" id="mlMs" style="margin:6px 0 0;font-size:13px;color:var(--danger)">⚠️ Les boîtes Microsoft (Outlook, Hotmail, Live, MSN) ne sont pas compatibles : Microsoft refuse la connexion par mot de passe. Utilise une autre adresse.</p>
     <label for="mlPwd">Mot de passe de la boîte (ou mot de passe d'application)</label><input id="mlPwd" type="password" autocomplete="off">
     <label for="mlSrv">Serveur de messagerie (IMAP)</label><input id="mlSrv" type="text" autocomplete="off" autocapitalize="off" placeholder="rempli selon ton adresse">
     <label for="mlFrom">Expéditeur des réponses</label><input id="mlFrom" type="email" autocomplete="off" autocapitalize="off">
@@ -616,6 +622,24 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
         <li>Touche <b>Vérifier maintenant</b> pour tester. Ensuite, l'appli vérifie environ toutes les 30 minutes.</li>
       </ol>
       <p>Statuts : ⏳ en attente, ✅ confirmé, ❌ refusé. Si un mail n'a pas été reconnu, ou pour une réservation faite par téléphone, va dans <b>Bus › Suivi des réservations › Forcer un jour</b>.</p>
+    </details>
+    <details class="hlp" id="hlpMail"><summary>📧 Boîtes mail compatibles</summary>
+      <p>Pour lire les réponses de la compagnie de bus, l'appli se connecte à ta boîte en <b>IMAP sécurisé</b> (port 993). Le serveur est rempli tout seul pour ces adresses :</p>
+      <table class="htab">
+        <tr><th>Fournisseur</th><th>Adresses</th><th>Mot de passe</th></tr>
+        <tr><td>Free</td><td>@free.fr, @freesbee.fr, @libertysurf.fr</td><td>habituel</td></tr>
+        <tr><td>Orange</td><td>@orange.fr, @wanadoo.fr</td><td>habituel</td></tr>
+        <tr><td>SFR</td><td>@sfr.fr, @neuf.fr, @cegetel.net, @club-internet.fr</td><td>habituel</td></tr>
+        <tr><td>Bouygues</td><td>@bbox.fr</td><td>habituel</td></tr>
+        <tr><td>La Poste</td><td>@laposte.net</td><td>habituel (accès IMAP à activer)</td></tr>
+        <tr><td>Gmail</td><td>@gmail.com, @googlemail.com</td><td><b>mot de passe d'application</b> (validation en 2 étapes requise)</td></tr>
+        <tr><td>Yahoo</td><td>@yahoo.fr, @yahoo.com, @ymail.com, @rocketmail.com</td><td><b>mot de passe d'application</b></td></tr>
+        <tr><td>iCloud</td><td>@icloud.com, @me.com, @mac.com</td><td><b>mot de passe d'application</b></td></tr>
+        <tr><td>GMX</td><td>@gmx.fr, @gmx.com, @gmx.net, @gmx.de</td><td>habituel (accès IMAP à activer)</td></tr>
+        <tr><td>Infomaniak</td><td>@ik.me, @etik.com, @ikmail.com</td><td>habituel</td></tr>
+      </table>
+      <p><b>Autre fournisseur :</b> ça marche aussi s'il propose l'IMAP sécurisé. Indique alors le serveur IMAP toi-même (il figure dans l'aide de ton fournisseur, rubrique IMAP).</p>
+      <p><b>Non compatibles :</b> Outlook, Hotmail, Live et MSN (Microsoft). Depuis septembre 2024, Microsoft n'accepte plus la connexion par mot de passe pour les applis comme celle-ci. Utilise plutôt une autre boîte, par exemple en y faisant transférer les mails de la compagnie.</p>
     </details>
     <details class="hlp"><summary>🍽️ Cantine</summary>
       <ol>
@@ -1342,15 +1366,20 @@ function mailFill(){
   var A = window.Android; if(!A || !A.mailSettings) return;
   var m = {}; try{ m = JSON.parse(A.mailSettings()); }catch(e){}
   $("mlAdr").value = m.adresse || ""; $("mlSrv").value = m.serveur || ""; $("mlFrom").value = m.expediteur || "";
+  if(typeof mlMsCheck === "function") mlMsCheck();
   $("mlPwd").value = ""; $("mlPwd").placeholder = m.motDePasse ? "enregistré (laisser vide pour le garder)" : "";
   $("mlState").textContent = !m.actif ? "Pas encore réglé : l'appli ne peut pas savoir si tes demandes de bus sont prises en compte."
     : (m.attente ? m.attente + " demande" + (m.attente > 1 ? "s" : "") + " de bus en attente de réponse." : "Aucune demande de bus en attente.");
 }
+function mlMsCheck(){ $("mlMs").classList.toggle("hidden", !/@(outlook|hotmail|live|msn)\./i.test($("mlAdr").value)); }
+$("mlAdr").addEventListener("input", mlMsCheck);
+$("mlHelp").addEventListener("click", function(ev){ ev.preventDefault(); location.hash = "aide"; setTimeout(function(){ var d = $("hlpMail"); d.open = true; d.scrollIntoView({behavior: "smooth", block: "start"}); }, 250); });
 $("mlAdr").addEventListener("change", function(){ if(!$("mlSrv").value && window.Android && window.Android.mailServerFor) $("mlSrv").value = window.Android.mailServerFor(this.value.trim()); });
 $("mlSave").addEventListener("click", function(){
   var A = window.Android, m = {}; try{ m = JSON.parse(A.mailSettings()); }catch(e){}
   var v = {adresse: $("mlAdr").value.trim(), motDePasse: $("mlPwd").value, serveur: $("mlSrv").value.trim(), expediteur: $("mlFrom").value.trim()};
   if(!v.adresse || (!v.motDePasse && !m.motDePasse)){ alert("Indique l'adresse mail et son mot de passe."); return; }
+  if(/@(outlook|hotmail|live|msn)\./i.test(v.adresse)){ alert("Les boîtes Microsoft (Outlook, Hotmail, Live, MSN) ne sont pas compatibles : Microsoft refuse la connexion par mot de passe pour ce type d'appli. Utilise une autre adresse."); return; }
   if(!v.serveur && !A.mailServerFor(v.adresse)){ alert("Je ne connais pas le serveur de cette boîte : indique-le (il figure dans l'aide de ton fournisseur, rubrique IMAP)."); return; }
   A.mailSave(JSON.stringify(v)); mailFill(); alert("Enregistré sur le téléphone.");
 });

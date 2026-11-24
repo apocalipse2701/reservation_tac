@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.8.1 — 24/11/2026
+- Aide : nouvelle partie « 📧 Boîtes mail compatibles », avec un tableau des fournisseurs reconnus (Free, Orange, SFR, Bouygues, La Poste, Gmail, Yahoo, iCloud, GMX, Infomaniak) et le type de mot de passe à utiliser. Elle explique aussi comment faire avec un autre fournisseur, et indique que les boîtes Microsoft ne sont pas compatibles.
+- Réglages › Bus › Réponses de la compagnie : lien « Quelles boîtes mail sont compatibles ? ». Une alerte s'affiche si on saisit une adresse Outlook, Hotmail, Live ou MSN.
+
 ## 2.8.0 — 24/11/2026
 - Nouvelle page « ❓ Aide », accessible en haut des Réglages :
   - « ✅ Ta configuration » montre ce qui est déjà réglé et ce qu'il reste à faire ; une touche sur une ligne ouvre le bon réglage ;
