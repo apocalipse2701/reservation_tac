@@ -1342,25 +1342,26 @@ function renderToday(){
   while(d.getDay() === 0 || d.getDay() === 6){ d.setDate(d.getDate() + 1); rel = "prochain jour de classe"; }
   var k = ymd(d), lines = "";
   function line(go, cls, ico, title, sub, st, stCls){
-    return '<div class="tline ' + cls + '" data-go="' + go + '" role="button" tabindex="0"><span class="dot ' + cls + '">' + ico + '</span>' +
+    return '<div class="tline ' + cls + '"><span class="dot ' + cls + '">' + ico + '</span>' +
       '<span class="what"><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="st ' + stCls + '">' + esc(st) + '</span></div>';
   }
   var c = (w.cantine || {})[k], cs = d.getDay() === 3 ? "Pas de cantine Mercredi" : "Pas encore vu", cc = "no";
   if(c){ var v = c[Object.keys(c)[0]]; cs = v === "ok" ? "Réservée" : v === "wait" ? "En attente" : v === "abs" ? "Absente" : "Non réservée"; cc = v === "ok" ? "ok" : v === "no" ? "warn" : "no"; }
   var cantKid = c ? Object.keys(c)[0] : "";
   lines += line("cantine", "c-cantine", "🍽️", "Cantine", cantKid, cs, cc);
-  // bus : les 3 prochains jours de classe
+  // bus : seulement les jours confirmés (prise en compte) parmi les 3 prochains jours de classe
   var bd = new Date(d), rows = "";
   for(var n = 0; n < 3; n++){
     while(bd.getDay() === 0 || bd.getDay() === 6) bd.setDate(bd.getDate() + 1);
-    var b = (w.bus || {})[ymd(bd)], al = b && b.aller ? " · " + b.aller : "";
-    var bs = !b ? "Pas de demande" : b.st === "ok" ? "✅ Pris en compte" + al : b.st === "ko" ? "❌ Refusé" + al : b.st === "wait" ? "⏳ En attente" + al : "Demandé" + al;
-    var bc = !b ? "no" : b.st === "ko" ? "warn" : b.st === "wait" ? "no" : "ok";
-    var jl = bd.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric"});
-    rows += '<div><span class="j">' + esc(jl.charAt(0).toUpperCase() + jl.slice(1)) + '</span><span class="st ' + bc + '">' + esc(bs) + '</span></div>';
+    var b = (w.bus || {})[ymd(bd)];
+    if(b && b.st === "ok"){
+      var jl = bd.toLocaleDateString("fr-FR", {weekday: "short", day: "numeric"});
+      rows += '<div><span class="j">' + esc(jl.charAt(0).toUpperCase() + jl.slice(1)) + '</span><span class="st ok">✅ Confirmé' + esc(b.aller ? " · " + b.aller : "") + '</span></div>';
+    }
     bd.setDate(bd.getDate() + 1);
   }
-  lines += '<div class="tline c-bus" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
+  if(!rows) rows = '<div><span class="j">Aucun bus confirmé ces 3 prochains jours</span></div>';
+  lines += '<div class="tline c-bus" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
     '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.prettyLine(window.perso().route.name || "")].filter(Boolean).join(" · ")) + '</span>' +
     '<span class="bdays">' + rows + '</span></span></div>';
   var cv = (w.covoit || {})[k], cvs = (w.covoitSans || {})[k] || "—", cvc = "no";
@@ -1368,8 +1369,8 @@ function renderToday(){
   lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);
   $("today").innerHTML = '<p class="when">' + esc(d.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"})) + '</p>' +
     '<p class="rel">' + rel.charAt(0).toUpperCase() + rel.slice(1) + '</p>' + lines;
-  $("today").querySelectorAll("[data-go]").forEach(function(el){
-    el.addEventListener("click", function(){ location.hash = el.getAttribute("data-go"); });
+  $("today").querySelectorAll("[data-go]").forEach(function(el){   // (plus rien de cliquable dans le résumé)
+    el.removeAttribute("data-go");
   });
 }
 $("rgLogin").addEventListener("click", function(){ if(window.Android && window.Android.portalLogin) window.Android.portalLogin(); });
