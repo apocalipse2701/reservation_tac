@@ -10,6 +10,10 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.7.0 — 24/11/2026
+- Covoiturage : nouveau bouton « 🏫 Pas d'école » sur chaque jour (grève, journée pédagogique, sortie…). Le jour s'affiche alors « 🏫 Pas d'école : personne à aller chercher », sans covoiturage, et tous les téléphones sont prévenus. « Il y a école finalement » annule.
+- Accueil, ligne Retour : affiche la raison quand personne n'a à aller chercher les enfants (🏫 Pas d'école, 🚌 Bus…), au lieu de « — ».
+
 ## 2.6.7 — 24/11/2026
 - Bus › ⭐ Mes trajets favoris :
   - quand il n'y a aucun favori, l'appli explique que le trajet habituel (Réglages) remplit déjà la ligne et les arrêts, et qu'un favori retient en plus l'horaire ;

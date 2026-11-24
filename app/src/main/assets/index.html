@@ -1359,7 +1359,7 @@ function renderToday(){
   lines += '<div class="tline c-bus" data-go="bus" role="button" tabindex="0" style="align-items:flex-start"><span class="dot c-bus">🚌</span>' +
     '<span class="what"><b>Bus</b><span>' + esc([window.kidBus(), window.perso().route.name || ""].filter(Boolean).join(" · ")) + '</span>' +
     '<span class="bdays">' + rows + '</span></span></div>';
-  var cv = (w.covoit || {})[k], cvs = "—", cvc = "no";
+  var cv = (w.covoit || {})[k], cvs = (w.covoitSans || {})[k] || "—", cvc = "no";
   if(cv !== undefined){ cv = String(cv).replace(/\s+\d{1,2}:\d{2}$/, ""); if(cv === "?"){ cvs = "Personne"; cvc = "warn"; } else { cvs = cv; cvc = "ok"; } }
   lines += line("covoit", "c-covoit", "🚗", "Retour", window.perso().covKids || "", cvs, cvc);
   $("today").innerHTML = '<p class="when">' + esc(d.toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "long"})) + '</p>' +
@@ -1981,7 +1981,12 @@ function editHour(day){
     if(all){ d.defaults[w] = v; delete y.heure; } else y.heure = v;
   }, me.nom + " : sortie de " + window.kidsCov() + " à " + v + " " + (all ? "tous les " + JOURS[w] : label(day)));
 }
-function reactivate(day){ mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = false; }, "Il faut aller chercher " + window.kidsCov() + " " + label(day) + " (" + me.nom + ")"); }
+function reactivate(day){ mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = false; delete y.noSchool; }, "Il faut aller chercher " + window.kidsCov() + " " + label(day) + " (" + me.nom + ")"); }
+function noSchoolDay(day){
+  if(!confirm("Pas d'école " + label(day) + " ?\nPersonne n'aura à aller chercher " + window.kidsCov() + " ce jour-là.")) return;
+  mutate(day, function(d){ var y = d.days[day] = d.days[day] || {}; y.off = true; y.noSchool = true; y.qui = null; },
+    "🏫 Pas d'école " + label(day) + " : personne à aller chercher (" + me.nom + ")");
+}
 
 /* --- bus validé : personne à aller chercher ce jour-là (partagé avec les autres téléphones) --- */
 function isBus(x){ return !!(x && x.off && x.bus); }
@@ -2084,6 +2089,10 @@ function render(){
       cls += " off";
       who = '<div class="who">🚌 ' + esc(window.kidBus() || "") + ' prend le bus : personne à aller chercher</div>';
       acts = '<span class="muted" style="font-size:13px">Pour changer, modifie le bus (Bus › Suivi des réservations).</span>';
+    } else if(x.off && x.noSchool){
+      cls += " off";
+      who = '<div class="who">🏫 Pas d\'école : personne à aller chercher</div>';
+      acts = '<button class="btn btn-ghost" data-a="react" data-d="' + day + '">Il y a école finalement</button>';
     } else if(x.off){
       cls += " off";
       who = '<div class="who">Pas besoin d\'aller les chercher</div>';
@@ -2095,17 +2104,20 @@ function render(){
       acts += (x.non || []).indexOf(me.id) >= 0 ? '<button class="btn btn-ghost" data-a="undo" data-d="' + day + '">Finalement dispo</button>'
         : '<button class="btn btn-ghost" data-a="cannot" data-d="' + day + '">Je ne peux pas</button>';
       acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Quelqu\'un d\'autre</button>';
+      acts += '<button class="btn btn-ghost" data-a="noschool" data-d="' + day + '">🏫 Pas d\'école</button>';
     } else if(x.qui === me.id){
       cls += " mine";
       who = '<div class="who me">✅ C\'est toi</div>'; pic = avatar(me.id, 64);
       acts = '<button class="btn btn-cancel" data-a="release" data-d="' + day + '">Je ne peux plus</button>';
       acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Autre</button>';
+      acts += '<button class="btn btn-ghost" data-a="noschool" data-d="' + day + '">🏫 Pas d\'école</button>';
     } else {
       var man = data.members[x.qui] && data.members[x.qui].manuel;
       who = '<div class="who"><b>' + esc(nameOf(x.qui)) + '</b></div>'; pic = avatar(x.qui, 64);
       acts = '<button class="btn btn-ghost" data-a="claim" data-d="' + day + '">Prendre le relais</button>';
       acts += '<button class="btn btn-ghost" data-a="other" data-d="' + day + '">👤 Autre</button>';
       if(man) acts += '<button class="btn btn-ghost" data-a="unset" data-d="' + day + '">Retirer</button>';
+      acts += '<button class="btn btn-ghost" data-a="noschool" data-d="' + day + '">🏫 Pas d\'école</button>';
     }
     var nonIds = (x.non || []).filter(function(i){ return i !== x.qui; });
     var sub = nonIds.length ? '<div class="sub nonl">Ne peut pas : ' + nonIds.map(function(i){
@@ -2115,7 +2127,7 @@ function render(){
     // colonne de droite : heure de sortie, et dessous la photo de qui les récupère
     html += '<div class="' + cls + '"><div class="kbody"><div class="kleft"><span class="dt">' + esc(label(day)) + '</span>' +
       who + (pic ? '<div class="acts">' + acts + '</div>' : '') + '</div>' +
-      '<div class="kright">' + (isBus(x) ? '<span class="hr">🚌</span>' : '<button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button>') + pic + '</div></div>' +
+      '<div class="kright">' + (isBus(x) ? '<span class="hr">🚌</span>' : (x.off && x.noSchool) ? '<span class="hr">🏫</span>' : '<button class="hr" data-a="hour" data-d="' + day + '">' + (h ? "🕔 " + esc(h) : "🕔 heure ?") + '</button>') + pic + '</div></div>' +
       (pic ? '' : '<div class="acts">' + acts + '</div>') + sub + '</div>';
   });
   $("kDays").innerHTML = html;
@@ -2145,7 +2157,7 @@ function render(){
       var d = b.getAttribute("data-d"), a = b.getAttribute("data-a");
       if(a === "claim") claim(d); else if(a === "cannot") cannot(d); else if(a === "release") release(d);
       else if(a === "undo") undoCannot(d); else if(a === "hour") editHour(d); else if(a === "react") reactivate(d);
-      else if(a === "other") pickFor(d); else if(a === "unset") unsetDay(d);
+      else if(a === "other") pickFor(d); else if(a === "unset") unsetDay(d); else if(a === "noschool") noSchoolDay(d);
     });
   });
   peopleRender();
@@ -2267,13 +2279,14 @@ if(A && A.carpoolSettings){
 function widget(){
   if(!window.widgetData || !data) return;
   window.widgetData(function(w){
-    var cov = {};
+    var cov = {}, sans = {};
     schoolDays().forEach(function(day){
-      var x = data.days[day] || {}; if(x.off || holiday(data, day)) return;
+      var x = data.days[day] || {}, hol = holiday(data, day);
+      if(x.off || hol){ sans[day] = isBus(x) ? "🚌 Bus" : (x.noSchool || hol) ? "🏫 Pas d'école" : "Pas besoin"; return; }
       var h = hourOf(data, day); if(!h && !x.qui) return;
       cov[day] = x.qui ? nameOf(x.qui) : "?";
     });
-    w.covoit = cov;
+    w.covoit = cov; w.covoitSans = sans;
     w.covoitNoms = Object.keys(data.members).map(function(i){ var m = data.members[i]; return {nom: m.nom || "", badge: m.badge || ""}; }).filter(function(m){ return m.nom; });
   });
 }
