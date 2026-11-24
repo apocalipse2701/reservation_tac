@@ -232,10 +232,23 @@
   .card.cat > h2{color:rgb(var(--cat))}
   .card.cat .btn-ghost{background:rgba(var(--cat),.16);color:rgb(var(--cat))}
   .card.cat input,.card.cat select{background:var(--card);border-color:rgba(var(--cat),.30)}
-  #busSetCard{border-width:2px;padding-top:0;overflow:hidden}
-  .bhead{display:flex;align-items:center;gap:12px;margin:0 -16px 12px;padding:14px 16px;background:rgba(var(--cat),.88);color:#fff}
-  .bhead h2{margin:0;color:#fff}.bhead p{margin:2px 0 0;font-size:13px;opacity:.9}
-  .bico{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+  /* réglages : catégories repliées, ouvertes d'une touche */
+  .cathead{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+  .cathead .ci{flex:0 0 44px;height:44px;border-radius:14px;background:rgba(var(--cat),.20);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .cathead .ct{flex:1;min-width:0}
+  .cathead .ct b{display:block;font:700 17px var(--disp);color:rgb(var(--cat))}
+  .cathead .ct small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+  .cathead .cv,.subhead .cv{font-size:20px;color:rgb(var(--cat));transition:transform .2s}
+  .card.cat.open .cathead .cv{transform:rotate(90deg)}
+  .catbody{margin-top:14px}
+  #reglages .card,#reglages .subbox,#aide .hlp{scroll-margin-top:110px}
+  .card.cat:not(.open) .catbody{display:none}
+  .subhead{display:flex;align-items:center;width:100%;background:none;border:0;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
+  .subhead .sub3{flex:1;margin:0}
+  .subbox.open .subhead .cv{transform:rotate(90deg)}
+  .subbox:not(.open) .subbody{display:none}
+  .subbody{margin-top:6px}
+  @media (prefers-reduced-motion:reduce){.cathead .cv,.subhead .cv{transition:none}}
   .subbox{background:rgba(var(--cat),.12);border-radius:16px;padding:12px 12px 14px;margin-top:10px}
   .subbox input,.subbox select{background:var(--card)}
   .sub3{font:700 14.5px var(--disp);margin:0 0 2px;color:rgb(var(--cat))}
@@ -360,7 +373,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
     <div class="swatches" id="swatches"></div>
   </section>
   <section class="card cat cat-vert" id="busSetCard">
-    <div class="bhead"><span class="bico">🚌</span><div><h2>Bus</h2><p>Tous les réglages des demandes de bus</p></div></div>
+    <h2>🚌 Bus</h2>
     <div class="subbox">
     <h3 class="sub3">1 · Enfant et trajet</h3>
     <label for="psBusKid">Prénom de l'enfant qui prend le bus</label><input id="psBusKid" type="text" placeholder="ex. Lucie">
@@ -1233,6 +1246,53 @@ function route_(){
 document.querySelectorAll("[data-go]").forEach(function(b){
   b.addEventListener("click", function(){ location.hash = b.getAttribute("data-go"); });
 });
+/* Réglages : chaque catégorie s'ouvre d'une touche (une seule ouverte à la fois) */
+(function(){
+  var DESC = {"Couleurs": "Thème de l'appli", "Bus": "Enfant, trajet, identité, réponses par mail", "Portail": "Adresse et identifiants du portail famille",
+    "Lien": "Conseils cantine et covoiturage", "Covoiturage": "Synology, enfants, code", "Widget": "Écran d'accueil du téléphone", "Application": "Version, mises à jour, nouveautés"};
+  var cards = document.querySelectorAll("#reglages > section.card.cat");
+  cards.forEach(function(card){
+    var h2 = card.querySelector(":scope > h2"); if(!h2) return;
+    var t = h2.textContent.trim(), m = t.match(/^(\S+)\s+(.*)$/), ico = m ? m[1] : "", title = m ? m[2] : t;
+    var desc = DESC[title.split(" ")[0]] || "";
+    var head = document.createElement("button"); head.type = "button"; head.className = "cathead";
+    head.innerHTML = '<span class="ci">' + ico + '</span><span class="ct"><b></b><small></small></span><span class="cv">›</span>';
+    head.querySelector("b").textContent = title; head.querySelector("small").textContent = desc;
+    var body = document.createElement("div"); body.className = "catbody";
+    while(h2.nextSibling) body.appendChild(h2.nextSibling);
+    h2.replaceWith(head); card.appendChild(body);
+    head.addEventListener("click", function(){
+      var open = !card.classList.contains("open");
+      cards.forEach(function(c){ c.classList.remove("open"); });
+      if(open){ card.classList.add("open"); setTimeout(function(){ card.scrollIntoView({behavior: "smooth", block: "start"}); }, 30); }
+    });
+    // sous-parties (Bus) : repliées elles aussi
+    card.querySelectorAll(".subbox").forEach(function(sb, i){
+      var h3 = sb.querySelector(".sub3"); if(!h3) return;
+      var sh = document.createElement("button"); sh.type = "button"; sh.className = "subhead";
+      var sbody = document.createElement("div"); sbody.className = "subbody";
+      while(h3.nextSibling) sbody.appendChild(h3.nextSibling);
+      h3.replaceWith(sh); sh.appendChild(h3); sh.insertAdjacentHTML("beforeend", '<span class="cv">›</span>'); sb.appendChild(sbody);
+      sh.addEventListener("click", function(){ sb.classList.toggle("open"); });
+    });
+  });
+  // ouvrir la catégorie (et la sous-partie) qui contient un élément
+  window.openSetting = function(id){
+    var el = document.getElementById(id); if(!el) return;
+    var card = el.closest("section.card.cat");
+    if(card && !card.classList.contains("open")) card.querySelector(".cathead").click();
+    var sb = el.closest(".subbox"); if(sb) sb.classList.add("open");
+    setTimeout(function(){ (sb || card || el).scrollIntoView({behavior: "smooth", block: "start"}); }, 120);
+  };
+  // liens « modifier » ailleurs dans l'appli : ouvrir directement la bonne catégorie
+  document.addEventListener("click", function(ev){
+    var a = ev.target.closest && ev.target.closest("[data-open]"); if(!a) return;
+    ev.preventDefault(); var id = a.getAttribute("data-open");
+    location.hash = "reglages"; setTimeout(function(){ window.openSetting(id); }, 200);
+  });
+  // revenir aux réglages = tout replié
+  window.addEventListener("hashchange", function(){ if(location.hash !== "#reglages") cards.forEach(function(c){ c.classList.remove("open"); }); });
+})();
 /* Aide : état de la configuration */
 function helpRender(){
   var A = window.Android || {}, P = window.perso();
@@ -1260,7 +1320,7 @@ function helpRender(){
       var it = items[+b.getAttribute("data-hi")];
       if(!it[3]){ alert("Pour ajouter le widget : appui long sur un espace vide de l'écran d'accueil du téléphone, puis Widgets › Gestion administrative enfants."); return; }
       location.hash = "reglages";
-      setTimeout(function(){ var el = $(it[3]); if(el){ (el.closest("section") || el).scrollIntoView({behavior: "smooth", block: "start"}); } }, 250);
+      setTimeout(function(){ window.openSetting(it[3]); }, 250);
     });
   });
 }
@@ -1325,8 +1385,8 @@ $("busForce").querySelectorAll("[data-bf]").forEach(function(b){
 });
 function idSummary(){
   var n = ($("prenom").value + " " + $("nom").value).trim(), c = [$("tel").value, $("email").value].filter(Boolean).join(" · ");
-  $("idSum").innerHTML = n ? "👤 " + esc(n) + (c ? '<br><small class="muted">' + esc(c) + "</small>" : "") + ' <a href="#reglages">modifier</a>'
-    : '<span style="color:var(--danger)">Ton identité n\'est pas encore remplie.</span> <a href="#reglages">La remplir dans Réglages</a>';
+  $("idSum").innerHTML = n ? "👤 " + esc(n) + (c ? '<br><small class="muted">' + esc(c) + "</small>" : "") + ' <a href="#reglages" data-open="nom">modifier</a>'
+    : '<span style="color:var(--danger)">Ton identité n\'est pas encore remplie.</span> <a href="#reglages" data-open="nom">La remplir dans Réglages</a>';
 }
 /* Page Réglages : état de chaque partie, et boutons vers leurs réglages */
 function refreshSettings(){
@@ -1926,7 +1986,7 @@ function renderPlan(){
     if(plan.envoye.length >= 16) html += '<p class="muted" style="margin:8px 0 0;font-size:12px">Planning envoyé le ' + plan.envoye.substring(8, 10) + "/" + plan.envoye.substring(5, 7) + " à " + plan.envoye.substring(11, 16) + '.</p>';
     box.innerHTML = html;
   }
-  var o = $("pOpen"); if(o) o.addEventListener("click", function(ev){ ev.preventDefault(); location.hash = "reglages"; });
+  var o = $("pOpen"); if(o) o.addEventListener("click", function(ev){ ev.preventDefault(); location.hash = "reglages"; setTimeout(function(){ window.openSetting("rgPlanCard"); }, 200); });
   var r = $("pRetry"); if(r) r.addEventListener("click", loadPlanning);
   box.querySelectorAll(".ign").forEach(function(b){
     b.addEventListener("click", function(){
@@ -2488,7 +2548,7 @@ function openSet(){
   $("kSet").classList.add("show");
 }
 if(A && A.carpoolSettings){
-  $("kSetupBtn").addEventListener("click", function(){ location.hash = "reglages"; });
+  $("kSetupBtn").addEventListener("click", function(){ location.hash = "reglages"; setTimeout(function(){ window.openSetting("rgCov"); }, 200); });
   window.openCarpoolSet = openSet;
   var showMyPhoto = window.showMyPhoto = function(){
     var st = settings(), id = st.id || "moi";

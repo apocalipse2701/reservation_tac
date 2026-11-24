@@ -10,6 +10,11 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.9.0 — 24/11/2026
+- Réglages réorganisés : chaque catégorie (Couleurs, Bus, Portail cantine, Planning, Covoiturage, Widget, Application) apparaît sur une seule ligne, avec son icône et un court résumé. Son contenu s'ouvre d'une touche, et une seule catégorie est ouverte à la fois.
+- Bus : les trois sous-parties (Enfant et trajet, Mon identité, Réponses de la compagnie) s'ouvrent elles aussi d'une touche.
+- Les liens « modifier » ailleurs dans l'appli (identité, covoiturage, planning, aide) ouvrent directement la bonne catégorie.
+
 ## 2.8.2 — 24/11/2026
 - Dès la première installation, l'adresse du portail famille et l'expéditeur des réponses de bus (tad-charleville@pretapartir.fr) sont déjà remplis dans les Réglages. Il n'y a rien à saisir.
 
