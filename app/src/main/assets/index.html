@@ -639,6 +639,7 @@ window.prettyLine = function(t){ return String(t || "").replace(/\bligne\s*(\w+)
 08h55-09h50 Français · Salle 26
 Mardi
 …</pre>
+  <button class="btn btn-ghost btn-small" id="edtImport" type="button" style="margin-bottom:8px">📂 Importer un fichier texte (.txt)</button>
   <textarea id="edtTxt" rows="14" spellcheck="false"></textarea>
   <label for="edtRef">Cette semaine est une semaine</label>
   <select id="edtRef"><option value="A">A</option><option value="B">B</option></select>
@@ -1549,6 +1550,18 @@ function edtSaveTxt(){
 $("edtEditBtn").addEventListener("click", edtEditOpen);
 $("edtEmptyBtn").addEventListener("click", edtEditOpen);
 $("edtSave").addEventListener("click", edtSaveTxt);
+$("edtImport").addEventListener("click", function(){ if(window.Android && window.Android.openTextFile) window.Android.openTextFile(); });
+window.__textFileDone = function(t){
+  if(t === null){ alert("Le fichier n'a pas pu être lu."); return; }
+  var r = edtParse(t);
+  if(!r.list.length){ alert("Ce fichier ne contient pas d'emploi du temps reconnu."); return; }
+  $("edtTxt").value = t.replace(/^\s*#.*$/gm, "").replace(/^\s*\n/gm, "").trim() + "\n";
+  // « semaine du 23/11/2026 = A » : on en déduit la lettre de la semaine en cours
+  var m = t.match(/semaine\s+du\s+(\d{1,2})\/(\d{1,2})\/(\d{4})\s*=\s*(A|B)/i);
+  if(m){ var r0 = new Date(+m[3], +m[2] - 1, +m[1]); var mon = new Date(r0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+    $("edtRef").value = edtWeek({ref: mon.getFullYear() + "-" + ("0" + (mon.getMonth() + 1)).slice(-2) + "-" + ("0" + mon.getDate()).slice(-2), refL: m[4].toUpperCase()}, new Date()); }
+  alert(r.list.length + " cours importés" + (r.bad.length ? " (" + r.bad.length + " ligne(s) ignorée(s))" : "") + ". Vérifie la semaine A/B, puis touche « Enregistrer ».");
+};
 $("edtAB").querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ edtL = b.dataset.w; edtRender(); }); });
 window.addEventListener("hashchange", function(){ if(location.hash === "#edt"){ edtSel = null; edtRender(); } });
 if(location.hash === "#edt") edtRender();

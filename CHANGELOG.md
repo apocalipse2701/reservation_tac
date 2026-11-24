@@ -10,6 +10,9 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 3.1.1 — 24/11/2026
+- Emploi du temps : bouton « 📂 Importer un fichier texte (.txt) » pour charger un emploi du temps gardé sur le téléphone. La semaine A/B est déduite de la ligne de référence du fichier. L'emploi du temps n'a donc jamais besoin d'être dans l'appli publiée.
+
 ## 3.1.0 — 24/11/2026
 - Nouveau : « 🎒 Emploi du temps » de l'enfant (tuile sur l'accueil). Les cours s'affichent jour par jour, avec semaines A et B, récréations, pause déjeuner et heure de sortie. Il se saisit en texte, une ligne par cours.
 - Résumé du jour de l'accueil : ligne « 🎒 Cours » avec l'heure de début et de fin des cours.

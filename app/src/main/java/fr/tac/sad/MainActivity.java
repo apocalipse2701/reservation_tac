@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
     private boolean unlocked = false, prompting = false;
     private long pausedAt = 0;
     private android.view.View lockView;
-    private static final int REQ_UNLOCK = 61, REQ_BACKUP_SAVE = 62, REQ_BACKUP_OPEN = 63;
+    private static final int REQ_UNLOCK = 61, REQ_BACKUP_SAVE = 62, REQ_BACKUP_OPEN = 63, REQ_TEXT_OPEN = 64;
     private String pendingBackupPassword;
 
     boolean lockOn() {
@@ -269,6 +269,19 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_LOGIN) web.evaluateJavascript("window.onPortalLogin && window.onPortalLogin()", null);
+        if (requestCode == REQ_TEXT_OPEN) {
+            final Uri uri = resultCode == RESULT_OK && data != null ? data.getData() : null;
+            new Thread(() -> {
+                String text = null;
+                if (uri != null) try (InputStream in = getContentResolver().openInputStream(uri)) {
+                    byte[] b = Backup.readAll(in);
+                    if (b.length <= 300_000) text = new String(b, StandardCharsets.UTF_8).replace("\uFEFF", "");
+                } catch (Exception ignored) {
+                }
+                final String js = "window.__textFileDone && window.__textFileDone(" + (text == null ? "null" : JSONObject.quote(text)) + ")";
+                web.post(() -> web.evaluateJavascript(js, null));
+            }).start();
+        }
         if (requestCode == REQ_UNLOCK) {
             prompting = false;
             java.util.function.Consumer<Boolean> t = unlockThen;
@@ -600,6 +613,19 @@ public class MainActivity extends Activity {
                 } else {
                     i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
                     startActivityForResult(i, REQ_BACKUP_OPEN);
+                }
+            });
+        }
+
+        /** Choisir un fichier texte sur le téléphone (ex. emploi du temps) ; résultat dans window.__textFileDone(texte). */
+        @JavascriptInterface
+        public void openTextFile() {
+            runOnUiThread(() -> {
+                try {
+                    startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+                            .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"text/*", "application/octet-stream"}), REQ_TEXT_OPEN);
+                } catch (Exception e) {
+                    web.evaluateJavascript("window.__textFileDone && window.__textFileDone(null)", null);
                 }
             });
         }
