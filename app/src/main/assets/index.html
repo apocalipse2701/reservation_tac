@@ -83,6 +83,8 @@
   .chip{display:flex;align-items:center;background:var(--soft);color:var(--brand);border-radius:999px;font-size:14px;font-weight:650;overflow:hidden}
   .chip button{border:0;background:none;color:inherit;font:inherit;padding:8px 12px;cursor:pointer}
   .chip .x{padding:8px 10px 8px 2px;opacity:.6}
+  .chip.on{background:var(--brand);color:var(--brand-ink)}
+  .favhint{margin-top:12px;padding:12px;border-radius:16px;background:var(--soft2);display:flex;flex-direction:column;gap:10px;font-size:14px}
   .alert{border-radius:16px;padding:13px 14px;margin:0 0 14px;font-size:14px}
   .alert-err{background:var(--danger-bg);color:var(--danger)}
   .alert-ok{background:var(--soft);color:var(--brand)}
@@ -577,9 +579,13 @@
   </section>
 
   <section class="card" id="favCard">
-    <h2>Mes trajets favoris <small>1 touche pour remplir</small></h2>
+    <h2>⭐ Mes trajets favoris <small>1 touche pour tout remplir</small></h2>
     <div class="chips" id="favs"></div>
-    <p class="muted" id="favEmpty">Aucun favori. Remplis un trajet puis touche « Enregistrer ce trajet ».</p>
+    <p class="muted" id="favEmpty" style="margin:0"></p>
+    <div class="favhint hidden" id="favHint">
+      <span id="favHintTxt"></span>
+      <button class="btn btn-primary btn-small" id="favHintBtn" type="button">★ L'enregistrer en favori</button>
+    </div>
   </section>
 
   <!-- 1 - Identité -->
@@ -909,9 +915,29 @@ function snapTrip(R){
   return {dep: R.depart.stopId, depTime: R.depart.stopTime && R.depart.stopTime.departureTime,
           dst: R.destination.stopId, dstTime: R.destination.stopTime && R.destination.stopTime.arrivalTime};
 }
+function curFav(){   // le trajet rempli correspond-il à un favori ?
+  if(!route || !aller.depart.stopTime || !aller.destination.stopTime) return -2;
+  var a = JSON.stringify(snapTrip(aller)), idx = -1;
+  favs.forEach(function(f, i){ if(idx < 0 && f.routeId === route.routeId && JSON.stringify(f.aller) === a) idx = i; });
+  return idx;
+}
+function favHint(){
+  var i = curFav();
+  document.querySelectorAll("#favs .chip").forEach(function(c, k){ c.classList.toggle("on", k === i); });
+  $("favHint").classList.toggle("hidden", i !== -1);
+  if(i === -1) $("favHintTxt").textContent = "Ce trajet (" + aller.depart.stopTime.name + " " + hm(aller.depart.stopTime.departureTime) + " → " +
+    aller.destination.stopTime.name + ") n'est pas encore en favori. Enregistre-le pour le retrouver en une touche, horaire compris.";
+}
+["aDep", "aDepT", "aDst", "aDstT", "rDep", "rDepT", "rDst", "rDstT", "ligne", "date"].forEach(function(id){
+  var el = $(id); if(el) el.addEventListener("change", function(){ setTimeout(favHint, 50); });
+});
 function renderFavs(){
   var box = $("favs"); box.innerHTML = "";
   $("favEmpty").classList.toggle("hidden", favs.length > 0);
+  var R = window.perso().route;
+  $("favEmpty").textContent = R.routeId
+    ? "Aucun favori pour l'instant. Ton trajet habituel (réglé dans ⚙️ Réglages) remplit déjà la ligne et les arrêts quand tu choisis une date. Un favori retient en plus l'horaire : choisis l'heure une fois, puis enregistre-le."
+    : "Aucun favori pour l'instant. Remplis un trajet (date, arrêts, horaires), puis enregistre-le : la prochaine fois, une touche suffira.";
   favs.forEach(function(f, i){
     var c = document.createElement("div"); c.className = "chip";
     c.innerHTML = '<button type="button">' + esc(f.label) + '</button><button type="button" class="x" aria-label="Supprimer">✕</button>';
@@ -921,7 +947,12 @@ function renderFavs(){
     });
     box.appendChild(c);
   });
+  favHint();
 }
+$("favHintBtn").addEventListener("click", function(){ $("saveFav").click(); });
+// après chaque mise à jour des listes du trajet, revoir l'indication de favori
+var renderTrip0 = renderTrip;
+renderTrip = function(){ var r = renderTrip0.apply(this, arguments); setTimeout(favHint, 0); return r; };
 $("saveFav").addEventListener("click", function(){
   if(!route || !aller.depart.stopTime || !aller.destination.stopTime){ showErr("Remplis d'abord la ligne, les arrêts et les horaires de l'aller."); return; }
   var def = aller.depart.stopTime.name + " → " + aller.destination.stopTime.name + " " + hm(aller.depart.stopTime.departureTime);
@@ -929,7 +960,7 @@ $("saveFav").addEventListener("click", function(){
   window.askText("Nom de ce trajet favori :", def, function(label){
     fav.label = label; favs.push(fav);
     save("favs", favs); renderFavs(); showErr("");
-    alert("Trajet « " + label + " » enregistré. Touche-le dans « Mes trajets favoris » pour remplir le formulaire.");
+    alert("Trajet « " + label + " » enregistré. Il est maintenant dans « ⭐ Mes trajets favoris » en haut de la page.");
   });
 });
 function applyTrip(R, ee, s){
@@ -941,7 +972,7 @@ function applyTrip(R, ee, s){
   if(!R.destination.stopTime) R.destination.stopTime = at.filter(function(x){ return x.arrivalTime === s.dstTime; })[0] || null;
 }
 function applyFav(f){
-  showErr("");
+  showErr(""); setTimeout(favHint, 1500);
   var p = $("date").value ? Promise.resolve() : (function(){
     var t = new Date(); t.setDate(t.getDate() + 1); $("date").value = ymd(t); return loadRoutes();
   })();
@@ -1079,7 +1110,6 @@ function busPendRender(){
   var A = window.Android, list = [];
   try{ list = JSON.parse(A && A.busPending ? A.busPending() : "[]"); }catch(e){}
   $("busPendBox").classList.toggle("hidden", !list.length);
-  if(!list.length) $("busForce").open = true;
   var box = $("busPendList"); box.innerHTML = "";
   list.sort(function(a, b){ return a.at - b.at; }).forEach(function(p){
     var parts = String(p.day).split("-"), d = new Date(+parts[0], +parts[1] - 1, +parts[2]);

@@ -10,6 +10,13 @@ la page « Version … (dernière) » sert aux mises à jour automatiques de l'a
 
 Pour publier une nouvelle version : augmenter `version.txt`, ajouter sa section ci-dessous (même numéro), puis envoyer.
 
+## 2.6.7 — 24/11/2026
+- Bus › ⭐ Mes trajets favoris :
+  - quand il n'y a aucun favori, l'appli explique que le trajet habituel (Réglages) remplit déjà la ligne et les arrêts, et qu'un favori retient en plus l'horaire ;
+  - dès qu'un trajet complet est rempli et n'est pas encore en favori, un encadré propose « ★ L'enregistrer en favori », juste sous la liste ;
+  - le favori qui correspond au trajet rempli est mis en évidence.
+- « Forcer un jour » est replié par défaut pour alléger le haut de la page.
+
 ## 2.6.6 — 23/11/2026
 - Accueil : mêmes couleurs translucides que dans les réglages. Cantine en bleu, Bus en vert et Covoiturage en rose, sur les lignes du résumé du jour comme sur les grandes tuiles.
 
